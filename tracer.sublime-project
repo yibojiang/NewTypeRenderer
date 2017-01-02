@@ -1,0 +1,48 @@
+{
+	"folders":
+	[
+		{
+			"path": "."
+		}
+	],
+    "build_systems":
+    [
+        {
+            "name": "Build Raytracer",
+            "target": "exec_in_window",
+            "variants": 
+            [
+                {
+                    "name": "Qmake & Make",
+                    "cmd": ["/usr/local/bin/qmake tracer.pro && make"],
+                    "working_dir": "${project_path:}",
+                    "shell": true,        
+                },
+                {
+                    "name": "Qmake & Make & Run",
+                    "cmd": ["/usr/local/bin/qmake tracer.pro && make && open tracer.app"],
+                    "working_dir": "${project_path:}",
+                    "shell": true,        
+                },
+                {
+                    "name": "Build & Run",
+                    "cmd": ["/usr/local/bin/clang-omp++ -fopenmp -o tracer $file && ./tracer"],
+                    "working_dir": "${project_path:${folder}}",
+                    "shell": true,        
+                },
+                {
+                    "name": "Build Tracer",
+                    "cmd": ["clang-omp++ -fopenmp -o tracer $file"],
+                    "working_dir": "${project_path:${folder}}",
+                    "shell": true,        
+                },
+                {
+                    "name": "Run Tracer",
+                    "cmd": ["./tracer"],
+                    "working_dir": "${project_path:${folder}}",
+                    "shell": true,          
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,10 @@
+CONFIG += qt
+QMAKE_CC =/usr/local/bin/clang-omp
+QMAKE_CXX =/usr/local/bin/clang-omp++
+QMAKE_CXXFLAGS+= -fopenmp
+QMAKE_LINK = /usr/local/bin/clang-omp++
+LIBS += -fopenmp
+HEADERS += src/window.h
+HEADERS += src/raytracer.h
+SOURCES += src/main.cpp
+SOURCES += src/raytracer.cpp
