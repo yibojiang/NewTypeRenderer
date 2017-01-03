@@ -8,7 +8,7 @@ Install clang-openmp
 
 Install QT4
 ```
-    brew qt4
+    brew install qt4
 ```
 
 To build the source
