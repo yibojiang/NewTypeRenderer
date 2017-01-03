@@ -67,3 +67,5 @@ Makefile*
 
 # QtCtreator CMake
 CMakeLists.txt.user*
+
+BUILD_RESULT

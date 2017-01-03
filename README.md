@@ -1,5 +1,6 @@
 # pathtracer
-a Monte Carlo Pathtracer with QT GUI.
+a Monte Carlo Pathtracer with qt4 GUI.
+
 Install clang-openmp
 ```
     brew tap homebrew/boneyard
@@ -15,5 +16,9 @@ To build the source
 ```
     qmake tracer.pro
     make
-    open tracer.app
+```
+
+Run
+```
+    ./tracer.app/Contents/MacOS/tracer
 ```
