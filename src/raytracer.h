@@ -2,15 +2,23 @@
 
 #include <math.h>   
 #include <iostream>
+// #include <fstream>
 #include <vector>
 #include "sys/time.h"
 #include <QImage>
+#include <QDebug>
+#include <QCoreApplication>
+#include <QDir>
+
 
 const double inf=1e9;
 const double eps=1e-6;
+
+
+
 struct vec2 {
     double x, y;
-    vec2(double _x, double _y){ x = _x; y = _y; }
+    vec2(double _x=0, double _y=0){ x = _x; y = _y; }
     vec2 operator+(const vec2 &b) const{ return vec2(x + b.x, y + b.y); }
     vec2 operator-(const vec2 &b) const{ return vec2(x - b.x, y - b.y); }
     vec2 operator*(const vec2 &b) const{ return vec2(x * b.x, y * b.y); }
@@ -26,7 +34,7 @@ struct vec2 {
 struct vec3 {
     double x, y, z;
     // vec3(double _v = 0) { x = _v; y = _v; z = _v; }
-    vec3(double _x = 0, double _y = 0, double _z = 0) { x = _x; y =_y; z = _z; }
+    vec3(double _x=0, double _y=0, double _z=0) { x = _x; y =_y; z = _z; }
     vec3 operator+(const vec3 &b) const { return vec3(x + b.x, y + b.y, z + b.z); }
     vec3 operator-(const vec3 &b) const { return vec3(x - b.x, y - b.y, z - b.z); }
     vec3 operator*(const vec3 &b) const { return vec3(x * b.x, y * b.y, z * b.z ); }
@@ -43,6 +51,11 @@ struct vec3 {
     vec3 reflect(vec3 &normal) const { return normal * (dot(normal) * 2) - *this; }
     friend std::ostream &operator<< (std::ostream &stream, const vec3 &v) {
         stream << '(' << v.x << ',' << v.y << ',' << v.z << ')';
+        return stream;
+    }
+
+    friend QDebug operator<< (QDebug stream, const vec3 &p) {
+        stream << p.x << ',' << p.y << ',' << p.z;
         return stream;
     }
 };
@@ -127,6 +140,8 @@ struct mat3{
         return stream;
     }
 };
+
+
 
 struct Ray {
     vec3 origin;
@@ -308,13 +323,16 @@ public:
  
 class Triangle : public Object{
 private:
-    vec3 normal, u, v;
+    
+    vec3 n1, n2, n3;
+    vec2 uv1, uv2, uv3;
 
 public:
+    vec3 normal, u, v;
     vec3 p1, p2, p3;
 
 
-    Triangle(vec3 _p1, vec3 _p2, vec3 _p3, vec3 _e, vec3 _c, Refl_t _refl) : p1(_p1), p2(_p2), p3(_p3) {
+    Triangle(vec3 _p1, vec3 _p2, vec3 _p3, vec3 _e=vec3(0,0,0), vec3 _c=vec3(1,1,1), Refl_t _refl=DIFF) : p1(_p1), p2(_p2), p3(_p3) {
         e = _e;
         c = _c;
         refl = _refl;
@@ -326,21 +344,49 @@ public:
 
     }
 
-    void setNormal(vec3 _normal) {
-        normal = _normal.normalize();
+    void setNormals(vec3 _n1, vec3 _n2, vec3 _n3) {
+        // normal = _normal.normalize();
+        n1 = _n1.normalize();
+        n2 = _n2.normalize();
+        n3 = _n3.normalize();
+    }
+
+    void setUVs(vec2 _uv1, vec2 _uv2, vec2 _uv3){
+        uv1 = _uv1;
+        uv2 = _uv2;
+        uv3 = _uv3;
     }
 
     vec3 getNormal(const vec3 &) const{    
         return normal;
+        // return n1;
     }
 
     double intersect(const Ray &r) { // returns distance, 0 if nohit
-        vec3 center = (p1 + p2 + p3) / 3;
+        
         // vec3 nl = r.dir.dot(normal) > 0 ? normal : normal * -1;
         // double dist = -r.origin.dot(nl) + center.dot(nl);
         // double tt = dist / r.dir.dot(nl);
+        
+        if (r.dir.dot(normal) == 0){
+            return 0;
+        }
+
+        double dn = r.dir.dot(normal);
+        if (normal == vec3(0,0,0)){             // triangle is degenerate
+            return 0; 
+        }
+
+        // if (fabs(dn) < eps) {     // ray is  parallel to triangle plane
+        //     // if (a == 0)                 // ray lies in triangle plane
+        //     //     return 2;
+        //     // else return 0;              // ray disjoint from plane
+        //     return 0;
+        // }
+
+        vec3 center = (p1 + p2 + p3) / 3;
         double dist = -r.origin.dot(normal) + center.dot(normal);
-        double tt = dist / r.dir.dot(normal);
+        double tt = dist / dn;
         vec3 hit = r.origin + r.dir * tt;
 
         u = p2 - p1;
@@ -382,30 +428,201 @@ class Intersection {
 };
 
 
-class Mesh: public Object{
-private:
-    Intersection closestIntersection;
+class Face
+{
+
 public:
-    std::vector<Triangle*> triangles;
+    // std::vector<vec3*> vertices;
+    // std::vector<vec3*> normals;
+    // std::vector<unsigned int*> faces;
+    // std::vector<unsigned int*> uvs;
+    vec3 v1, v2, v3;
+    vec3 n1, n2, n3;
+    vec2 uv1, uv2, uv3;
+
+    void setupUVs(const vec2 _uv1,const vec2 _uv2,const vec2 _uv3){
+        uv1 = _uv1;
+        uv2 = _uv2;
+        uv3 = _uv3;
+    }
+
+    void setupVertices(const vec3 _v1,const vec3 _v2,const vec3 _v3){
+        v1 = _v1;
+        v2 = _v2;
+        v3 = _v3;
+    }
+
+    void setupNormals(const vec3 _n1,const vec3 _n2,const vec3 _n3){
+        n1 = _n1;
+        n2 = _n2;
+        n3 = _n3;
+    }
+
+
+    Face() {};
+    ~Face() {};
+    
+};
+
+class Mesh: public Object{
+
+public:
+    std::vector<Face*> faces;
+    
     Mesh() {
 
-     }
+    }
 
     ~Mesh(){
-        for (uint32_t i = 0; i < triangles.size(); ++i){
-            delete triangles[i];
+        for (uint32_t i = 0; i < faces.size(); ++i){
+            delete faces[i];
         }
     }
 
-    void add(Triangle* triangle){
-        triangles.push_back(triangle);
+    void addFace(Face* face){
+        faces.push_back(face);
     }
 
+    void translate(double tx, double ty, double tz){
+        vec3 tr = vec3(tx, ty, tz);
+        for (uint32_t i = 0; i < faces.size(); ++i){
+            faces[i]->v1 = faces[i]->v1 + tr;
+            faces[i]->v2 = faces[i]->v2 + tr;
+            faces[i]->v3 = faces[i]->v3 + tr;
+        }
+    } 
+
+    void rotate(double rx, double ry, double rz){
+        mat3 mt(sx, 0, 0, 
+                0, sy, 0, 
+                0, 0, sz );
+    }
+
+    void scale(double sx, double sy, double sz){
+        mat3 mt(sx, 0, 0, 
+            0, sy, 0, 
+            0, 0, sz );
+        
+        for (uint32_t i = 0; i < faces.size(); ++i){
+            faces[i]->v1 = mt * faces[i]->v1;
+            faces[i]->v2 = mt * faces[i]->v2;
+            faces[i]->v3 = mt * faces[i]->v3;
+        }
+    }
     
 };
 
 
+class ObjLoader
+{
+public:
 
+    ObjLoader(){};
+    ~ObjLoader(){};
+
+    bool loadObj(std::string _name, Mesh *mesh){
+        // QString path = QCoreApplication::applicationDirPath();
+        QString path = QDir::currentPath();
+        _name = '/' + _name;
+        std::string fullpath = path.toUtf8().constData() + _name;
+        qDebug() << "open" << fullpath.c_str();
+
+        // return true;
+        // QByteArray ba = path.toLatin1();
+        // const char *c_str2 = ba.data();
+        FILE *file = fopen( fullpath.c_str(), "r");
+        if( file == NULL ){
+            // printf("Impossible to open the file !\n");
+            qDebug() << "Impossible to open the file !\n" << fullpath.c_str();
+            return false;
+        }
+
+        std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
+        std::vector<vec3> temp_vertices;
+        std::vector<vec2> temp_uvs;
+        std::vector<vec3> temp_normals;
+
+        while(1){
+            
+            char lineHeader[128];
+
+            // read the first word of the line
+            int res = fscanf(file, "%s", lineHeader);
+            // qDebug() << res;
+            if (res == EOF){
+                // qDebug() << "break";   
+                break; // EOF = End Of File. Quit the loop.
+            }
+            // qDebug() << res;
+            // else : parse lineHeader
+            if ( strcmp( lineHeader, "v" ) == 0 ){
+                vec3 vertex;
+                fscanf(file, "%lf %lf %lf\n", &vertex.x, &vertex.y, &vertex.z );
+                // qDebug() << "vertex: " << vertex.x << ',' << vertex.y << ',' << vertex.z;
+                temp_vertices.push_back(vertex);
+
+            }
+            else if ( strcmp( lineHeader, "vt" ) == 0 ){
+                vec2 uv;
+                fscanf(file, "%lf %lf\n", &uv.x, &uv.y );
+                temp_uvs.push_back(uv);
+
+            }
+            else if ( strcmp( lineHeader, "vn" ) == 0 ){
+                vec3 normal;
+                fscanf(file, "%lf %lf %lf\n", &normal.x, &normal.y, &normal.z );
+                temp_normals.push_back(normal);
+
+            }
+            else if ( strcmp( lineHeader, "f" ) == 0 ){
+                std::string vertex1, vertex2, vertex3;
+                unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
+                int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2] );
+                if (matches != 9){
+                    printf("File can't be read by our simple parser : ( Try exporting with other options\n");
+                    return false;
+                }
+                // vertexIndices.push_back(vertexIndex[0]);
+                // vertexIndices.push_back(vertexIndex[1]);
+                // vertexIndices.push_back(vertexIndex[2]);
+                // uvIndices    .push_back(uvIndex[0]);
+                // uvIndices    .push_back(uvIndex[1]);
+                // uvIndices    .push_back(uvIndex[2]);
+                // normalIndices.push_back(normalIndex[0]);
+                // normalIndices.push_back(normalIndex[1]);
+                // normalIndices.push_back(normalIndex[2]);
+
+                // qDebug() << "size: " << temp_vertices.size();
+                // qDebug() << vertexIndex[0] << vertexIndex[1] << vertexIndex[2];   
+                // if (mesh->triangles.size() < 1){
+
+                Face *face = new Face();
+                face -> setupVertices(temp_vertices[vertexIndex[0]-1], temp_vertices[vertexIndex[1]-1], temp_vertices[vertexIndex[2]-1]);
+                face -> setupUVs(temp_uvs[uvIndex[0]-1], temp_uvs[uvIndex[1]-1], temp_uvs[uvIndex[2]-1]);
+                face -> setupNormals(temp_normals[normalIndex[0]-1], temp_normals[normalIndex[1]-1], temp_normals[normalIndex[2]-1]);
+                mesh->addFace(face);
+                // face -> vertices.push_back(vertex1, vertex2, vertex3);
+                // face -> uvs.push_back(uvIndex, vertex2, vertex3);
+
+                // Triangle *triangle = new Triangle(temp_vertices[vertexIndex[0]-1], temp_vertices[vertexIndex[1]-1], temp_vertices[vertexIndex[2]-1]);
+                // qDebug() << vertexIndex[0] << ": " << temp_vertices[vertexIndex[0] - 1];  
+                // qDebug() << vertexIndex[1] << ": " << temp_vertices[vertexIndex[1] - 1];
+                // qDebug() << vertexIndex[2] << ": " << temp_vertices[vertexIndex[2] - 1];
+                // qDebug() << "";
+                // triangle->setNormals(temp_normals[normalIndex[0]-1], temp_normals[normalIndex[1]-1], temp_normals[normalIndex[2]-1]);
+                // triangle->setUVs(temp_uvs[uvIndex[0]-1], temp_uvs[uvIndex[1]-1], temp_uvs[uvIndex[2]-1] );
+                // mesh->add(triangle);
+                // }
+                // return true;
+            }
+        }
+
+
+        // delete file;
+        return true;
+    }
+    
+};
 
 class Scene
 {
@@ -417,8 +634,13 @@ public:
     }
 
     void addMesh(Mesh* mesh) {
-        for (uint32_t i = 0; i < mesh->triangles.size(); ++i) {
-            add((Object*)mesh->triangles[i]);
+        // for (uint32_t i = 0; i < mesh->triangles.size(); ++i) {
+        //     add((Object*)mesh->triangles[i]);
+        // }
+
+        for (uint32_t i = 0; i < mesh->faces.size(); ++i) {
+            Triangle *triangle = new Triangle(mesh->faces[i]->v1, mesh->faces[i]->v2, mesh->faces[i]->v3);
+            add((Object*)triangle);
         }
     }
 
@@ -448,9 +670,7 @@ public:
     vec3 ro;
     vec3 ta;
     float fov;
-    float near;
-
-    
+    float near;    
 };
 
 

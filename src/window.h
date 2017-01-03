@@ -40,9 +40,8 @@ private slots:
 private:
     int displayMode; // 0 - render, 1 - normal
 
-
-
 };
+
 
 // class RenderWidget : public QWidget
 // {

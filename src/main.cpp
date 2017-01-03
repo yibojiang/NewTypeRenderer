@@ -15,8 +15,7 @@
 #include "window.h"
 #include <QBuffer>
 #include <QByteArray>
-
-
+#include <QDebug>
 
 Window::Window(QWidget *parent) :
  QMainWindow(parent) {
@@ -25,8 +24,8 @@ Window::Window(QWidget *parent) :
     
     setWindowTitle("Render View " + QString::number(width) + "x" + QString::number(height));
     // renderButton = new QPushButton("Render", this);
-    displayMode = 0;
-    sample = 16;
+    displayMode = 2;
+    sample = 4;
     // set size and location of the button
     // renderButton->setGeometry(QRect(QPoint(0, 0),
     // QSize(200, 50)));
@@ -80,7 +79,7 @@ Window::Window(QWidget *parent) :
 
     status = new QStatusBar(this);
     setStatusBar(status);
-    status->showMessage("test",10000);
+    status->showMessage("test", 10000);
     // status->addWidget(stat0,1);
 
     connect(channelBox, SIGNAL(currentIndexChanged(const QString&)),

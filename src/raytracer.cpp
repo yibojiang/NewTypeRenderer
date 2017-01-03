@@ -189,9 +189,36 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     width = _width;
     height = _height;
     samples = _samples;
-    Mesh *mesh = new Mesh();
-    mesh->add(new Triangle(vec3(30, 20, 60), vec3(50, 50, 60),  vec3(80, 10, 80),       vec3(), vec3(1, 1, 1)*.999, DIFF));
 
+
+
+    Mesh *mesh = new Mesh();
+    ObjLoader *loader = new ObjLoader();
+    loader->loadObj("cube.obj", mesh);
+    delete loader;
+
+    // for (uint32_t i = 0; i < mesh->triangles.size(); ++i){
+    //     qDebug() << i << ":" << mesh->triangles[i]->p1;
+    //     qDebug() << i << ":" << mesh->triangles[i]->p2;
+    //     qDebug() << i << ":"  << mesh->triangles[i]->p3;
+    //     qDebug() << "normal:"  << mesh->triangles[i]->normal;
+    //     qDebug() << "";
+    // }
+
+    
+    mesh->scale(3, 2, 1);
+    mesh->translate(30, 10, 120);
+
+    // mesh->add(new Triangle(vec3(30, 20, 60), vec3(50, 50, 60),  vec3(80, 10, 80),       vec3(), vec3(1, 1, 1)*.999, DIFF));
+    // mesh->add(new Triangle(vec3(30, 20, 60), vec3(50, 50, 60),  vec3(80, 10, 80),       vec3(), vec3(1, 1, 1)*.999, DIFF));
+
+    // for (uint32_t i = 0; i < mesh->triangles.size(); ++i){
+    //     qDebug() << i << ":" << mesh->triangles[i]->p1;
+    //     qDebug() << i << ":" << mesh->triangles[i]->p2;
+    //     qDebug() << i << ":"  << mesh->triangles[i]->p3;
+    //     qDebug() << "normal:"  << mesh->triangles[i]->normal;
+    //     qDebug() << "";
+    // }
 
     scene.add((Object*)new Plane(vec3(1, 0, 0), 0,       vec3(), vec3(.75, .25, .25), DIFF)); //Left
     scene.add((Object*)new Plane(vec3(-1, 0, 0), 99,       vec3(), vec3(.25, .25, .75), DIFF)); //Right
@@ -201,7 +228,10 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     scene.add((Object*)new Plane(vec3(0, -1, 0), 81.6,       vec3(), vec3(.75, .25, .75), DIFF)); //Ceil
     scene.add((Object*)new AABBox(vec3(50, 81, 60), vec3(50, 0.1, 50),       vec3(12, 12, 12), vec3(), DIFF)); //Glas
     scene.addMesh(mesh);
-    // scene.add((Object*)new Sphere(16.5, vec3(73, 16.5, 78),       vec3(), vec3(1, 1, 1)*.999, SPEC)); //Glas
+
+    
+
+    scene.add((Object*)new Sphere(16.5, vec3(73, 16.5, 78),       vec3(), vec3(1, 1, 1)*.999, SPEC)); //Glas
     // scene.add((Object*)new AABBox(vec3(80, 25, 120), vec3(10, 50, 40),       vec3(), vec3(1, 1, 1)*.999, SPEC)); //Glas
     // scene.add((Object*)new AABBox(vec3(20, 18, 80), vec3(36, 36, 36),       vec3(), vec3(1, 1, 1)*.999, SPEC)); //Glas
     // scene.add((Object*)new Triangle(vec3(30, 20, 60), vec3(50, 50, 60),  vec3(80, 10, 80),       vec3(), vec3(1, 1, 1)*.999, DIFF)); 
@@ -258,6 +288,8 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
     vec3 normalColor;
     vec3 directColor;
 
+    vec3 lig = vec3(-1, -3, -1.5).normalize();
+
     #pragma omp parallel for schedule(dynamic, 1)  private(directColor, normalColor)    // OpenMP
     for (unsigned short i = 0; i < height; ++i){
         for (unsigned short j = 0; j < width; ++j){
@@ -274,7 +306,8 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
                 vec3 N = obj.getNormal(ro + rd * intersection.t);
                 normalColor = vec3((N.x + 1)*0.5, (N.y + 1)*0.5, (N.z+1) * 0.25 + 0.5) * 255;
                 // normalColor = obj.c * 255;
-                directColor = obj.getDiffuse() * 255;
+                directColor = obj.getDiffuse() * fmax(lig.dot(-N), 0) * 255;
+                // directColor = obj.getDiffuse() * 255;
             }
 
             QRgb normalVal = qRgb(normalColor.x, normalColor.y, normalColor.z); // 0xffbd9527
@@ -309,7 +342,7 @@ QImage Raytracer::render(double &time) {
         // fprintf(stderr, "\rRendering (%d spp) %5.2f%%", samps * gridSize * gridSize, 100.*i / (height - 1));
         unsigned short Xi[3] = {0, 0, i*i * i};
         for (unsigned short j = 0; j < width; ++j){
-            unsigned int idx = i*width + j;
+            // unsigned int idx = i*width + j;
             vec3 color;
             for (int sy = 0; sy < 2; ++sy) { // 2x2 subpixel rows
                 for (int sx = 0; sx < 2; ++sx) { // 2x2 subpixel cols

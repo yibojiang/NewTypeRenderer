@@ -20,7 +20,7 @@
                 },
                 {
                     "name": "Qmake & Make & Run",
-                    "cmd": ["/usr/local/bin/qmake tracer.pro && make && open tracer.app"],
+                    "cmd": ["/usr/local/bin/qmake tracer.pro && make && ./tracer.app/Contents/MacOS/tracer"],
                     "working_dir": "${project_path:}",
                     "shell": true,        
                 },
