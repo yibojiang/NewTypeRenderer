@@ -148,7 +148,12 @@ struct mat3{
 
 struct mat4{
   double cols[4][4];
-    mat4(){}
+    mat4(){
+        cols[0][0] = 1; cols[1][0] = 0; cols[2][0] = 0; cols[3][0] = 0; 
+        cols[0][1] = 0; cols[1][1] = 1; cols[2][1] = 0; cols[3][1] = 0; 
+        cols[0][2] = 0; cols[1][2] = 0; cols[2][2] = 1; cols[3][2] = 0; 
+        cols[0][3] = 0; cols[1][3] = 0; cols[2][3] = 0; cols[3][3] = 1;   
+    }
     mat4(
         const double &m00, const double &m10, const double &m20, const double &m30, 
         const double &m01, const double &m11, const double &m21, const double &m31, 
@@ -255,10 +260,6 @@ struct Quaternion{
       w = cos(half_angle);
     }
 
-    Quaternion invertQuaternion(const Quaternion &q){
-      return Quaternion(-q.x, -q.y, -q.z, q.w);
-    }
-
     friend Quaternion operator*(Quaternion q1, const Quaternion& q2){
         Quaternion qr;
         qr.x = (q1.w * q2.x) + (q1.x * q2.w) + (q1.y * q2.z) - (q1.z * q2.y);
@@ -270,25 +271,16 @@ struct Quaternion{
 
     mat4 toMatrix(){
         return mat4(
-        1 - 2*y*y - 2*z*z,   2*x*y - 2*z*w,   2*x*z + 2*y*w,       0,
+        1 - 2*y*y - 2*z*z,     2*x*y - 2*z*w,       2*x*z + 2*y*w,       0,
         2*x*y + 2*z*w,         1 - 2*x*x - 2*z*z,   2*y*z - 2*x*w,       0,
-        2*x*z - 2*y*w,         2*y*z + 2*x*w,   1 - 2*x*x - 2*y*y,   0,
-        0,                         0,                   0,                       1);
+        2*x*z - 2*y*w,         2*y*z + 2*x*w,       1 - 2*x*x - 2*y*y,   0,
+        0,                     0,                   0,                   1);
     }
 
     friend QDebug operator<< (QDebug stream, const Quaternion &a) {
         stream << a.x << ',' << a.y << ',' << a.z << ',' << a.w;
         return stream;
     }
-                     
-    // vec4 operator*(const vec4 &q2) const{ 
-    //     vec4 qr;
-    //     qr.x = (w * q2.x) + (x * q2.w) + (y * q2.z) - (z * q2.y);
-    //     qr.y = (w * q2.y) - (x * q2.z) + (y * q2.w) + (z * q2.x);
-    //     qr.z = (w * q2.z) + (x * q2.y) - (y * q2.x) + (z * q2.w);
-    //     qr.w = (w * q2.w) - (x * q2.x) - (y * q2.y) - (z * q2.z);
-    //     return qr;
-    // }
 };
 // Quaternion::identity(0,0,0,1);
 class Transform {
@@ -296,6 +288,18 @@ public:
     mat4 translate;
     Quaternion rotation;
     mat4 scale;
+
+    vec3 getPosition(){
+        vec4 p(0, 0, 0, 1);
+        p = translate * p;
+        return vec3(p.x, p.y, p.z);
+    }
+
+    vec3 getScale(){
+        vec4 s(1, 1, 1, 1);
+        s = scale * s;
+        return vec3(s.x, s.y, s.z);   
+    }
 
     mat4 getTransformMatrix(){
         // return vec3(position.x, position.y, position.z);
@@ -316,6 +320,10 @@ public:
                      0,  0,  0,  1);
     }
 
+    void setRotation(Quaternion q){
+        rotation = q;
+    }
+
     void move(const double tx, const double ty, const double tz){
         mat4 mt(1, 0, 0, tx,
                 0, 1, 0, ty,
@@ -324,9 +332,7 @@ public:
         translate = mt * translate;
     }
 
-    void setRotation(Quaternion q){
-        rotation = q;
-    }
+    
 
     void rotateX(double rx){
         // mat4 mt(1, 0,       0,          0,
@@ -378,6 +384,7 @@ protected:
     vec3 c; // position, emission, color
     Refl_t refl; // reflection type (DIFFuse, SPECular, REFRactive)
 public:
+    Transform transform;
     Object(){}
     virtual ~Object(){}
     

@@ -227,15 +227,18 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     t1.setTranslate(4, 2, 1);
     t1.move(1, 1, 1);
     t1.rotateZ(M_PI/6);
+    t1.setScale(2, 3, 2);
     // t1.rotateY(M_PI/6);
-    qDebug() << t1.rotation.toMatrix();
+    // qDebug() << t1.rotation.toMatrix();
 
     
-    vec4 dir2 = t1.getTransformMatrix() * dir;
+    // vec4 dir2 = t1.getTransformMatrix() * dir;
     // if (dir2.x < eps){
     //     dir2.x = 0;
     // }
-    qDebug() << "dir:" << dir2;
+    // qDebug() << "dir:" << dir2;
+    qDebug() << "pos:" << t1.getPosition();
+    qDebug() << "scale:" << t1.getScale();
 
     // mat4 m3 = m1 * m2;
     // mat3 m3;
