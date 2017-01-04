@@ -33,7 +33,7 @@ struct vec2 {
 
 struct vec3 {
     double x, y, z;
-    // vec3(double _v = 0) { x = _v; y = _v; z = _v; }
+    // vec3(vec4 _v) { x = _v.x; y = _v.y; z = _v.z; }
     vec3(double _x=0, double _y=0, double _z=0) { x = _x; y =_y; z = _z; }
     vec3 operator+(const vec3 &b) const { return vec3(x + b.x, y + b.y, z + b.z); }
     vec3 operator-(const vec3 &b) const { return vec3(x - b.x, y - b.y, z - b.z); }
@@ -62,7 +62,8 @@ struct vec3 {
 
 struct vec4 {
     double x, y, z, w;
-    vec4( double _x, double _y, double _z) { x = _x; y = _y; z = _z; w = 1.0; }
+    vec4( double _x=0, double _y=0, double _z=0) { x = _x; y = _y; z = _z; w = 1.0; }
+    vec4( vec3 _v, double w) { x = _v.x; y = _v.y; z = _v.z; w = 1.0; }
     vec4( double _x, double _y, double _z, double _w) { x = _x; y = _y; z = _z; w = _w == 0.0 ? 0.0 : 1.0; }
     vec4 operator+(const vec4 &b) const { return vec4(x + b.x, y + b.y, z + b.z); }
     vec4 operator-(const vec4 &b) const { return vec4(x - b.x, y - b.y, z - b.z); }
@@ -74,6 +75,10 @@ struct vec4 {
     vec4 normalized() { return vec4(*this/length()); }
     vec4 cross(vec4 &b) const { return vec4(y * b.z - z * b.y, z * b.x - x * b.z, x * b.y - y * b.x); }
     vec4 reflect(vec4 &normal) const { return normal * (dot(normal) * 2) - *this; }
+    friend QDebug operator<< (QDebug stream, const vec4 &p) {
+        stream << p.x << ',' << p.y << ',' << p.z << ',' << p.w;
+        return stream;
+    }
 };
 
 
@@ -85,9 +90,9 @@ struct mat3{
         const double &m01, const double &m11, const double &m21, 
         const double &m02, const double &m12, const double &m22
     ){
-        cols[0][0] = m00; cols[0][1] = m01; cols[0][2] = m02; 
-        cols[1][0] = m10; cols[1][1] = m11; cols[1][2] = m12; 
-        cols[2][0] = m20; cols[2][1] = m21; cols[2][2] = m22; 
+        cols[0][0] = m00; cols[1][0] = m01; cols[2][0] = m02; 
+        cols[0][1] = m10; cols[1][1] = m11; cols[2][1] = m12; 
+        cols[0][2] = m20; cols[1][2] = m21; cols[2][2] = m22; 
     }
 
     mat3(const vec3 &uu, const vec3 &vv, const vec3 &ww){
@@ -120,7 +125,7 @@ struct mat3{
             for (int j = 0; j < 3; ++j){
                 double sum(0);
                 for (int k = 0; k < 3; ++k){
-                    sum+= cols[i][k] *  b.cols[k][j]; 
+                    sum+= cols[k][i] *  b.cols[j][k]; 
                 }
 
                 c.cols[i][j] = sum;
@@ -141,6 +146,74 @@ struct mat3{
     }
 };
 
+struct mat4{
+  double cols[4][4];
+    mat4(){}
+    mat4(
+        const double &m00, const double &m10, const double &m20, const double &m30, 
+        const double &m01, const double &m11, const double &m21, const double &m31, 
+        const double &m02, const double &m12, const double &m22, const double &m32, 
+        const double &m03, const double &m13, const double &m23, const double &m33
+    ){
+        cols[0][0] = m00; cols[1][0] = m01; cols[2][0] = m02; cols[3][0] = m03; 
+        cols[0][1] = m10; cols[1][1] = m11; cols[2][1] = m12; cols[3][1] = m13; 
+        cols[0][2] = m20; cols[1][2] = m21; cols[2][2] = m22; cols[3][2] = m23; 
+        cols[0][3] = m30; cols[1][3] = m31; cols[2][3] = m32; cols[3][3] = m33; 
+    }
+
+
+    vec4 operator*(vec4 &b){
+        vec4 c;
+        c.x = b.x * cols[0][0] + b.y * cols[0][1] + b.z * cols[0][2] + b.w * cols[0][3];
+        c.y = b.x * cols[1][0] + b.y * cols[1][1] + b.z * cols[1][2] + b.w * cols[1][3];
+        c.z = b.x * cols[2][0] + b.y * cols[2][1] + b.z * cols[2][2] + b.w * cols[2][3];
+        c.w = b.x * cols[3][0] + b.y * cols[3][1] + b.z * cols[3][2] + b.w * cols[3][3];
+        
+        return c;
+    }
+
+    mat4 operator*(mat4 &b){
+        mat4 c;
+        for (int i = 0; i < 4; ++i){
+            for (int j = 0; j < 4; ++j){
+                double sum(0);
+                for (int k = 0; k < 4; ++k){
+                    sum+= cols[k][i] *  b.cols[j][k]; 
+                }
+
+                c.cols[i][j] = sum;
+            }
+        }
+        return c;
+    }
+
+    // mat4& reverse() {
+    //     return *this;
+    // }
+
+    friend std::ostream &operator<< (std::ostream &stream, const mat4 &a) {
+        stream << '[';
+        for (int i = 0; i < 4; ++i){
+            for (int j = 0; j < 4; ++j){
+                stream << a.cols[i][j] << ((i * j == 9)? ']' : ',');
+            }
+            stream << std::endl;
+        }
+        return stream;
+    }  
+
+    friend QDebug &operator<< (QDebug &stream, const mat4 &a) {
+        stream << '[';
+        for (int i = 0; i < 4; ++i){
+            for (int j = 0; j < 4; ++j){
+                stream << a.cols[i][j] << ((i * j == 9)? ']' : ',');
+            }
+            stream << "\n";
+        }
+        return stream;
+    }  
+};
+
 
 
 struct Ray {
@@ -152,9 +225,38 @@ struct Ray {
 
 enum Refl_t { DIFF, SPEC, REFR };  // material types, used in radiance()
 
+struct Quaternion{
+    double x, y, z, w;
+};
 
-class Object
-{
+class Transform {
+public:
+    vec4 position;
+    Quaternion rotation;
+    vec3 scale;
+
+    // double getRotateX() {
+
+    // }
+    // void scale()
+    void setPosition(double x, double y, double z){
+        position = vec4(x, y, z);
+    }
+
+    void translate(const double tx, const double ty, const double tz) {
+        mat4 mt(1, 0, 0, tx,
+                0, 1, 0, ty,
+                0, 0, 1, tz,
+                0, 0, 0, 1);
+        // qDebug() << "translate: \n" << mt;
+        position = mt * position;
+    }
+
+    Transform() {}
+    ~Transform() {}
+};
+
+class Object {
 protected:
     vec3 p; 
     vec3 e;
@@ -492,10 +594,52 @@ public:
         }
     } 
 
-    void rotate(double rx, double ry, double rz){
-        mat3 mt(sx, 0, 0, 
-                0, sy, 0, 
-                0, 0, sz );
+    void rotateX(double rx){
+        mat3 mt(1, 0,       0,
+                0, cos(rx), -sin(rx), 
+                0, sin(rx), cos(rx));
+
+        for (uint32_t i = 0; i < faces.size(); ++i){
+            faces[i]->v1 = mt * faces[i]->v1;
+            faces[i]->v2 = mt * faces[i]->v2;
+            faces[i]->v3 = mt * faces[i]->v3;
+
+            faces[i]->n1 = mt * faces[i]->n1;
+            faces[i]->n2 = mt * faces[i]->n2;
+            faces[i]->n3 = mt * faces[i]->n3;
+        }
+    }
+
+    void rotateY(double rx){
+        mat3 mt(cos(rx), 0, -sin(rx), 
+                0,       1, 0, 
+                sin(rx), 0, cos(rx));
+
+        for (uint32_t i = 0; i < faces.size(); ++i){
+            faces[i]->v1 = mt * faces[i]->v1;
+            faces[i]->v2 = mt * faces[i]->v2;
+            faces[i]->v3 = mt * faces[i]->v3;
+
+            faces[i]->n1 = mt * faces[i]->n1;
+            faces[i]->n2 = mt * faces[i]->n2;
+            faces[i]->n3 = mt * faces[i]->n3;
+        }
+    }
+
+    void rotateZ(double rx){
+        mat3 mt(cos(rx), -sin(rx), 0,
+                sin(rx), cos(rx), 0,
+                0, 0,       1 );
+
+        for (uint32_t i = 0; i < faces.size(); ++i){
+            faces[i]->v1 = mt * faces[i]->v1;
+            faces[i]->v2 = mt * faces[i]->v2;
+            faces[i]->v3 = mt * faces[i]->v3;
+
+            faces[i]->n1 = mt * faces[i]->n1;
+            faces[i]->n2 = mt * faces[i]->n2;
+            faces[i]->n3 = mt * faces[i]->n3;
+        }
     }
 
     void scale(double sx, double sy, double sz){
@@ -532,7 +676,6 @@ public:
         // const char *c_str2 = ba.data();
         FILE *file = fopen( fullpath.c_str(), "r");
         if( file == NULL ){
-            // printf("Impossible to open the file !\n");
             qDebug() << "Impossible to open the file !\n" << fullpath.c_str();
             return false;
         }
@@ -579,41 +722,31 @@ public:
                 unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
                 int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2] );
                 if (matches != 9){
-                    printf("File can't be read by our simple parser : ( Try exporting with other options\n");
+                    qDebug() << "9 File can't be read by our simple parser : ( Try exporting with other options\n";
                     return false;
                 }
-                // vertexIndices.push_back(vertexIndex[0]);
-                // vertexIndices.push_back(vertexIndex[1]);
-                // vertexIndices.push_back(vertexIndex[2]);
-                // uvIndices    .push_back(uvIndex[0]);
-                // uvIndices    .push_back(uvIndex[1]);
-                // uvIndices    .push_back(uvIndex[2]);
-                // normalIndices.push_back(normalIndex[0]);
-                // normalIndices.push_back(normalIndex[1]);
-                // normalIndices.push_back(normalIndex[2]);
+                else{
+                    Face *face = new Face();
+                    face -> setupVertices(temp_vertices[vertexIndex[0]-1], temp_vertices[vertexIndex[1]-1], temp_vertices[vertexIndex[2]-1]);
+                    face -> setupUVs(temp_uvs[uvIndex[0]-1], temp_uvs[uvIndex[1]-1], temp_uvs[uvIndex[2]-1]);
+                    face -> setupNormals(temp_normals[normalIndex[0]-1], temp_normals[normalIndex[1]-1], temp_normals[normalIndex[2]-1]);    
+                    mesh->addFace(face);
+                }
 
-                // qDebug() << "size: " << temp_vertices.size();
-                // qDebug() << vertexIndex[0] << vertexIndex[1] << vertexIndex[2];   
-                // if (mesh->triangles.size() < 1){
 
-                Face *face = new Face();
-                face -> setupVertices(temp_vertices[vertexIndex[0]-1], temp_vertices[vertexIndex[1]-1], temp_vertices[vertexIndex[2]-1]);
-                face -> setupUVs(temp_uvs[uvIndex[0]-1], temp_uvs[uvIndex[1]-1], temp_uvs[uvIndex[2]-1]);
-                face -> setupNormals(temp_normals[normalIndex[0]-1], temp_normals[normalIndex[1]-1], temp_normals[normalIndex[2]-1]);
-                mesh->addFace(face);
-                // face -> vertices.push_back(vertex1, vertex2, vertex3);
-                // face -> uvs.push_back(uvIndex, vertex2, vertex3);
-
-                // Triangle *triangle = new Triangle(temp_vertices[vertexIndex[0]-1], temp_vertices[vertexIndex[1]-1], temp_vertices[vertexIndex[2]-1]);
-                // qDebug() << vertexIndex[0] << ": " << temp_vertices[vertexIndex[0] - 1];  
-                // qDebug() << vertexIndex[1] << ": " << temp_vertices[vertexIndex[1] - 1];
-                // qDebug() << vertexIndex[2] << ": " << temp_vertices[vertexIndex[2] - 1];
-                // qDebug() << "";
-                // triangle->setNormals(temp_normals[normalIndex[0]-1], temp_normals[normalIndex[1]-1], temp_normals[normalIndex[2]-1]);
-                // triangle->setUVs(temp_uvs[uvIndex[0]-1], temp_uvs[uvIndex[1]-1], temp_uvs[uvIndex[2]-1] );
-                // mesh->add(triangle);
+                // int matches = fscanf(file, "%d %d %d\n", &vertexIndex[0], &vertexIndex[1], &vertexIndex[2]);
+                // if (matches != 3){
+                //     qDebug() << matches <<" File can't be read by our simple parser : ( Try exporting with other options\n";
+                //     return false;
                 // }
-                // return true;
+                // else{
+                //     Face *face = new Face();
+                //     face -> setupVertices(temp_vertices[vertexIndex[0]-1], temp_vertices[vertexIndex[1]-1], temp_vertices[vertexIndex[2]-1]);    
+                //     mesh->addFace(face);
+                // }
+                
+                
+             
             }
         }
 

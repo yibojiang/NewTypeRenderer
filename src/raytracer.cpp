@@ -181,7 +181,7 @@ vec3 Raytracer::tracing(const Ray &ray, int depth, unsigned short *Xi){
     }
     
     // return vec3(1);
-    return obj.getDiffuse();
+    return vec3();
     
 }
 
@@ -194,8 +194,12 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
 
     Mesh *mesh = new Mesh();
     ObjLoader *loader = new ObjLoader();
+    // loader->loadObj("teapot.obj", mesh);
+    // loader->loadObj("rifle.obj", mesh);
     loader->loadObj("cube.obj", mesh);
+    
     delete loader;
+    qDebug() << "Object Loaded";
 
     // for (uint32_t i = 0; i < mesh->triangles.size(); ++i){
     //     qDebug() << i << ":" << mesh->triangles[i]->p1;
@@ -204,11 +208,18 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     //     qDebug() << "normal:"  << mesh->triangles[i]->normal;
     //     qDebug() << "";
     // }
-
+    // mesh->scale(0.8, 0.8, 0.8);
+    mesh->scale(0.5, 0.5, 0.5);
+    mesh->rotateY(M_PI*0.2);
     
-    mesh->scale(3, 2, 1);
-    mesh->translate(30, 10, 120);
+    mesh->translate(45, 20, 70);
+    qDebug() << "vertices count: " << mesh->faces.size();
 
+    Transform *t1 = new Transform();
+    t1->setPosition(0, 0, 0);
+    qDebug() << "position: " << t1->position;
+    t1->translate(10,10,10);
+    qDebug() << "position: " << t1->position;
     // mesh->add(new Triangle(vec3(30, 20, 60), vec3(50, 50, 60),  vec3(80, 10, 80),       vec3(), vec3(1, 1, 1)*.999, DIFF));
     // mesh->add(new Triangle(vec3(30, 20, 60), vec3(50, 50, 60),  vec3(80, 10, 80),       vec3(), vec3(1, 1, 1)*.999, DIFF));
 
@@ -231,7 +242,7 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
 
     
 
-    scene.add((Object*)new Sphere(16.5, vec3(73, 16.5, 78),       vec3(), vec3(1, 1, 1)*.999, SPEC)); //Glas
+    // scene.add((Object*)new Sphere(16.5, vec3(73, 16.5, 78),       vec3(), vec3(1, 1, 1)*.999, SPEC)); //Glas
     // scene.add((Object*)new AABBox(vec3(80, 25, 120), vec3(10, 50, 40),       vec3(), vec3(1, 1, 1)*.999, SPEC)); //Glas
     // scene.add((Object*)new AABBox(vec3(20, 18, 80), vec3(36, 36, 36),       vec3(), vec3(1, 1, 1)*.999, SPEC)); //Glas
     // scene.add((Object*)new Triangle(vec3(30, 20, 60), vec3(50, 50, 60),  vec3(80, 10, 80),       vec3(), vec3(1, 1, 1)*.999, DIFF)); 
@@ -288,9 +299,11 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
     vec3 normalColor;
     vec3 directColor;
 
-    vec3 lig = vec3(-1, -3, -1.5).normalize();
+    // vec3 lig = vec3(-1, -3, -1.5).normalize();
+    vec3 pointLig = vec3(50 , 78, 60);
 
-    #pragma omp parallel for schedule(dynamic, 1)  private(directColor, normalColor)    // OpenMP
+
+    // #pragma omp parallel for schedule(dynamic, 1)  private(directColor, normalColor)    // OpenMP
     for (unsigned short i = 0; i < height; ++i){
         for (unsigned short j = 0; j < width; ++j){
             double u = j * 1.0 / width;
@@ -303,11 +316,34 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
             Intersection intersection = scene.intersect(Ray(ro, rd));
             if (intersection.object) {
                 const Object &obj = *intersection.object;
-                vec3 N = obj.getNormal(ro + rd * intersection.t);
+                vec3 hit = ro + rd * intersection.t;
+                vec3 N = obj.getNormal(hit);
                 normalColor = vec3((N.x + 1)*0.5, (N.y + 1)*0.5, (N.z+1) * 0.25 + 0.5) * 255;
                 // normalColor = obj.c * 255;
-                directColor = obj.getDiffuse() * fmax(lig.dot(-N), 0) * 255;
+                vec3 ld = (pointLig - hit).normalize();
+                directColor = obj.getDiffuse() * fmax(ld.dot(N), 0) * 255;
                 // directColor = obj.getDiffuse() * 255;
+
+                // for (int k = 0; k < scene.objects.size(); ++k) {
+                //     const Object &ligObj = *scene.objects[k];
+                //     if (ligObj.getEmission().x + ligObj.getEmission().y + ligObj.getEmission().z > 0) {
+                //         vec3 ld = (ligObj. - hit).normalize();
+                //         Intersection shadow = scene.intersect(Ray(hit + ld, ld);
+                //         if (*shadow.object == ligObj){
+                            
+                //         }   
+                //         else{
+                //             directColor = directColor * 0.2; 
+                //         }     
+                //     }
+                // }
+                // Shadow
+                Intersection shadow = scene.intersect(Ray(hit + ld*0.01, ld));
+                double distToLight = (pointLig - hit).length();
+                if (shadow.object && shadow.t <= distToLight){
+                    directColor = directColor * clamp(3.8 * shadow.t/(distToLight), 0.0, 1.0); 
+                }
+
             }
 
             QRgb normalVal = qRgb(normalColor.x, normalColor.y, normalColor.z); // 0xffbd9527
@@ -340,6 +376,7 @@ QImage Raytracer::render(double &time) {
     #pragma omp parallel for schedule(dynamic, 1) private(r)       // OpenMP
     for (unsigned short i = 0; i < height; ++i){
         // fprintf(stderr, "\rRendering (%d spp) %5.2f%%", samps * gridSize * gridSize, 100.*i / (height - 1));
+        qDebug() << "Rendering " << "spp:" <<samps * gridSize * gridSize << " " << 100.*i / (height - 1) << '%';
         unsigned short Xi[3] = {0, 0, i*i * i};
         for (unsigned short j = 0; j < width; ++j){
             // unsigned int idx = i*width + j;
@@ -405,6 +442,8 @@ QImage Raytracer::render(double &time) {
 
     gettimeofday(&end, NULL);
     time = ((end.tv_sec  - start.tv_sec) * 1000000u + end.tv_usec - start.tv_usec) / 1.e6;
+
+    qDebug() << "Render time: " << time;
 
     // return c;
     return image;

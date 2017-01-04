@@ -21,11 +21,13 @@ Window::Window(QWidget *parent) :
  QMainWindow(parent) {
     width = 800, height = 600;
     resize(width, height);
+
+    
     
     setWindowTitle("Render View " + QString::number(width) + "x" + QString::number(height));
     // renderButton = new QPushButton("Render", this);
-    displayMode = 2;
-    sample = 4;
+    displayMode = 0;
+    samples = 4;
     // set size and location of the button
     // renderButton->setGeometry(QRect(QPoint(0, 0),
     // QSize(200, 50)));
@@ -59,7 +61,7 @@ Window::Window(QWidget *parent) :
     // connect(quit, SIGNAL(triggered()), qApp, SLOT(quit()));
 
     QLineEdit *sampleText = new QLineEdit();
-    sampleText->setText(QString::number(sample));
+    sampleText->setText(QString::number(samples));
     sampleText->setMaxLength(5);
     // textEdit->setGeometry(QRect(10, 560, 200, 30))
 
@@ -87,12 +89,21 @@ Window::Window(QWidget *parent) :
 
     connect(sampleText, SIGNAL(textEdited(const QString&)),
         this, SLOT(changeSample(const QString&)));
-    
+
+    tracer = new Raytracer(width, height, samples);
+
+    normalImage = QImage(width, height, QImage::Format_RGB32);
+    directImage = QImage(width, height, QImage::Format_RGB32);
+    indirectImage = QImage(width, height, QImage::Format_RGB32);
+    double directTime;
+    tracer->renderDirect(directTime, directImage, normalImage);
+    displayMode = 2;
+    update();
 
  }
 void Window::changeSample(const QString& _text){
     debugLabel->setText(_text);
-    sample = _text.toInt();
+    samples = _text.toInt();
 }
 
 void Window::saveImage(){
@@ -120,15 +131,17 @@ void Window::switchChannel(const QString& _channel){
 
 void Window::render(){
     statusBar()->showMessage("Rendering...");
-    QPainter painter(this);
-    Raytracer tracer(width, height, sample);
+    
+    // Raytracer tracer(width, height, samples);
+    // double directTime;
+    // tracer->renderDirect(directTime, directImage, normalImage);
+    tracer->samples = samples;
     double indirectTime;
-    indirectImage = tracer.render(indirectTime);
+    indirectImage = tracer->render(indirectTime);
 
-    double directTime;
-    normalImage = QImage(width, height, QImage::Format_RGB32);
-    directImage = QImage(width, height, QImage::Format_RGB32);
-    tracer.renderDirect(directTime, directImage, normalImage);
+    
+    
+    
     // normalImage.fill(qRgb(255, 0, 0));
 
     // renderButton->setText("Render Time: " + QString::number(time));

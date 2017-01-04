@@ -25,13 +25,13 @@ class Window : public QMainWindow
     void paintEvent(QPaintEvent *event);
     int width;
     int height;
-    int sample;
+    int samples;
     QImage directImage;
     QImage indirectImage;
     QImage normalImage;
     QLabel *debugLabel;
     QStatusBar *status;
-
+    Raytracer *tracer;
 private slots:
     void render();
     void saveImage();
