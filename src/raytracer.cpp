@@ -192,8 +192,6 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     height = _height;
     samples = _samples;
 
-
-
     Mesh *mesh = new Mesh();
     ObjLoader *loader = new ObjLoader();
     // loader->loadObj("teapot.obj", mesh);
@@ -226,6 +224,8 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     Transform t1 = Transform();
     t1.setTranslate(4, 2, 1);
     t1.move(1, 1, 1);
+    t1.rotateX(M_PI/6);
+    t1.rotateY(M_PI/6);
     t1.rotateZ(M_PI/6);
     t1.setScale(2, 3, 2);
     // t1.rotateY(M_PI/6);
@@ -239,6 +239,7 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     // qDebug() << "dir:" << dir2;
     qDebug() << "pos:" << t1.getPosition();
     qDebug() << "scale:" << t1.getScale();
+    qDebug() << "rotation:" << t1.getRotateX() << t1.getRotateY() << t1.getRotateZ();
 
     // mat4 m3 = m1 * m2;
     // mat3 m3;
