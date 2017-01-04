@@ -4,6 +4,8 @@
 #include "raytracer.h"
 // #endif
 
+
+
 inline mat3 setCamera( vec3 ro, vec3 ta, float cr )
 {
   vec3 cw = (ta - ro).normalized();
@@ -209,17 +211,45 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     //     qDebug() << "";
     // }
     // mesh->scale(0.8, 0.8, 0.8);
-    mesh->scale(0.5, 0.5, 0.5);
-    mesh->rotateY(M_PI*0.2);
+
+    mat4 m1(1, 0, 0, 1,
+            0, 1, 0, 1,
+            0, 0, 1, 1,
+            0, 0, 0 , 1);
+
+    mat4 m2(1, 0, 0, -2,
+            0, 2, 0, 3,
+            0, 0, 1, 1,
+            0, 0, 0 , 1);
+
+    vec4 dir(1, 0, 0, 0);
+    Transform t1 = Transform();
+    t1.setTranslate(4, 2, 1);
+    t1.move(1, 1, 1);
+    t1.rotateZ(M_PI/6);
+    // t1.rotateY(M_PI/6);
+    qDebug() << t1.rotation.toMatrix();
+
     
+    vec4 dir2 = t1.getTransformMatrix() * dir;
+    // if (dir2.x < eps){
+    //     dir2.x = 0;
+    // }
+    qDebug() << "dir:" << dir2;
+
+    // mat4 m3 = m1 * m2;
+    // mat3 m3;
+    // qDebug() << m1*m2;
+    mesh->scale(0.5, 0.5, 0.5);
+    mesh->rotateY(M_PI*0.2); 
     mesh->translate(45, 20, 70);
     qDebug() << "vertices count: " << mesh->faces.size();
 
-    Transform *t1 = new Transform();
-    t1->setPosition(0, 0, 0);
-    qDebug() << "position: " << t1->position;
-    t1->translate(10,10,10);
-    qDebug() << "position: " << t1->position;
+    // Transform *t1 = new Transform();
+    // t1->setPosition(0, 0, 0);
+    // qDebug() << "position: " << t1->position;
+    // t1->translate(10,10,10);
+    // qDebug() << "position: " << t1->position;
     // mesh->add(new Triangle(vec3(30, 20, 60), vec3(50, 50, 60),  vec3(80, 10, 80),       vec3(), vec3(1, 1, 1)*.999, DIFF));
     // mesh->add(new Triangle(vec3(30, 20, 60), vec3(50, 50, 60),  vec3(80, 10, 80),       vec3(), vec3(1, 1, 1)*.999, DIFF));
 

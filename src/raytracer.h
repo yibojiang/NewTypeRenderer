@@ -125,7 +125,7 @@ struct mat3{
             for (int j = 0; j < 3; ++j){
                 double sum(0);
                 for (int k = 0; k < 3; ++k){
-                    sum+= cols[k][i] *  b.cols[j][k]; 
+                    sum+= cols[i][j] *  b.cols[k][j]; 
                 }
 
                 c.cols[i][j] = sum;
@@ -162,23 +162,35 @@ struct mat4{
     }
 
 
-    vec4 operator*(vec4 &b){
+    // vec4 operator*(vec4 &b){
+    friend vec4 operator*(mat4 a, const vec4& b){
         vec4 c;
-        c.x = b.x * cols[0][0] + b.y * cols[0][1] + b.z * cols[0][2] + b.w * cols[0][3];
-        c.y = b.x * cols[1][0] + b.y * cols[1][1] + b.z * cols[1][2] + b.w * cols[1][3];
-        c.z = b.x * cols[2][0] + b.y * cols[2][1] + b.z * cols[2][2] + b.w * cols[2][3];
-        c.w = b.x * cols[3][0] + b.y * cols[3][1] + b.z * cols[3][2] + b.w * cols[3][3];
+        c.x = b.x * a.cols[0][0] + b.y * a.cols[0][1] + b.z * a.cols[0][2] + b.w * a.cols[0][3];
+        c.y = b.x * a.cols[1][0] + b.y * a.cols[1][1] + b.z * a.cols[1][2] + b.w * a.cols[1][3];
+        c.z = b.x * a.cols[2][0] + b.y * a.cols[2][1] + b.z * a.cols[2][2] + b.w * a.cols[2][3];
+        c.w = b.x * a.cols[3][0] + b.y * a.cols[3][1] + b.z * a.cols[3][2] + b.w * a.cols[3][3];
         
         return c;
     }
 
-    mat4 operator*(mat4 &b){
+    friend mat4 operator+(mat4 a, const mat4& b){
+        mat4 c;
+        for (int i = 0; i < 4; ++i){
+            for (int j = 0; j < 4; ++j){
+                c.cols[i][j] = a.cols[i][j] + b.cols[i][j];
+            }
+        }
+        return c;
+    }
+
+    // mat4 operator*(mat4 &b){
+    friend mat4 operator*(mat4 a, const mat4& b){
         mat4 c;
         for (int i = 0; i < 4; ++i){
             for (int j = 0; j < 4; ++j){
                 double sum(0);
                 for (int k = 0; k < 4; ++k){
-                    sum+= cols[k][i] *  b.cols[j][k]; 
+                    sum+= a.cols[i][k] *  b.cols[k][j]; 
                 }
 
                 c.cols[i][j] = sum;
@@ -202,7 +214,7 @@ struct mat4{
         return stream;
     }  
 
-    friend QDebug &operator<< (QDebug &stream, const mat4 &a) {
+    friend QDebug operator<< (QDebug stream, const mat4 &a) {
         stream << '[';
         for (int i = 0; i < 4; ++i){
             for (int j = 0; j < 4; ++j){
@@ -225,34 +237,137 @@ struct Ray {
 
 enum Refl_t { DIFF, SPEC, REFR };  // material types, used in radiance()
 
+
+
+
 struct Quaternion{
     double x, y, z, w;
-};
-
-class Transform {
-public:
-    vec4 position;
-    Quaternion rotation;
-    vec3 scale;
-
-    // double getRotateX() {
-
-    // }
-    // void scale()
-    void setPosition(double x, double y, double z){
-        position = vec4(x, y, z);
+    Quaternion() :x(0), y(0), z(0), w(1) {}
+    Quaternion(double _x, double _y, double _z, double _w) 
+        :x(_x), y(_y), z(_z), w(_w){}
+    
+    // Axis had to be normalized.
+    Quaternion(const vec3 axis, const double angle){
+      double half_angle = angle / 2.0;
+      x = axis.x * sin(half_angle);
+      y = axis.y * sin(half_angle);
+      z = axis.z * sin(half_angle);
+      w = cos(half_angle);
     }
 
-    void translate(const double tx, const double ty, const double tz) {
+    Quaternion invertQuaternion(const Quaternion &q){
+      return Quaternion(-q.x, -q.y, -q.z, q.w);
+    }
+
+    friend Quaternion operator*(Quaternion q1, const Quaternion& q2){
+        Quaternion qr;
+        qr.x = (q1.w * q2.x) + (q1.x * q2.w) + (q1.y * q2.z) - (q1.z * q2.y);
+        qr.y = (q1.w * q2.y) - (q1.x * q2.z) + (q1.y * q2.w) + (q1.z * q2.x);
+        qr.z = (q1.w * q2.z) + (q1.x * q2.y) - (q1.y * q2.x) + (q1.z * q2.w);
+        qr.w = (q1.w * q2.w) - (q1.x * q2.x) - (q1.y * q2.y) - (q1.z * q2.z);
+        return qr;
+    }
+
+    mat4 toMatrix(){
+        return mat4(
+        1 - 2*y*y - 2*z*z,   2*x*y - 2*z*w,   2*x*z + 2*y*w,       0,
+        2*x*y + 2*z*w,         1 - 2*x*x - 2*z*z,   2*y*z - 2*x*w,       0,
+        2*x*z - 2*y*w,         2*y*z + 2*x*w,   1 - 2*x*x - 2*y*y,   0,
+        0,                         0,                   0,                       1);
+    }
+
+    friend QDebug operator<< (QDebug stream, const Quaternion &a) {
+        stream << a.x << ',' << a.y << ',' << a.z << ',' << a.w;
+        return stream;
+    }
+                     
+    // vec4 operator*(const vec4 &q2) const{ 
+    //     vec4 qr;
+    //     qr.x = (w * q2.x) + (x * q2.w) + (y * q2.z) - (z * q2.y);
+    //     qr.y = (w * q2.y) - (x * q2.z) + (y * q2.w) + (z * q2.x);
+    //     qr.z = (w * q2.z) + (x * q2.y) - (y * q2.x) + (z * q2.w);
+    //     qr.w = (w * q2.w) - (x * q2.x) - (y * q2.y) - (z * q2.z);
+    //     return qr;
+    // }
+};
+// Quaternion::identity(0,0,0,1);
+class Transform {
+public:
+    mat4 translate;
+    Quaternion rotation;
+    mat4 scale;
+
+    mat4 getTransformMatrix(){
+        // return vec3(position.x, position.y, position.z);
+        return translate * scale * rotation.toMatrix();
+    }
+
+    void setTranslate(double tx, double ty, double tz){
+        translate = mat4(1, 0, 0, tx,
+                         0, 1, 0, ty,
+                         0, 0, 1, tz,
+                         0, 0, 0 , 1);
+    }
+
+    void setScale(double sx, double sy, double sz){
+        scale = mat4(sx, 0,  0,  0,
+                     0,  sy, 0,  0,
+                     0,  0,  sz, 0,
+                     0,  0,  0,  1);
+    }
+
+    void move(const double tx, const double ty, const double tz){
         mat4 mt(1, 0, 0, tx,
                 0, 1, 0, ty,
                 0, 0, 1, tz,
                 0, 0, 0, 1);
-        // qDebug() << "translate: \n" << mt;
-        position = mt * position;
+        translate = mt * translate;
     }
 
-    Transform() {}
+    void setRotation(Quaternion q){
+        rotation = q;
+    }
+
+    void rotateX(double rx){
+        // mat4 mt(1, 0,       0,          0,
+        //         0, cos(rx), -sin(rx),   0, 
+        //         0, sin(rx), cos(rx),    0, 
+        //         0, 0,       0,          0); 
+        Quaternion q(vec3(1, 0, 0), rx);
+        rotation = q * rotation;
+    }
+
+    void rotateY(double ry){
+        // mat4 mt(cos(ry), 0,  -sin(ry),  0,
+        //         0,       1,  0,         0,
+        //         sin(ry), 0,  cos(ry),   0,
+        //         0,       0,  0,         0);
+        Quaternion q(vec3(0, -1, 0), ry);
+        rotation = q * rotation;
+    }
+
+    void rotateZ(double rz){
+        // mat4 mt(cos(rz), -sin(rz), 0,   0,
+        //         sin(rz), cos(rz),  0,   0,
+        //         0,       0,        1,   0,
+        //         0,       0,        0,   1);
+        Quaternion q(vec3(0, 0, 1), rz);
+        rotation = q * rotation;
+    }
+
+    Transform() {
+        translate = mat4 (1, 0, 0, 0,
+                        0, 1, 0, 0,
+                        0, 0, 1, 0,
+                        0, 0, 0, 1);
+        rotation = Quaternion(0, 0, 0, 1);
+        scale = mat4(1, 0,  0,  0,
+                     0,  1, 0,  0,
+                     0,  0,  1, 0,
+                     0,  0,  0,  1);
+        
+        
+    }
     ~Transform() {}
 };
 
