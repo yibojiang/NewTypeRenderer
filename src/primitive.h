@@ -3,6 +3,7 @@
 const double inf=1e9;
 const double eps=1e-6;
 
+
 struct Ray {
     vec3 origin;
     vec3 dir;
@@ -12,34 +13,38 @@ struct Ray {
 
 
 enum Refl_t { DIFF, SPEC, REFR };  // material types, used in radiance()
+
+// class Transform;
+
 class Object {
 protected:
-    vec3 p; 
-    vec3 e;
-    vec3 c; // position, emission, color
+    vec3 emission;
+    vec3 color;
     Refl_t refl; // reflection type (DIFFuse, SPECular, REFRactive)
 public:
-    Transform transform;
+    // Transform transform;
     Object(){}
     virtual ~Object(){}
-    
     virtual vec3 getNormal(const vec3 &) const{ return vec3(1);}
     virtual double intersect(const Ray &){ return 0;}
 
     virtual vec3 getDiffuse() const{
-        return c;
+        return color;
     }
 
     virtual vec3 getEmission() const{
-        return e;
+        return emission;
     }
 
     virtual Refl_t getReflectionType() const{
         return refl;
     }
+
+    virtual void updateTransformMatrix(const mat4&){
+
+    }
     // virtual vec3 debug(vec3 _pos) const{return vec3(0);}
 };
-
 
 
 class Plane: public Object{
@@ -51,8 +56,8 @@ public:
     Plane(vec3 _nor, double _off, vec3 _e, vec3 _c, Refl_t _refl){
         normal = _nor.normalize();
         off = _off;
-        e = _e;
-        c = _c;
+        emission = _e;
+        color = _c;
         refl = _refl;
     }
 
@@ -63,6 +68,18 @@ public:
 
     vec3 getNormal(const vec3 &) const{
         return normal;
+    }
+
+    void updateTransformMatrix(const mat4& m){
+        vec4 normalDir = vec4(normal, 0);
+        normalDir = m * normalDir;
+        normalDir.normalize();
+        normal = vec3(normalDir.x, normalDir.y, normalDir.z);
+
+        vec4 origin = vec4(normal*off, 1);
+        origin = m * origin;
+        vec3 origin3 = vec3(origin.x, origin.y, origin.z);
+        off = origin3.dot(normal);
     }
 
     // virtual vec3 debug(vec3 _pos) const{return vec3(1);}
@@ -76,8 +93,8 @@ public:
     Sphere(double _rad, vec3 _p, vec3 _e, vec3 _c, Refl_t _refl){
         rad = _rad;
         center = _p;
-        e = _e;
-        c = _c;
+        emission = _e;
+        color = _c;
         refl = _refl;
     }
 
@@ -93,6 +110,12 @@ public:
         return (_pos - center)/rad;
     }
 
+    void updateTransformMatrix(const mat4& m){
+        vec4 pos = vec4(center, 1);
+        pos = m * pos;
+        center = vec3(pos.x, pos.y, pos.z);
+    }
+
     // virtual vec3 debug(vec3 _pos) const{return vec3(1);}
 };
 
@@ -106,8 +129,8 @@ public:
         center = _center;
         size = _size;
         bounds[0] = center - _size * 0.5, bounds[1] = center + _size * 0.5; 
-        e = _e;
-        c = _c;
+        emission = _e;
+        color = _c;
         refl = _refl;
     }
 
@@ -180,6 +203,11 @@ public:
         return normal;
        
     }
+
+    // TODO
+    // virtual void updateTransform(Transform& transform){
+
+    // }
 };
  
 class Triangle : public Object{
@@ -194,8 +222,8 @@ public:
 
 
     Triangle(vec3 _p1, vec3 _p2, vec3 _p3, vec3 _e=vec3(0,0,0), vec3 _c=vec3(1,1,1), Refl_t _refl=DIFF) : p1(_p1), p2(_p2), p3(_p3) {
-        e = _e;
-        c = _c;
+        emission = _e;
+        color = _c;
         refl = _refl;
         u = p2 - p1;
         v = p3 - p1;
@@ -276,7 +304,6 @@ public:
 
         return tt;
     }
-    
 };
 
 class Face
@@ -323,6 +350,20 @@ public:
     ~Mesh(){
         for (uint32_t i = 0; i < faces.size(); ++i){
             delete faces[i];
+        }
+    }
+
+    void updateTransformMatrix(const mat4& m){
+        for (uint32_t i = 0; i < faces.size(); ++i){
+            vec4 v1 = vec4(faces[i]->v1, 1);
+            vec4 v2 = vec4(faces[i]->v2, 1);
+            vec4 v3 = vec4(faces[i]->v3, 1);
+            v1 = m * v1;
+            v2 = m * v2;
+            v3 = m * v3;
+            faces[i]->v1 = vec3(v1.x, v1.y, v1.z);
+            faces[i]->v2 = vec3(v2.x, v2.y, v2.z);
+            faces[i]->v3 = vec3(v3.x, v3.y, v3.z);
         }
     }
 
@@ -397,6 +438,5 @@ public:
             faces[i]->v2 = mt * faces[i]->v2;
             faces[i]->v3 = mt * faces[i]->v3;
         }
-    }
-    
+    }  
 };

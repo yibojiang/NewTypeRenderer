@@ -1,4 +1,7 @@
 #pragma once
+#include <math.h>
+#include <QDebug>
+#include <iostream>
 struct vec2 {
     double x, y;
     vec2(double _x=0, double _y=0){ x = _x; y = _y; }

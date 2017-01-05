@@ -241,14 +241,14 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     qDebug() << "scale:" << t1.getScale();
     qDebug() << "rotation:" << t1.getRotateX() << t1.getRotateY() << t1.getRotateZ();
 
-    // mat4 m3 = m1 * m2;
-    // mat3 m3;
-    // qDebug() << m1*m2;
-    mesh->scale(0.5, 0.5, 0.5);
-    mesh->rotateY(M_PI*0.2); 
-    mesh->translate(45, 20, 70);
-    qDebug() << "vertices count: " << mesh->faces.size();
+    
+    // mesh->scale(0.5, 0.5, 0.5);
+    // mesh->rotateY(M_PI*0.2); 
+    // mesh->translate(45, 20, 70);
+    // qDebug() << "vertices count: " << mesh->faces.size();
 
+
+    // qDebug() << "after obj pos:" << tobj->getPosition();
     // Transform *t1 = new Transform();
     // t1->setPosition(0, 0, 0);
     // qDebug() << "position: " << t1->position;
@@ -380,11 +380,9 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
 
             }
 
-            QRgb normalVal = qRgb(normalColor.x, normalColor.y, normalColor.z); // 0xffbd9527
-            normalImage.setPixel(j, i, normalVal);
-
-            QRgb directVal = qRgb(directColor.x, directColor.y, directColor.z); // 0xffbd9527
-            directImage.setPixel(j, i, directVal);
+            
+            normalImage.setPixel(j, i, qRgb(normalColor.x, normalColor.y, normalColor.z));
+            directImage.setPixel(j, i, qRgb(directColor.x, directColor.y, directColor.z));
             
         }
     }
@@ -437,19 +435,12 @@ QImage Raytracer::render(double &time) {
                 
 
                 color = color + vec3(clamp(r.x), clamp(r.y), clamp(r.z)) * .25;
-                // c[idx] = gammaCorrect(color) * 255;
-                vec3 correct = gammaCorrect(color) * 255;
-                // color = color + r * 0.25;
-                // color +=vec3(clamp(r.x), clamp(r.y), clamp(r.z));
-                // vec3 correctColor = gammaCorrect(color);
-                // color = vec3(clamp(correctColor.x), clamp(correctColor.y), clamp(correctColor.z)) * 255;
-                // c[idx] = color;
-                // QRgb value;
 
-                // value = qRgb(189, 149, 39); // 0xffbd9527
-                QRgb value;
-                value = qRgb(correct.x, correct.y, correct.z); // 0xffbd9527
-                image.setPixel(j, i, value);
+                vec3 correct = gammaCorrect(color) * 255;
+
+                
+                // QRgb value = qRgb(correct.x, correct.y, correct.z); // 0xffbd9527
+                image.setPixel(j, i, qRgb(correct.x, correct.y, correct.z));
 
                 // value = qRgb(122, 163, 39); // 0xff7aa327
                 // image.setPixel(0, 1, value);

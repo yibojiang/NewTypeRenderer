@@ -1,105 +1,52 @@
 #pragma once
-
 #include "vec.h"
+
+class Object;
 class Transform {
 public:
+    Transform *parent;
+    std::vector<Transform*> children;
+    
+    Object *object;
+
     mat4 translate;
     Quaternion rotation;
     mat4 scale;
 
-    vec3 getPosition(){
-        vec4 p(0, 0, 0, 1);
-        p = translate * p;
-        return vec3(p.x, p.y, p.z);
-    }
+    void addObject(Object*);
 
-    vec3 getScale(){
-        vec4 s(1, 1, 1, 1);
-        s = scale * s;
-        return vec3(s.x, s.y, s.z);   
-    }
+    Transform* addChild(vec3&);
 
-    mat4 getTransformMatrix(){
-        return translate * rotation.toMatrix() * scale;
-    }
+    void removeChild(Transform*);        
 
-    void setTranslate(double tx, double ty, double tz){
-        translate = mat4(1, 0, 0, tx,
-                         0, 1, 0, ty,
-                         0, 0, 1, tz,
-                         0, 0, 0 , 1);
-    }
+    vec3 getPosition();
 
-    void setScale(double sx, double sy, double sz){
-        scale = mat4(sx, 0,  0,  0,
-                     0,  sy, 0,  0,
-                     0,  0,  sz, 0,
-                     0,  0,  0,  1);
-    }
+    vec3 getScale();
 
-    void setRotation(Quaternion q){
-        rotation = q;
-    }
+    mat4 getTransformMatrix();
 
-    void move(const double tx, const double ty, const double tz){
-        mat4 mt(1, 0, 0, tx,
-                0, 1, 0, ty,
-                0, 0, 1, tz,
-                0, 0, 0, 1);
-        translate = mt * translate;
-    }
+    void setTranslate(double tx, double ty, double tz);
 
-    double getRotateX(){
-        double ysqr = rotation.y * rotation.y;
-        // roll (x-axis rotation)
-        double t0 = +2.0f * (rotation.w * rotation.x + rotation.y * rotation.z);
-        double t1 = +1.0f - 2.0f * (rotation.x * rotation.x + ysqr);
-        return atan2(t0, t1);
-    }
+    void setScale(double sx, double sy, double sz);
 
-    double getRotateY(){
-        // pitch (y-axis rotation)
-        double t2 = +2.0f * (rotation.w * rotation.y - rotation.z * rotation.x);
-        t2 = t2 > 1.0f ? 1.0f : t2;
-        t2 = t2 < -1.0f ? -1.0f : t2;
-        return asin(t2);
-    }
+    void setRotation(Quaternion q);
 
-    double getRotateZ(){
-        double ysqr = rotation.y * rotation.y;
-        // yaw (z-axis rotation)
-        double t3 = +2.0f * (rotation.w * rotation.z + rotation.x *rotation.y);
-        double t4 = +1.0f - 2.0f * (ysqr + rotation.z * rotation.z);  
-        return atan2(t3, t4);
-    }
+    void move(const double tx, const double ty, const double tz);
 
-    void rotateX(double rx){
-        Quaternion q(vec3(1, 0, 0), rx);
-        rotation = q * rotation;
-    }
+    double getRotateX();
 
-    void rotateY(double ry){
-        Quaternion q(vec3(0, 1, 0), ry);
-        rotation = q * rotation;
-    }
+    double getRotateY();
 
-    void rotateZ(double rz){
-        Quaternion q(vec3(0, 0, 1), rz);
-        rotation = q * rotation;
-    }
+    double getRotateZ();
 
-    Transform() {
-        translate = mat4 (1, 0, 0, 0,
-                        0, 1, 0, 0,
-                        0, 0, 1, 0,
-                        0, 0, 0, 1);
-        rotation = Quaternion(0, 0, 0, 1);
-        scale = mat4(1, 0,  0,  0,
-                     0,  1, 0,  0,
-                     0,  0,  1, 0,
-                     0,  0,  0,  1);
-    }
+    void rotateX(double rx);
 
+    void rotateY(double ry);
+
+    void rotateZ(double rz);
+
+    Transform();
+
+    ~Transform();
     
-    ~Transform() {}
 };

@@ -8,9 +8,10 @@
 #include <QImage>
 #include <QDebug>
 #include <QCoreApplication>
-#include <QDir>
+
 #include "vec.h"
 #include "primitive.h"
+#include "transform.h"
 #include "modelloader.h"
 
 
@@ -26,8 +27,12 @@ class Intersection {
 class Scene
 {
 public:
+    Transform *root;
     std::vector<Object*> objects;
-    Scene(){}
+    Scene(){
+        root = new Transform();
+
+    }
     void add(Object* object) {
         objects.push_back(object);
     }
@@ -58,6 +63,18 @@ public:
         // printf("destroy scene\n");
         for (uint32_t i = 0; i < objects.size(); ++i) {
             delete objects[i];
+        }
+    }
+
+    void updateTransform(Transform* transform, mat4 mt) {
+        mt = mt * transform->getTransformMatrix();
+
+        if (transform->object){
+            transform->object->updateTransformMatrix(mt);
+        }
+
+        for (unsigned int i = 0; i < transform->children.size(); ++i){
+            updateTransform(transform->children[i], mt);
         }
     }
 
