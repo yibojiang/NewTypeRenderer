@@ -15,6 +15,8 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QStatusBar>
+#include <QCheckBox>
+#include <QColor>
 
 class Window : public QMainWindow
 {
@@ -29,14 +31,20 @@ class Window : public QMainWindow
     QImage directImage;
     QImage indirectImage;
     QImage normalImage;
+    QImage postImage;
     QLabel *debugLabel;
     QStatusBar *status;
     Raytracer *tracer;
+    QCheckBox *gammaCheckbox;
 private slots:
     void render();
     void saveImage();
     void switchChannel(const QString&);
     void changeSample(const QString&);
+    void changeResolutionWidth(const QString&);
+    void changeResolutionHeight(const QString&);
+    void gammaState(int state);
+    QImage postProcess(const QImage &image);
 private:
     int displayMode; // 0 - render, 1 - normal
 

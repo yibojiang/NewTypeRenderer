@@ -96,9 +96,11 @@ public:
     ~Raytracer();
     vec3 tracing(const Ray &ray, int depth, unsigned short *Xi);
     vec3 render_pixel(unsigned short i, unsigned short j, unsigned short *Xi);
-    QImage render(double &time) ;
+    // QImage render(double &time) ;
+    void renderIndirect(double &time, QImage &image);
     void renderDirect(double &time, QImage &directImage, QImage &normalImage);
     unsigned short width;
     unsigned short height;
+    void setResolution(const int &width, const int &height);
 };
 

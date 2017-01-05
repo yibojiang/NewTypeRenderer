@@ -34,7 +34,7 @@ struct vec3 {
     vec3& normalize(){ return *this = *this/length(); }
     vec3 normalized() { return vec3(*this/length()); }
     vec3 cross(vec3 &b) const { return vec3(y * b.z - z * b.y, z * b.x - x * b.z, x * b.y - y * b.x); }
-    vec3 reflect(vec3 &normal) const { return normal * (dot(normal) * 2) - *this; }
+    vec3 reflect(vec3 &normal) const { return *this - normal * (dot(normal) * 2); }
     friend std::ostream &operator<< (std::ostream &stream, const vec3 &v) {
         stream << '(' << v.x << ',' << v.y << ',' << v.z << ')';
         return stream;

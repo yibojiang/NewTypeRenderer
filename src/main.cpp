@@ -1,21 +1,12 @@
 
-// #include <stdlib.h> 
-// #include <stdio.h> 
-// #include <iostream>
-// #include <vector>
 #include <QApplication>
 #include "raytracer.h"
 #include <string>
-// #include <QtGui>
-// #include <random>
-// #include <cmath>
-// #include <vector>
-// using namespace std;
-
 #include "window.h"
 #include <QBuffer>
 #include <QByteArray>
 #include <QDebug>
+#include <QFileDialog>
 
 Window::Window(QWidget *parent) :
  QMainWindow(parent) {
@@ -43,6 +34,7 @@ Window::Window(QWidget *parent) :
 
     connect(save, SIGNAL(triggered()), this, SLOT(saveImage()));
 
+    
 
     QToolBar *toolbar = addToolBar("main toolbar");
     QPixmap renderpix("new.png");
@@ -63,7 +55,15 @@ Window::Window(QWidget *parent) :
     QLineEdit *sampleText = new QLineEdit();
     sampleText->setText(QString::number(samples));
     sampleText->setMaxLength(5);
-    // textEdit->setGeometry(QRect(10, 560, 200, 30))
+    // sampleText->setGeometry(QRect(10, 560, 200, 30));
+
+    QLineEdit *widthText = new QLineEdit();
+    widthText->setText(QString::number(width));
+    widthText->setMaxLength(5);
+
+    QLineEdit *heightText = new QLineEdit();
+    heightText->setText(QString::number(height));
+    heightText->setMaxLength(5);
 
     QComboBox *channelBox = new QComboBox;
     channelBox->addItem(tr("InDirect"));
@@ -72,7 +72,17 @@ Window::Window(QWidget *parent) :
     
 
     toolbar->addWidget(channelBox);
+    toolbar->addWidget(new QLabel("Samples: ", this));
     toolbar->addWidget(sampleText);
+    toolbar->addWidget(new QLabel("Resolutions: ", this));
+    toolbar->addWidget(widthText);
+    toolbar->addWidget(new QLabel("x", this));
+    toolbar->addWidget(heightText);
+
+    gammaCheckbox = new QCheckBox("Gamma", this);
+    toolbar->addWidget(gammaCheckbox);
+    gammaCheckbox->setCheckState(Qt::Checked);
+
 
     debugLabel = new QLabel(this);
     debugLabel->setGeometry(QRect(750, 560, 200, 30));
@@ -90,6 +100,15 @@ Window::Window(QWidget *parent) :
     connect(sampleText, SIGNAL(textEdited(const QString&)),
         this, SLOT(changeSample(const QString&)));
 
+    connect(widthText, SIGNAL(textEdited(const QString&)),
+        this, SLOT(changeResolutionWidth(const QString&)));
+
+    connect(heightText, SIGNAL(textEdited(const QString&)),
+        this, SLOT(changeResolutionHeight(const QString&)));
+
+    connect(gammaCheckbox, SIGNAL(stateChanged(int)),
+        this, SLOT(gammaState(int)));
+
     tracer = new Raytracer(width, height, samples);
 
     normalImage = QImage(width, height, QImage::Format_RGB32);
@@ -97,7 +116,7 @@ Window::Window(QWidget *parent) :
     indirectImage = QImage(width, height, QImage::Format_RGB32);
     double directTime;
     tracer->renderDirect(directTime, directImage, normalImage);
-    displayMode = 2;
+    // displayMode = 2;
     update();
 
  }
@@ -106,11 +125,39 @@ void Window::changeSample(const QString& _text){
     samples = _text.toInt();
 }
 
+void Window::changeResolutionWidth(const QString& _text){
+    width = _text.toInt();
+}
+
+void Window::changeResolutionHeight(const QString& _text){
+    height = _text.toInt();
+}
+
+void Window::gammaState(int){
+    // qDebug() << state;
+    // if (state == Qt::Unchecked){
+
+    // }
+    // else if (state == Qt::Checked){
+
+    // }
+    postImage = postProcess(indirectImage);
+    update();
+}
+
 void Window::saveImage(){
+
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
+                           "~/",
+                           tr("Images (*.png)"));
+    QFile file(fileName);
+    file.open( QIODevice::WriteOnly );
     QByteArray ba;
     QBuffer buffer(&ba);
     buffer.open(QIODevice::WriteOnly);
     indirectImage.save(&buffer, "PNG"); // writes image into ba in PNG format
+    file.write(ba);
+    file.close();
     debugLabel->setText("saved");
 }
 
@@ -131,24 +178,13 @@ void Window::switchChannel(const QString& _channel){
 
 void Window::render(){
     statusBar()->showMessage("Rendering...");
-    
-    // Raytracer tracer(width, height, samples);
-    // double directTime;
-    // tracer->renderDirect(directTime, directImage, normalImage);
+    resize(width, height);
+    tracer->setResolution(width, height);
     tracer->samples = samples;
     double indirectTime;
-    indirectImage = tracer->render(indirectTime);
-
-    
-    
-    
-    // normalImage.fill(qRgb(255, 0, 0));
-
-    // renderButton->setText("Render Time: " + QString::number(time));
-    
-    
+    tracer->renderIndirect(indirectTime, indirectImage);
+    postImage = postProcess(indirectImage);
     update();
-    // debugLabel->setText("time: " + QString::number(indirectTime));
     statusBar()->showMessage("time: " + QString::number(indirectTime));
     
 
@@ -163,19 +199,39 @@ void Window::render(){
     // }
 }
 
+QImage Window::postProcess(const QImage &image){
+    QImage reuslt = QImage(image.width(), image.height(), QImage::Format_RGB32);
+    if (gammaCheckbox->checkState() == Qt::Unchecked){
+        reuslt = image;
+    }
+    else if (gammaCheckbox->checkState() == Qt::Checked){
+        for (int i = 0; i < image.width(); ++i){
+            for (int j = 0; j < image.height(); ++j){
+                QColor color(image.pixel(i, j));
+                int r = 255*pow(color.red()*1.0/255, 1.0/2.2);
+                int g = 255*pow(color.green()*1.0/255, 1.0/2.2);
+                int b = 255*pow(color.blue()*1.0/255, 1.0/2.2);
+                reuslt.setPixel(i, j, qRgb(r, g, b));
+            }
+        }
+        qDebug()<<"gamma correct on";
+    }
+    return reuslt;
+}
+
 void Window::paintEvent(QPaintEvent *){
 
     QPainter painter(this);
     QRectF target(0.0, 0.0, 800.0, 600.0);
     QRectF source(0.0, 0.0, 800.0, 600.0);
     if (displayMode == 0){
-        painter.drawImage(target, indirectImage, source);    
+        painter.drawImage(target, postImage, source);    
     }
     else if (displayMode == 1){
         painter.drawImage(target, normalImage, source);    
     }
     else if (displayMode == 2){
-        painter.drawImage(target, directImage, source);   
+        painter.drawImage(target, postImage, source);   
     }
     
     // if (images){
