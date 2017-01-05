@@ -69,14 +69,22 @@ Window::Window(QWidget *parent) :
     channelBox->addItem(tr("InDirect"));
     channelBox->addItem(tr("Normal"));
     channelBox->addItem(tr("Direct"));
+
+    rgbBox = new QComboBox;
+    rgbBox->addItem(tr("RGB"));
+    rgbBox->addItem(tr("R"));
+    rgbBox->addItem(tr("G"));
+    rgbBox->addItem(tr("B"));
+    rgbBox->addItem(tr("Grey"));
     
 
     toolbar->addWidget(channelBox);
+    toolbar->addWidget(rgbBox);
     toolbar->addWidget(new QLabel("Samples: ", this));
     toolbar->addWidget(sampleText);
-    toolbar->addWidget(new QLabel("Resolutions: ", this));
+    toolbar->addWidget(new QLabel("w: ", this));
     toolbar->addWidget(widthText);
-    toolbar->addWidget(new QLabel("x", this));
+    toolbar->addWidget(new QLabel("h", this));
     toolbar->addWidget(heightText);
 
     gammaCheckbox = new QCheckBox("Gamma", this);
@@ -96,6 +104,9 @@ Window::Window(QWidget *parent) :
 
     connect(channelBox, SIGNAL(currentIndexChanged(const QString&)),
         this, SLOT(switchChannel(const QString&)));
+
+    connect(rgbBox, SIGNAL(currentIndexChanged(const QString&)),
+        this, SLOT(switchRGBChannel(const QString&)));
 
     connect(sampleText, SIGNAL(textEdited(const QString&)),
         this, SLOT(changeSample(const QString&)));
@@ -134,13 +145,6 @@ void Window::changeResolutionHeight(const QString& _text){
 }
 
 void Window::gammaState(int){
-    // qDebug() << state;
-    // if (state == Qt::Unchecked){
-
-    // }
-    // else if (state == Qt::Checked){
-
-    // }
     postImage = postProcess(indirectImage);
     update();
 }
@@ -176,11 +180,20 @@ void Window::switchChannel(const QString& _channel){
     update();
 }
 
+void Window::switchRGBChannel(const QString&){
+    postImage = postProcess(indirectImage);
+    update();
+}
+
 void Window::render(){
     statusBar()->showMessage("Rendering...");
     resize(width, height);
     tracer->setResolution(width, height);
     tracer->samples = samples;
+    
+    double directTime;
+    tracer->renderDirect(directTime, directImage, normalImage);
+
     double indirectTime;
     tracer->renderIndirect(indirectTime, indirectImage);
     postImage = postProcess(indirectImage);
@@ -201,29 +214,54 @@ void Window::render(){
 
 QImage Window::postProcess(const QImage &image){
     QImage reuslt = QImage(image.width(), image.height(), QImage::Format_RGB32);
-    if (gammaCheckbox->checkState() == Qt::Unchecked){
-        reuslt = image;
-    }
-    else if (gammaCheckbox->checkState() == Qt::Checked){
-        for (int i = 0; i < image.width(); ++i){
-            for (int j = 0; j < image.height(); ++j){
-                QColor color(image.pixel(i, j));
-                int r = 255*pow(color.red()*1.0/255, 1.0/2.2);
-                int g = 255*pow(color.green()*1.0/255, 1.0/2.2);
-                int b = 255*pow(color.blue()*1.0/255, 1.0/2.2);
-                reuslt.setPixel(i, j, qRgb(r, g, b));
+    
+    qDebug() << rgbBox->currentText();
+    for (int i = 0; i < image.width(); ++i){
+        for (int j = 0; j < image.height(); ++j){
+            QColor color(image.pixel(i, j));
+            int r = color.red();
+            int g = color.green();
+            int b = color.blue();           
+            
+            if (gammaCheckbox->checkState() == Qt::Checked){
+                r = 255*pow(color.red()*1.0/255, 1.0/2.2);
+                g = 255*pow(color.green()*1.0/255, 1.0/2.2);
+                b = 255*pow(color.blue()*1.0/255, 1.0/2.2);
             }
+
+            if (rgbBox->currentText() == "RGB"){
+
+            }
+            else if (rgbBox->currentText() == "R"){
+                g = 0;
+                b = 0;
+            }
+            else if (rgbBox->currentText() == "G"){
+                r = 0;
+                b = 0;   
+            }
+            else if (rgbBox->currentText() == "B"){
+                r = 0;
+                g = 0;
+            }
+            else if (rgbBox->currentText() == "Grey"){
+                g = r;
+                b = r;
+            }
+
+            reuslt.setPixel(i, j, qRgb(r, g, b));
         }
-        qDebug()<<"gamma correct on";
     }
+    qDebug()<<"gamma correct on";
+
     return reuslt;
 }
 
 void Window::paintEvent(QPaintEvent *){
 
     QPainter painter(this);
-    QRectF target(0.0, 0.0, 800.0, 600.0);
-    QRectF source(0.0, 0.0, 800.0, 600.0);
+    QRectF target(0.0, 0.0, width, height);
+    QRectF source(0.0, 0.0, width, height);
     if (displayMode == 0){
         painter.drawImage(target, postImage, source);    
     }
@@ -231,7 +269,7 @@ void Window::paintEvent(QPaintEvent *){
         painter.drawImage(target, normalImage, source);    
     }
     else if (displayMode == 2){
-        painter.drawImage(target, postImage, source);   
+        painter.drawImage(target, directImage, source);   
     }
     
     // if (images){

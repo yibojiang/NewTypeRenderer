@@ -36,10 +36,12 @@ class Window : public QMainWindow
     QStatusBar *status;
     Raytracer *tracer;
     QCheckBox *gammaCheckbox;
+    QComboBox *rgbBox;
 private slots:
     void render();
     void saveImage();
     void switchChannel(const QString&);
+    void switchRGBChannel(const QString&);
     void changeSample(const QString&);
     void changeResolutionWidth(const QString&);
     void changeResolutionHeight(const QString&);

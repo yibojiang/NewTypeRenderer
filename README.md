@@ -1,6 +1,11 @@
 # pathtracer
-a Monte Carlo Pathtracer with qt4 GUI.
+a simple Monte Carlo Pathtracer with qt4 GUI in C++.
 
+## Features
+ - Mesh Rendering
+ - Obj Model Support
+
+## Compiling
 Install clang-openmp
 ```
     brew tap homebrew/boneyard
