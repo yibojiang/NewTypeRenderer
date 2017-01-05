@@ -342,7 +342,7 @@ class Mesh: public Object{
 
 public:
     std::vector<Face*> faces;
-    vec3 vertices;
+    
     Mesh() {
 
     }
@@ -371,72 +371,4 @@ public:
         faces.push_back(face);
     }
 
-    void translate(double tx, double ty, double tz){
-        vec3 tr = vec3(tx, ty, tz);
-        for (uint32_t i = 0; i < faces.size(); ++i){
-            faces[i]->v1 = faces[i]->v1 + tr;
-            faces[i]->v2 = faces[i]->v2 + tr;
-            faces[i]->v3 = faces[i]->v3 + tr;
-        }
-    } 
-
-    void rotateX(double rx){
-        mat3 mt(1, 0,       0,
-                0, cos(rx), -sin(rx), 
-                0, sin(rx), cos(rx));
-
-        for (uint32_t i = 0; i < faces.size(); ++i){
-            faces[i]->v1 = mt * faces[i]->v1;
-            faces[i]->v2 = mt * faces[i]->v2;
-            faces[i]->v3 = mt * faces[i]->v3;
-
-            faces[i]->n1 = mt * faces[i]->n1;
-            faces[i]->n2 = mt * faces[i]->n2;
-            faces[i]->n3 = mt * faces[i]->n3;
-        }
-    }
-
-    void rotateY(double rx){
-        mat3 mt(cos(rx), 0, -sin(rx), 
-                0,       1, 0, 
-                sin(rx), 0, cos(rx));
-
-        for (uint32_t i = 0; i < faces.size(); ++i){
-            faces[i]->v1 = mt * faces[i]->v1;
-            faces[i]->v2 = mt * faces[i]->v2;
-            faces[i]->v3 = mt * faces[i]->v3;
-
-            faces[i]->n1 = mt * faces[i]->n1;
-            faces[i]->n2 = mt * faces[i]->n2;
-            faces[i]->n3 = mt * faces[i]->n3;
-        }
-    }
-
-    void rotateZ(double rx){
-        mat3 mt(cos(rx), -sin(rx), 0,
-                sin(rx), cos(rx), 0,
-                0, 0,       1 );
-
-        for (uint32_t i = 0; i < faces.size(); ++i){
-            faces[i]->v1 = mt * faces[i]->v1;
-            faces[i]->v2 = mt * faces[i]->v2;
-            faces[i]->v3 = mt * faces[i]->v3;
-
-            faces[i]->n1 = mt * faces[i]->n1;
-            faces[i]->n2 = mt * faces[i]->n2;
-            faces[i]->n3 = mt * faces[i]->n3;
-        }
-    }
-
-    void scale(double sx, double sy, double sz){
-        mat3 mt(sx, 0, 0, 
-            0, sy, 0, 
-            0, 0, sz );
-        
-        for (uint32_t i = 0; i < faces.size(); ++i){
-            faces[i]->v1 = mt * faces[i]->v1;
-            faces[i]->v2 = mt * faces[i]->v2;
-            faces[i]->v3 = mt * faces[i]->v3;
-        }
-    }  
 };
