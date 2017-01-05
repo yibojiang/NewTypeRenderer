@@ -210,6 +210,21 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     // }
     // mesh->scale(0.8, 0.8, 0.8);
 
+    Transform *t = new Transform();
+    scene.root->addChild(t);
+    t->addObject(mesh);
+    t->setScale(1, 1, 1);
+    t->rotateY(M_PI/6);
+    t->setTranslate(45, 20, 70);
+
+    mat4 m;
+    // qDebug() << "size:" << t->children.size();
+    scene.updateTransform(scene.root, m);
+
+    // mesh->scale(0.5, 0.5, 0.5);
+    // mesh->rotateY(M_PI*0.2); 
+    // mesh->translate(45, 20, 70);
+
     mat4 m1(1, 0, 0, 1,
             0, 1, 0, 1,
             0, 0, 1, 1,
@@ -242,6 +257,7 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     qDebug() << "rotation:" << t1.getRotateX() << t1.getRotateY() << t1.getRotateZ();
 
     
+
     // mesh->scale(0.5, 0.5, 0.5);
     // mesh->rotateY(M_PI*0.2); 
     // mesh->translate(45, 20, 70);
@@ -264,6 +280,8 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     //     qDebug() << "normal:"  << mesh->triangles[i]->normal;
     //     qDebug() << "";
     // }
+
+
 
     scene.add((Object*)new Plane(vec3(1, 0, 0), 0,       vec3(), vec3(.75, .25, .25), DIFF)); //Left
     scene.add((Object*)new Plane(vec3(-1, 0, 0), 99,       vec3(), vec3(.25, .25, .75), DIFF)); //Right

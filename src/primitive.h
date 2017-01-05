@@ -342,7 +342,7 @@ class Mesh: public Object{
 
 public:
     std::vector<Face*> faces;
-    
+    vec3 vertices;
     Mesh() {
 
     }
@@ -355,9 +355,9 @@ public:
 
     void updateTransformMatrix(const mat4& m){
         for (uint32_t i = 0; i < faces.size(); ++i){
-            vec4 v1 = vec4(faces[i]->v1, 1);
-            vec4 v2 = vec4(faces[i]->v2, 1);
-            vec4 v3 = vec4(faces[i]->v3, 1);
+            vec4 v1(faces[i]->v1, 1.0);
+            vec4 v2(faces[i]->v2, 1.0);
+            vec4 v3(faces[i]->v3, 1.0);
             v1 = m * v1;
             v2 = m * v2;
             v3 = m * v3;

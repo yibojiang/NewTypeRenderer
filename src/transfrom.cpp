@@ -93,12 +93,18 @@ Transform::Transform() {
                  0,  0,  1, 0,
                  0,  0,  0,  1);
     parent = nullptr;
+    object = nullptr;
     // children = new std::vector<Transform*>();
 }
 
 Transform* Transform::addChild(vec3& pos){
     Transform *child = new Transform();
     child->setTranslate(pos.x, pos.y, pos.z);
+    children.push_back(child);
+    return child;
+}
+
+Transform* Transform::addChild(Transform *child){
     children.push_back(child);
     return child;
 }

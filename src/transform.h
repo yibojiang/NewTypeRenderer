@@ -17,6 +17,8 @@ public:
 
     Transform* addChild(vec3&);
 
+    Transform* addChild(Transform *child);
+
     void removeChild(Transform*);        
 
     vec3 getPosition();
