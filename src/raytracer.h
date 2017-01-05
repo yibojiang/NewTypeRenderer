@@ -70,6 +70,7 @@ public:
         mt = mt * transform->getTransformMatrix();
 
         if (transform->object){
+            qDebug() << mt;
             transform->object->updateTransformMatrix(mt);
         }
 

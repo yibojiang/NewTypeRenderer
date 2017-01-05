@@ -49,7 +49,7 @@ struct vec3 {
 struct vec4 {
     double x, y, z, w;
     vec4( double _x=0, double _y=0, double _z=0) { x = _x; y = _y; z = _z; w = 1.0; }
-    vec4( vec3 _v, double w) { x = _v.x; y = _v.y; z = _v.z; w = 1.0; }
+    vec4( vec3 _v, double _w) { x = _v.x; y = _v.y; z = _v.z; w = _w == 0.0 ? 0.0 : 1.0;}
     vec4( double _x, double _y, double _z, double _w) { x = _x; y = _y; z = _z; w = _w == 0.0 ? 0.0 : 1.0; }
     vec4 operator+(const vec4 &b) const { return vec4(x + b.x, y + b.y, z + b.z); }
     vec4 operator-(const vec4 &b) const { return vec4(x - b.x, y - b.y, z - b.z); }
