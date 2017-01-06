@@ -171,25 +171,30 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     mat4 m;
     scene.updateTransform(scene.root, m);
 
-    scene.add((Object*)new Plane(vec3(1, 0, 0), 0,       vec3(), vec3(.75, .25, .25), DIFF)); //Left
-    scene.add((Object*)new Plane(vec3(-1, 0, 0), 99,       vec3(), vec3(.25, .25, .75), DIFF)); //Right
-    scene.add((Object*)new Plane(vec3(0, 1, 0), 0,       vec3(), vec3(.75, .75, .75), DIFF)); //Bottom
-    scene.add((Object*)new Plane(vec3(0, 0, 1), 0,       vec3(), vec3(.25, .75, .25), DIFF)); //Front
-    scene.add((Object*)new Plane(vec3(0, 0, -1), 296,       vec3(), vec3(.75, .75, .75), DIFF)); // Back
-    scene.add((Object*)new Plane(vec3(0, -1, 0), 81.6,       vec3(), vec3(.75, .25, .75), DIFF)); //Ceil
-    scene.add((Object*)new AABBox(vec3(50, 81, 60), vec3(50, 0.1, 50),       vec3(12, 12, 12), vec3(), DIFF)); //Glas
+    // scene.add((Object*)new Plane(vec3(1, 0, 0), 0,       vec3(), vec3(.75, .25, .25), DIFF)); //Left
+    // scene.add((Object*)new Plane(vec3(-1, 0, 0), 99,       vec3(), vec3(.25, .25, .75), DIFF)); //Right
+    // scene.add((Object*)new Plane(vec3(0, 1, 0), 0,       vec3(), vec3(.75, .75, .75), DIFF)); //Bottom
+    // scene.add((Object*)new Plane(vec3(0, 0, 1), 0,       vec3(), vec3(.25, .75, .25), DIFF)); //Front
+    // scene.add((Object*)new Plane(vec3(0, 0, -1), 296,       vec3(), vec3(.75, .75, .75), DIFF)); // Back
+    // scene.add((Object*)new Plane(vec3(0, -1, 0), 81.6,       vec3(), vec3(.75, .25, .75), DIFF)); //Ceil
+    // scene.add((Object*)new AABBox(vec3(50, 81, 60), vec3(50, 0.1, 50),       vec3(12, 12, 12), vec3(), DIFF)); //Glas
     // scene.addMesh(mesh);
-    
-    scene.add((Object*)new Sphere(16.5, vec3(73, 16.5, 78),       vec3(), vec3(1, 1, 1)*.999, SPEC)); //Glas
-    scene.add((Object*)new Sphere(16.5, vec3(20, 16.5, 90),       vec3(), vec3(1, 1, 1)*.999, REFR)); //Glas
+    scene.add((Object*)new Sphere(16.5, vec3(0, 0, 0),       vec3(), vec3(1, 1, 1)*.999, SPEC)); //Glas
+    scene.add((Object*)new Sphere(16.5, vec3(50, 0, 90),       vec3(), vec3(1, 1, 1)*.999, SPEC)); //Glas
+    // scene.add((Object*)new Sphere(16.5, vec3(73, 16.5, 78),       vec3(), vec3(1, 1, 1)*.999, SPEC)); //Glas
+    // scene.add((Object*)new Sphere(16.5, vec3(20, 16.5, 90),       vec3(), vec3(1, 1, 1)*.999, REFR)); //Glas
+
     // scene.add((Object*)new AABBox(vec3(80, 25, 120), vec3(10, 50, 40),       vec3(), vec3(1, 1, 1)*.999, DIFF)); //Glas
     // scene.add((Object*)new AABBox(vec3(20, 18, 80), vec3(36, 36, 36),       vec3(), vec3(1, 1, 1)*.999, DIFF)); //Glas
     // scene.add((Object*)new Triangle(vec3(30, 20, 60), vec3(50, 50, 60),  vec3(80, 10, 80),       vec3(), vec3(1, 1, 1)*.999, DIFF)); 
     scene.fov = M_PI/3; // hotirzontal fov 60
     scene.ro = vec3(50, 52, 295.6);
+    // scene.ro = vec3(0, 52, 295.6);
     scene.ta = scene.ro + vec3(0, -0.042612, -1).normalize(); 
     scene.ca = setCamera(scene.ro, scene.ta, 0.0);
     scene.near = 2.0/tan(scene.fov/2);
+
+    bvh.setup(scene);
 }
 
 vec3 Raytracer::render_pixel(unsigned short i, unsigned short j, unsigned short *Xi){
@@ -229,17 +234,18 @@ vec3 Raytracer::render_pixel(unsigned short i, unsigned short j, unsigned short 
     return gammaCorrect(color) * 255;
 }
 
-void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalImage) {
+void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalImage, QImage &boundingBoxImage) {
     struct timeval start, end;
     gettimeofday(&start, NULL);
     float near = scene.near;
     mat3 ca = scene.ca;
-    vec3 ro(50, 52, 295.6);
+    vec3 ro = scene.ro;
     vec3 normalColor;
     vec3 directColor;
-
+    vec3 boundingBoxColor;
+    vec3 ambColor(0.15, 0.15, 0.15);
     // vec3 lig = vec3(-1, -3, -1.5).normalize();
-    vec3 pointLig = vec3(50 , 78, 60);
+    vec3 pointLig(50 , 78, 60);
 
 
     // #pragma omp parallel for schedule(dynamic, 1)  private(directColor, normalColor)    // OpenMP
@@ -252,6 +258,18 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
             u = u * width/height;
             vec3 rd = ca * (vec3(u, v, near)).normalize();
             
+
+
+            
+            normalColor = vec3(0,0,0);
+            directColor = vec3(0,0,0);
+            boundingBoxColor = vec3(0,0,0);
+
+            Intersection intersectionBox = bvh.intersect(Ray(ro, rd));
+            if (intersectionBox.object) {
+                boundingBoxImage.setPixel(j, i, qRgb(0, 255, 0));
+            }
+
             Intersection intersection = scene.intersect(Ray(ro, rd));
             if (intersection.object) {
                 const Object &obj = *intersection.object;
@@ -277,15 +295,18 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
                 //     }
                 // }
                 // Shadow
+
                 Intersection shadow = scene.intersect(Ray(hit + ld*0.01, ld));
+                // Intersection shadow = bvh.intersect(Ray(hit + ld*0.01, ld));
                 double distToLight = (pointLig - hit).length();
                 if (shadow.object && shadow.t <= distToLight){
                     directColor = directColor * clamp(3.8 * shadow.t/(distToLight), 0.0, 1.0); 
                 }
 
+                directColor = directColor + ambColor * 255; 
+                directColor = clamp(directColor, vec3(0,0,0), vec3(255,255,255));
             }
 
-            
             normalImage.setPixel(j, i, qRgb(normalColor.x, normalColor.y, normalColor.z));
             directImage.setPixel(j, i, qRgb(directColor.x, directColor.y, directColor.z));
             
@@ -304,7 +325,7 @@ void Raytracer::renderIndirect(double &time, QImage &image) {
     const int gridSize = 2;
     int samps = samples / (gridSize * gridSize);
     mat3 ca = scene.ca;
-    vec3 ro(50, 52, 295.6);
+    vec3 ro = scene.ro;
 
     vec3 r(0,0,0);
     #pragma omp parallel for schedule(dynamic, 1) private(r)       // OpenMP

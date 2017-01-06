@@ -1,7 +1,7 @@
 #pragma once
 #include "transform.h"
-const double inf=1e9;
-const double eps=1e-6;
+#include "BVH.h"
+
 
 
 struct Ray {
@@ -16,11 +16,14 @@ enum Refl_t { DIFF, SPEC, REFR };  // material types, used in radiance()
 
 // class Transform;
 
+
+
 class Object {
 protected:
     vec3 emission;
     vec3 color;
     Refl_t refl; // reflection type (DIFFuse, SPECular, REFRactive)
+    Extents bounds;
 public:
     // Transform transform;
     Object(){}
@@ -43,6 +46,14 @@ public:
     virtual void updateTransformMatrix(const mat4&){
 
     }
+
+    virtual void computebounds(){
+
+    }
+
+    virtual Extents getBounds(){
+        return bounds;
+    }
     // virtual vec3 debug(vec3 _pos) const{return vec3(0);}
 };
 
@@ -63,7 +74,7 @@ public:
 
     Plane(vec3 _nor, double _off) { off = _off; normal = _nor; }
     double intersect(const Ray &r) {
-        return ( -r.origin.dot(normal) - off) / (normal).dot(r.dir);
+        return (-r.origin.dot(normal) - off) / (normal).dot(r.dir);
     }
 
     vec3 getNormal(const vec3 &) const{
@@ -84,6 +95,8 @@ public:
 
     // virtual vec3 debug(vec3 _pos) const{return vec3(1);}
 };
+
+
 
 class Sphere: public Object {
 public:
@@ -116,6 +129,20 @@ public:
         center = vec3(pos.x, pos.y, pos.z);
     }
 
+    virtual void computebounds(){
+        for (uint8_t i = 0; i < BVH::slabCount; ++i){
+            vec3 slabN = BVH::normals[i];
+            // vec3 slabN;
+            double d = center.dot(slabN);
+            // d = 0;
+            bounds.dnear[i] = -rad - d;
+            bounds.dfar[i] = rad - d;
+            qDebug() << "d: "<< d;
+            qDebug() << "near: "<< bounds.dnear[i];
+            qDebug() << "far: "<< bounds.dfar[i];
+        }
+    }
+
     // virtual vec3 debug(vec3 _pos) const{return vec3(1);}
 };
 
@@ -135,39 +162,32 @@ public:
     }
 
     double intersect(const Ray &r) { // returns distance, 0 if nohit
-        double t;
-        vec3 dirfrac;
-        dirfrac.x = 1.0 / r.dir.x;
-        dirfrac.y = 1.0 / r.dir.y;
-        dirfrac.z = 1.0 / r.dir.z;
+        vec3 invdir(1.0 / r.dir.x, 1.0 / r.dir.y, 1.0 / r.dir.z);
+        
         // lb is the corner of AABB with minimal coordinates - left bottom, rt is maximal corner
         // r.org is origin of ray
-        double t1 = (bounds[0].x - r.origin.x)*dirfrac.x;
-        double t2 = (bounds[1].x - r.origin.x)*dirfrac.x;
-        double t3 = (bounds[0].y - r.origin.y)*dirfrac.y;
-        double t4 = (bounds[1].y - r.origin.y)*dirfrac.y;
-        double t5 = (bounds[0].z - r.origin.z)*dirfrac.z;
-        double t6 = (bounds[1].z - r.origin.z)*dirfrac.z;
+        double t1 = (bounds[0].x - r.origin.x) * invdir.x;
+        double t2 = (bounds[1].x - r.origin.x) * invdir.x;
+        double t3 = (bounds[0].y - r.origin.y) * invdir.y;
+        double t4 = (bounds[1].y - r.origin.y) * invdir.y;
+        double t5 = (bounds[0].z - r.origin.z) * invdir.z;
+        double t6 = (bounds[1].z - r.origin.z) * invdir.z;
 
-        double tmin = fmax(fmax(fmin(t1, t2), fmin(t3, t4)), fmin(t5, t6));
-        double tmax = fmin(fmin(fmax(t1, t2), fmax(t3, t4)), fmax(t5, t6));
+        double tmin = fmax(fmax(fmin(t1, t2), fmin(t3, t4)), fmin(t5, t6)); // max tnear 
+        double tmax = fmin(fmin(fmax(t1, t2), fmax(t3, t4)), fmax(t5, t6)); // min tfar
 
         // if tmax < 0, ray (line) is intersecting AABB, but whole AABB is behing us
-        if (tmax < 0)
-        {
-            t = tmax;
+        if (tmax < 0){
             return 0;
         }
 
         // if tmin > tmax, ray doesn't intersect AABB
-        if (tmin > tmax)
-        {
-            t = tmax;
+        if (tmin > tmax){
             return 0;
         }
 
-        t = tmin;
-        return t;
+        
+        return tmin;
     } 
     
     vec3 getNormal(const vec3 &_pos) const{
@@ -203,6 +223,8 @@ public:
         return normal;
        
     }
+
+    
 
     // TODO
     // virtual void updateTransform(Transform& transform){

@@ -10,7 +10,7 @@ public:
     bool loadObj(std::string _name, Mesh *mesh){
         // QString path = QCoreApplication::applicationDirPath();
         QString path = QDir::currentPath();
-        _name = '/' + _name;
+        _name = "/models/" + _name;
         std::string fullpath = path.toUtf8().constData() + _name;
         qDebug() << "open" << fullpath.c_str();
 

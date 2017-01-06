@@ -69,6 +69,7 @@ Window::Window(QWidget *parent) :
     channelBox->addItem(tr("InDirect"));
     channelBox->addItem(tr("Normal"));
     channelBox->addItem(tr("Direct"));
+    channelBox->addItem(tr("Boundingbox"));
 
     rgbBox = new QComboBox;
     rgbBox->addItem(tr("RGB"));
@@ -92,10 +93,10 @@ Window::Window(QWidget *parent) :
     gammaCheckbox->setCheckState(Qt::Checked);
 
 
-    debugLabel = new QLabel(this);
-    debugLabel->setGeometry(QRect(750, 560, 200, 30));
-    debugLabel->setText("");
-    debugLabel->setAlignment(Qt::AlignBottom | Qt::AlignLeft);
+    // debugLabel = new QLabel(this);
+    // debugLabel->setGeometry(QRect(750, 560, 200, 30));
+    // debugLabel->setText("");
+    // debugLabel->setAlignment(Qt::AlignBottom | Qt::AlignLeft);
 
     status = new QStatusBar(this);
     setStatusBar(status);
@@ -125,14 +126,16 @@ Window::Window(QWidget *parent) :
     normalImage = QImage(width, height, QImage::Format_RGB32);
     directImage = QImage(width, height, QImage::Format_RGB32);
     indirectImage = QImage(width, height, QImage::Format_RGB32);
+    boundingBoxImage = QImage(width, height, QImage::Format_RGB32);
     double directTime;
-    tracer->renderDirect(directTime, directImage, normalImage);
-    // displayMode = 2;
+    tracer->renderDirect(directTime, directImage, normalImage, boundingBoxImage);
+    
+    displayMode = 2;
     update();
 
  }
 void Window::changeSample(const QString& _text){
-    debugLabel->setText(_text);
+    // debugLabel->setText(_text);
     samples = _text.toInt();
 }
 
@@ -159,14 +162,15 @@ void Window::saveImage(){
     QByteArray ba;
     QBuffer buffer(&ba);
     buffer.open(QIODevice::WriteOnly);
-    indirectImage.save(&buffer, "PNG"); // writes image into ba in PNG format
+    postImage.save(&buffer, "PNG"); // writes image into ba in PNG format
     file.write(ba);
     file.close();
-    debugLabel->setText("saved");
+    // debugLabel->setText("saved");
+    
 }
 
 void Window::switchChannel(const QString& _channel){
-    debugLabel->setText(_channel);
+    // debugLabel->setText(_channel);
     if (_channel == "Direct"){
         displayMode = 2;
     }
@@ -176,7 +180,9 @@ void Window::switchChannel(const QString& _channel){
     else if (_channel == "InDirect"){
         displayMode = 0;
     }
-
+    else if (_channel == "Boundingbox"){
+        displayMode = 3;
+    }
     update();
 }
 
@@ -192,7 +198,7 @@ void Window::render(){
     tracer->samples = samples;
     
     double directTime;
-    tracer->renderDirect(directTime, directImage, normalImage);
+    tracer->renderDirect(directTime, directImage, normalImage, boundingBoxImage);
 
     double indirectTime;
     tracer->renderIndirect(indirectTime, indirectImage);
@@ -262,6 +268,7 @@ void Window::paintEvent(QPaintEvent *){
     QPainter painter(this);
     QRectF target(0.0, 0.0, width, height);
     QRectF source(0.0, 0.0, width, height);
+    // qDebug() << "mode: " << displayMode;
     if (displayMode == 0){
         painter.drawImage(target, postImage, source);    
     }
@@ -270,6 +277,10 @@ void Window::paintEvent(QPaintEvent *){
     }
     else if (displayMode == 2){
         painter.drawImage(target, directImage, source);   
+    }
+    else if (displayMode == 3){
+        painter.drawImage(target, boundingBoxImage, source);   
+        qDebug() << "mode: boundingBoxImage";
     }
     
     // if (images){

@@ -2,6 +2,8 @@
 #include <math.h>
 #include <QDebug>
 #include <iostream>
+const double inf=1e9;
+const double eps=1e-6;
 struct vec2 {
     double x, y;
     vec2(double _x=0, double _y=0){ x = _x; y = _y; }

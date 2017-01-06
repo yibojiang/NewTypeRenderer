@@ -32,7 +32,8 @@ class Window : public QMainWindow
     QImage indirectImage;
     QImage normalImage;
     QImage postImage;
-    QLabel *debugLabel;
+    QImage boundingBoxImage;
+    // QLabel *debugLabel;
     QStatusBar *status;
     Raytracer *tracer;
     QCheckBox *gammaCheckbox;

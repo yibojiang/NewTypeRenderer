@@ -59,6 +59,9 @@ public:
         }
         return closestIntersection;
     }
+
+    
+
     ~Scene(){
         // printf("destroy scene\n");
         for (uint32_t i = 0; i < objects.size(); ++i) {
@@ -91,6 +94,7 @@ public:
 class Raytracer{
 public:
     Scene scene;
+    BVH bvh;
     int samples;
     Raytracer(unsigned width, unsigned height,int _samples);
     ~Raytracer();
@@ -98,7 +102,7 @@ public:
     vec3 render_pixel(unsigned short i, unsigned short j, unsigned short *Xi);
     // QImage render(double &time) ;
     void renderIndirect(double &time, QImage &image);
-    void renderDirect(double &time, QImage &directImage, QImage &normalImage);
+    void renderDirect(double &time, QImage &directImage, QImage &normalImage, QImage &boundingBoxImage);
     unsigned short width;
     unsigned short height;
     void setResolution(const int &width, const int &height);
