@@ -161,14 +161,12 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     // }
     // mesh->scale(0.8, 0.8, 0.8);
 
-    
-
     Object *cube = new Box(vec3(0, 0, 0), vec3(10, 50, 40),       vec3(), vec3(1, 1, 1)*.999, DIFF);
     Transform *t = new Transform();
     t->addObject((Object*)cube);
     scene.root->addChild(t);
     // t->addObject(mesh);
-    t->setScale(1, 0.5, 1);
+    t->setScale(1, 1, 1);
     t->rotateY(M_PI/6);
     // t->setTranslate(0, 20, 70);
     t->setTranslate(80, 25, 120);
@@ -176,12 +174,12 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
      
     scene.updateTransform(scene.root, mat4());
 
-    // scene.add((Object*)new Plane(vec3(1, 0, 0), 0,       vec3(), vec3(.75, .25, .25), DIFF)); //Left
-    // scene.add((Object*)new Plane(vec3(-1, 0, 0), 99,       vec3(), vec3(.25, .25, .75), DIFF)); //Right
-    // scene.add((Object*)new Plane(vec3(0, 1, 0), 0,       vec3(), vec3(.75, .75, .75), DIFF)); //Bottom
-    // scene.add((Object*)new Plane(vec3(0, 0, 1), 0,       vec3(), vec3(.25, .75, .25), DIFF)); //Front
-    // scene.add((Object*)new Plane(vec3(0, 0, -1), 296,       vec3(), vec3(.75, .75, .75), DIFF)); // Back
-    // scene.add((Object*)new Plane(vec3(0, -1, 0), 81.6,       vec3(), vec3(.75, .25, .75), DIFF)); //Ceil
+    scene.add((Object*)new Plane(vec3(1, 0, 0), 0,       vec3(), vec3(.75, .25, .25), DIFF)); //Left
+    scene.add((Object*)new Plane(vec3(-1, 0, 0), 99,       vec3(), vec3(.25, .25, .75), DIFF)); //Right
+    scene.add((Object*)new Plane(vec3(0, 1, 0), 0,       vec3(), vec3(.75, .75, .75), DIFF)); //Bottom
+    scene.add((Object*)new Plane(vec3(0, 0, 1), 0,       vec3(), vec3(.25, .75, .25), DIFF)); //Front
+    scene.add((Object*)new Plane(vec3(0, 0, -1), 296,       vec3(), vec3(.75, .75, .75), DIFF)); // Back
+    scene.add((Object*)new Plane(vec3(0, -1, 0), 81.6,       vec3(), vec3(.75, .25, .75), DIFF)); //Ceil
     scene.add((Object*)new Box(vec3(50, 81, 60), vec3(50, 0.1, 50),       vec3(12, 12, 12), vec3(), DIFF)); //Glas
     // scene.addMesh(mesh);
     // scene.add((Object*)new Sphere(16.5, vec3(0, 0, 0),       vec3(), vec3(1, 1, 1)*.999, SPEC)); //Glas

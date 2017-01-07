@@ -26,3 +26,14 @@ public:
 
     double intersect(const Ray &r);
 };
+
+// struct Octree{
+
+
+    
+// };
+
+// struct OctreeNode{
+//     OctreeNode *praent;
+//     OctreeNode *children[8];
+// };

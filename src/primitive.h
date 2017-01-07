@@ -174,11 +174,11 @@ public:
         p[5] = center + vec3(half_size.x, -half_size.y, -half_size.z);
         p[6] = center + vec3(-half_size.x, half_size.y, -half_size.z);
         p[7] = center + vec3(-half_size.x, -half_size.y, -half_size.z);
-        updateVertex();
+        updatePlane();
         
     }
 
-    void updateVertex(){
+    void updatePlane(){
         
         for (int i = 0; i < 3; ++i){
             dnear[i] = inf;
@@ -195,10 +195,10 @@ public:
                 }
             }
 
-            qDebug()<<"near far"<<dnear[i] << dfar[i];
         }
     }
-
+    
+    // AABB
     // double intersect(const Ray &r) { // returns distance, 0 if nohit
     //     vec3 invdir(1.0 / r.dir.x, 1.0 / r.dir.y, 1.0 / r.dir.z);
         
@@ -284,7 +284,7 @@ public:
         // size = m * size;
         vec4 center4 = m * vec4(center, 1);
         center = vec3(center4.x, center4.y, center4.z);
-        updateVertex();
+        updatePlane();
     }
 
     virtual void computebounds(){
