@@ -50,8 +50,6 @@ public:
         // for (std::vector<Object*>::iterator it = objects.begin(); it != objects.end(); ++it){
         for (uint32_t i = 0; i < objects.size(); ++i) {
             double t = objects[i]->intersect(ray);
-            // std::cout << t << std::endl;
-            // double t = (*it)->intersect(ray);
             if (t > eps && t < closestIntersection.t) {
                 closestIntersection.t = t;
                 closestIntersection.object = objects[i];

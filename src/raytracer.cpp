@@ -161,15 +161,20 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     // }
     // mesh->scale(0.8, 0.8, 0.8);
 
-    Transform *t = new Transform();
-    scene.root->addChild(t);
-    t->addObject(mesh);
-    t->setScale(1, 1, 1);
-    t->rotateY(M_PI/6);
-    t->setTranslate(45, 20, 70);
+    
 
-    mat4 m;
-    scene.updateTransform(scene.root, m);
+    Object *cube = new Box(vec3(0, 0, 0), vec3(10, 50, 40),       vec3(), vec3(1, 1, 1)*.999, DIFF);
+    Transform *t = new Transform();
+    t->addObject((Object*)cube);
+    scene.root->addChild(t);
+    // t->addObject(mesh);
+    t->setScale(1, 0.5, 1);
+    t->rotateY(M_PI/6);
+    // t->setTranslate(0, 20, 70);
+    t->setTranslate(80, 25, 120);
+    
+     
+    scene.updateTransform(scene.root, mat4());
 
     // scene.add((Object*)new Plane(vec3(1, 0, 0), 0,       vec3(), vec3(.75, .25, .25), DIFF)); //Left
     // scene.add((Object*)new Plane(vec3(-1, 0, 0), 99,       vec3(), vec3(.25, .25, .75), DIFF)); //Right
@@ -177,16 +182,16 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     // scene.add((Object*)new Plane(vec3(0, 0, 1), 0,       vec3(), vec3(.25, .75, .25), DIFF)); //Front
     // scene.add((Object*)new Plane(vec3(0, 0, -1), 296,       vec3(), vec3(.75, .75, .75), DIFF)); // Back
     // scene.add((Object*)new Plane(vec3(0, -1, 0), 81.6,       vec3(), vec3(.75, .25, .75), DIFF)); //Ceil
-    // scene.add((Object*)new AABBox(vec3(50, 81, 60), vec3(50, 0.1, 50),       vec3(12, 12, 12), vec3(), DIFF)); //Glas
+    scene.add((Object*)new Box(vec3(50, 81, 60), vec3(50, 0.1, 50),       vec3(12, 12, 12), vec3(), DIFF)); //Glas
     // scene.addMesh(mesh);
-    scene.add((Object*)new Sphere(16.5, vec3(0, 0, 0),       vec3(), vec3(1, 1, 1)*.999, SPEC)); //Glas
-    scene.add((Object*)new Sphere(16.5, vec3(50, 0, 90),       vec3(), vec3(1, 1, 1)*.999, SPEC)); //Glas
+    // scene.add((Object*)new Sphere(16.5, vec3(0, 0, 0),       vec3(), vec3(1, 1, 1)*.999, SPEC)); //Glas
+    // scene.add((Object*)new Sphere(16.5, vec3(50, 0, 90),       vec3(), vec3(1, 1, 1)*.999, SPEC)); //Glas
     // scene.add((Object*)new Sphere(16.5, vec3(73, 16.5, 78),       vec3(), vec3(1, 1, 1)*.999, SPEC)); //Glas
     // scene.add((Object*)new Sphere(16.5, vec3(20, 16.5, 90),       vec3(), vec3(1, 1, 1)*.999, REFR)); //Glas
 
-    // scene.add((Object*)new AABBox(vec3(80, 25, 120), vec3(10, 50, 40),       vec3(), vec3(1, 1, 1)*.999, DIFF)); //Glas
-    // scene.add((Object*)new AABBox(vec3(20, 18, 80), vec3(36, 36, 36),       vec3(), vec3(1, 1, 1)*.999, DIFF)); //Glas
-    // scene.add((Object*)new Triangle(vec3(30, 20, 60), vec3(50, 50, 60),  vec3(80, 10, 80),       vec3(), vec3(1, 1, 1)*.999, DIFF)); 
+    scene.add((Object*)cube); //Glas
+    scene.add((Object*)new Box(vec3(20, 18, 80), vec3(36, 20, 36),       vec3(), vec3(1, 1, 1)*.999, DIFF)); //Glas
+    // scene.add((Object*)new Triangle(vec3(30, 20, 60), vec3(50, 50, 60),  vec3(80, 10, 60),       vec3(), vec3(1, 1, 1)*.999, DIFF)); 
     scene.fov = M_PI/3; // hotirzontal fov 60
     scene.ro = vec3(50, 52, 295.6);
     // scene.ro = vec3(0, 52, 295.6);

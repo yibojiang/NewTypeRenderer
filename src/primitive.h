@@ -132,14 +132,9 @@ public:
     virtual void computebounds(){
         for (uint8_t i = 0; i < BVH::slabCount; ++i){
             vec3 slabN = BVH::normals[i];
-            // vec3 slabN;
             double d = center.dot(slabN);
-            // d = 0;
             bounds.dnear[i] = -rad - d;
             bounds.dfar[i] = rad - d;
-            qDebug() << "d: "<< d;
-            qDebug() << "near: "<< bounds.dnear[i];
-            qDebug() << "far: "<< bounds.dfar[i];
         }
     }
 
@@ -147,35 +142,100 @@ public:
 };
 
 
-class AABBox: public Object{ 
+class Box: public Object{ 
+private:
+    double dnear[3];
+    double dfar[3];
 public: 
-    vec3 bounds[2]; 
+    vec3 p[8]; 
     vec3 center;
     vec3 size;
-    AABBox(const vec3 &_center, const vec3 &_size, vec3 _e, vec3 _c, Refl_t _refl) { 
+    vec3 normals[3];
+
+    Box(const vec3 &_center, const vec3 &_size, vec3 _e, vec3 _c, Refl_t _refl) { 
         center = _center;
         size = _size;
-        bounds[0] = center - _size * 0.5, bounds[1] = center + _size * 0.5; 
+        
+
         emission = _e;
         color = _c;
         refl = _refl;
+
+        normals[0] = vec3(1, 0, 0);
+        normals[1] = vec3(0, 1, 0);
+        normals[2] = vec3(0, 0, 1);
+
+        vec3 half_size = size * 0.5;
+        p[0] = center + vec3(half_size.x, half_size.y, half_size.z);
+        p[1] = center + vec3(-half_size.x, half_size.y, half_size.z);
+        p[2] = center + vec3(half_size.x, -half_size.y, half_size.z);
+        p[3] = center + vec3(half_size.x, half_size.y, -half_size.z);
+        p[4] = center + vec3(-half_size.x, -half_size.y, half_size.z);
+        p[5] = center + vec3(half_size.x, -half_size.y, -half_size.z);
+        p[6] = center + vec3(-half_size.x, half_size.y, -half_size.z);
+        p[7] = center + vec3(-half_size.x, -half_size.y, -half_size.z);
+        updateVertex();
+        
     }
 
-    double intersect(const Ray &r) { // returns distance, 0 if nohit
-        vec3 invdir(1.0 / r.dir.x, 1.0 / r.dir.y, 1.0 / r.dir.z);
+    void updateVertex(){
         
-        // lb is the corner of AABB with minimal coordinates - left bottom, rt is maximal corner
-        // r.org is origin of ray
-        double t1 = (bounds[0].x - r.origin.x) * invdir.x;
-        double t2 = (bounds[1].x - r.origin.x) * invdir.x;
-        double t3 = (bounds[0].y - r.origin.y) * invdir.y;
-        double t4 = (bounds[1].y - r.origin.y) * invdir.y;
-        double t5 = (bounds[0].z - r.origin.z) * invdir.z;
-        double t6 = (bounds[1].z - r.origin.z) * invdir.z;
+        for (int i = 0; i < 3; ++i){
+            dnear[i] = inf;
+            dfar[i] = -inf;
+            
+            for (int j = 0; j < 8; ++j){
+                double d = -p[j].dot(normals[i]);
+                if (d > dfar[i]){
+                    dfar[i] = d;
+                }
 
-        double tmin = fmax(fmax(fmin(t1, t2), fmin(t3, t4)), fmin(t5, t6)); // max tnear 
-        double tmax = fmin(fmin(fmax(t1, t2), fmax(t3, t4)), fmax(t5, t6)); // min tfar
+                if (d < dnear[i]){
+                    dnear[i] = d;
+                }
+            }
 
+            qDebug()<<"near far"<<dnear[i] << dfar[i];
+        }
+    }
+
+    // double intersect(const Ray &r) { // returns distance, 0 if nohit
+    //     vec3 invdir(1.0 / r.dir.x, 1.0 / r.dir.y, 1.0 / r.dir.z);
+        
+    //     // lb is the corner of AABB with minimal coordinates - left bottom, rt is maximal corner
+    //     // r.org is origin of ray
+    //     double t1 = (bounds[0].x - r.origin.x) * invdir.x;
+    //     double t2 = (bounds[1].x - r.origin.x) * invdir.x;
+    //     double t3 = (bounds[0].y - r.origin.y) * invdir.y;
+    //     double t4 = (bounds[1].y - r.origin.y) * invdir.y;
+    //     double t5 = (bounds[0].z - r.origin.z) * invdir.z;
+    //     double t6 = (bounds[1].z - r.origin.z) * invdir.z;
+
+    //     double tmin = fmax(fmax(fmin(t1, t2), fmin(t3, t4)), fmin(t5, t6)); // max tnear 
+    //     double tmax = fmin(fmin(fmax(t1, t2), fmax(t3, t4)), fmax(t5, t6)); // min tfar
+
+    //     // if tmax < 0, ray (line) is intersecting AABB, but whole AABB is behing us
+    //     if (tmax < 0){
+    //         return 0;
+    //     }
+
+    //     // if tmin > tmax, ray doesn't intersect AABB
+    //     if (tmin > tmax){
+    //         return 0;
+    //     }
+    //     return tmin;
+    // } 
+
+
+    double intersect(const Ray &r) { // returns distance, 0 if nohit
+        double t1 = (-dnear[0] - r.origin.dot(normals[0])) / r.dir.dot(normals[0]);
+        double t2 = (-dfar[0] - r.origin.dot(normals[0])) / r.dir.dot(normals[0]);
+        double t3 = (-dnear[1] - r.origin.dot(normals[1])) / r.dir.dot(normals[1]);
+        double t4 = (-dfar[1] - r.origin.dot(normals[1])) / r.dir.dot(normals[1]);
+        double t5 = (-dnear[2] - r.origin.dot(normals[2])) / r.dir.dot(normals[2]);
+        double t6 = (-dfar[2] - r.origin.dot(normals[2])) / r.dir.dot(normals[2]);
+        double tmin = fmax(fmax(fmin(t1, t2), fmin(t3, t4)), fmin(t5, t6)); // max t near 
+        double tmax = fmin(fmin(fmax(t1, t2), fmax(t3, t4)), fmax(t5, t6)); // min t far
         // if tmax < 0, ray (line) is intersecting AABB, but whole AABB is behing us
         if (tmax < 0){
             return 0;
@@ -186,50 +246,64 @@ public:
             return 0;
         }
 
-        
         return tmin;
     } 
     
     vec3 getNormal(const vec3 &_pos) const{
-        vec3 normal;
-        vec3 localPoint = _pos - center;
-        float min = std::numeric_limits<float>::max();
-        float distance = fabs(size.x - fabs(localPoint.x));
-        if (distance < min) {
-            min = distance;
-            normal = vec3(1, 0, 0);
-            if (localPoint.x < 0){
-                normal = normal * -1;
+        for (int i = 0; i < 3; ++i){
+            if (fabs((_pos.dot(normals[i]) + dnear[i])) < eps){
+                return normals[i];
             }
-            // normal *= SIGN(localPoint.x);
+
+            if (fabs((_pos.dot(normals[i]) + dfar[i])) < eps){
+                return -normals[i];
+            }
+
+            if (fabs((_pos.dot(-normals[i]) + dnear[i])) < eps){
+                return -normals[i];
+            }
+
+            if (fabs((_pos.dot(-normals[i]) + dfar[i])) < eps){
+                return normals[i];
+            }
         }
-        distance = fabs(size.y - fabs(localPoint.y));
-        if (distance < min) {
-            min = distance;
-            normal = vec3(0, 1, 0);
-            if (localPoint.y < 0){
-                normal = normal * -1;
-            }
-            // normal *= SIGN(localPoint.y);
-        }
-        distance = fabs(size.z - fabs(localPoint.z));
-        if (distance < min) { 
-            min = distance; 
-            normal = vec3(0, 0, 1);
-            if (localPoint.z < 0){
-                normal = normal * -1;
-            }
-        } 
-        return normal;
-       
     }
 
-    
+    void updateTransformMatrix(const mat4& m){
+        for (int i = 0; i < 3; ++i){
+            // vec4 n = m*  vec4(normals[i], 0);
+            normals[i] = m * normals[i];   
+        }
 
-    // TODO
-    // virtual void updateTransform(Transform& transform){
+        for (int i = 0; i < 8; ++i){
+            vec4 p4 = vec4(p[i], 1);
+            p4 = m * p4;
+            p[i] = vec3(p4.x, p4.y, p4.z);
+        }
 
-    // }
+        // size = m * size;
+        vec4 center4 = m * vec4(center, 1);
+        center = vec3(center4.x, center4.y, center4.z);
+        updateVertex();
+    }
+
+    virtual void computebounds(){
+        for (uint8_t i = 0; i < BVH::slabCount; ++i){
+            bounds.dnear[i] = inf;
+            bounds.dfar[i] = -inf;
+            for (int j = 0; j < 8; ++j){
+                qDebug()<<p[j];
+                double d =  -p[j].dot(BVH::normals[i]);
+                if (d < bounds.dnear[i]){
+                    bounds.dnear[i] = d;
+                }
+                if (d > bounds.dfar[i]){
+                    bounds.dfar[i] = d;
+                }
+            }
+
+        }
+    }
 };
  
 class Triangle : public Object{
@@ -325,6 +399,17 @@ public:
             return 0;
 
         return tt;
+    }
+
+    virtual void computebounds(){
+        for (uint8_t i = 0; i < BVH::slabCount; ++i){
+            vec3 slabN = BVH::normals[i];
+            double d1 =  -p1.dot(slabN);
+            double d2 =  -p2.dot(slabN);
+            double d3 =  -p3.dot(slabN);
+            bounds.dnear[i] = fmin(d1, fmin(d2, d3));
+            bounds.dfar[i] = fmax(d1, fmax(d2, d3));
+        }
     }
 };
 

@@ -166,6 +166,14 @@ struct mat4{
         return c;
     }
 
+    friend vec3 operator*(mat4 a, const vec3& b){
+        vec3 c;
+        c.x = b.x * a.cols[0][0] + b.y * a.cols[0][1] + b.z * a.cols[0][2];
+        c.y = b.x * a.cols[1][0] + b.y * a.cols[1][1] + b.z * a.cols[1][2];
+        c.z = b.x * a.cols[2][0] + b.y * a.cols[2][1] + b.z * a.cols[2][2];
+        return c;
+    }
+
     friend mat4 operator+(mat4 a, const mat4& b){
         mat4 c;
         for (int i = 0; i < 4; ++i){
