@@ -5,7 +5,22 @@ class Scene;
 class Object;
 struct Ray;
 class Intersection;
+class Extents;
 
+
+
+class OctreeNode{
+public:
+    OctreeNode();
+    OctreeNode(OctreeNode*);
+    ~OctreeNode();
+    OctreeNode *parent;
+    OctreeNode *children[8];
+    Object *object;
+    Extents *extents;
+    void addObject(Object *);
+    void Traverse();
+};
 
 class BVH{
 public:
@@ -16,24 +31,19 @@ public:
     void setup(Scene &);
     Intersection intersect(const Ray&) const;
     ~BVH();
-    
+    std::vector<Extents *> extentsList;
+    OctreeNode octree;
 };
 
 class Extents {
 public:
     double dnear[BVH::slabCount], dfar[BVH::slabCount];
     Extents();
-
+    ~Extents();
+    vec3 getCentriod();
+    // Extents group(Extents &);
+    void extendBy(Extents &);
     double intersect(const Ray &r);
 };
 
-// struct Octree{
 
-
-    
-// };
-
-// struct OctreeNode{
-//     OctreeNode *praent;
-//     OctreeNode *children[8];
-// };

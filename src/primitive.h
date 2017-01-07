@@ -14,18 +14,13 @@ struct Ray {
 
 enum Refl_t { DIFF, SPEC, REFR };  // material types, used in radiance()
 
-// class Transform;
-
-
-
 class Object {
 protected:
     vec3 emission;
     vec3 color;
     Refl_t refl; // reflection type (DIFFuse, SPECular, REFRactive)
-    Extents bounds;
+    // Extents bounds;
 public:
-    // Transform transform;
     Object(){}
     virtual ~Object(){}
     virtual vec3 getNormal(const vec3 &) const{ return vec3(1);}
@@ -47,13 +42,13 @@ public:
 
     }
 
-    virtual void computebounds(){
-
+    virtual Extents* computebounds(){
+        return new Extents();
     }
 
-    virtual Extents getBounds(){
-        return bounds;
-    }
+    // virtual Extents getBounds(){
+    //     return bounds;
+    // }
     // virtual vec3 debug(vec3 _pos) const{return vec3(0);}
 };
 
@@ -103,9 +98,8 @@ public:
     double rad;
     vec3 center;
 
-    Sphere(double _rad, vec3 _p, vec3 _e, vec3 _c, Refl_t _refl){
+    Sphere(double _rad, vec3 _e, vec3 _c, Refl_t _refl){
         rad = _rad;
-        center = _p;
         emission = _e;
         color = _c;
         refl = _refl;
@@ -129,13 +123,15 @@ public:
         center = vec3(pos.x, pos.y, pos.z);
     }
 
-    virtual void computebounds(){
+    Extents* computebounds(){
+        Extents *bounds = new Extents();
         for (uint8_t i = 0; i < BVH::slabCount; ++i){
             vec3 slabN = BVH::normals[i];
             double d = center.dot(slabN);
-            bounds.dnear[i] = -rad - d;
-            bounds.dfar[i] = rad - d;
+            bounds->dnear[i] = -rad - d;
+            bounds->dfar[i] = rad - d;
         }
+        return bounds;
     }
 
     // virtual vec3 debug(vec3 _pos) const{return vec3(1);}
@@ -152,8 +148,7 @@ public:
     vec3 size;
     vec3 normals[3];
 
-    Box(const vec3 &_center, const vec3 &_size, vec3 _e, vec3 _c, Refl_t _refl) { 
-        center = _center;
+    Box(const vec3 &_size, vec3 _e, vec3 _c, Refl_t _refl) { 
         size = _size;
         
 
@@ -197,7 +192,7 @@ public:
 
         }
     }
-    
+
     // AABB
     // double intersect(const Ray &r) { // returns distance, 0 if nohit
     //     vec3 invdir(1.0 / r.dir.x, 1.0 / r.dir.y, 1.0 / r.dir.z);
@@ -267,6 +262,7 @@ public:
                 return normals[i];
             }
         }
+        return vec3();
     }
 
     void updateTransformMatrix(const mat4& m){
@@ -287,22 +283,23 @@ public:
         updatePlane();
     }
 
-    virtual void computebounds(){
+    Extents* computebounds(){
+        Extents *bounds = new Extents();
         for (uint8_t i = 0; i < BVH::slabCount; ++i){
-            bounds.dnear[i] = inf;
-            bounds.dfar[i] = -inf;
+            bounds->dnear[i] = inf;
+            bounds->dfar[i] = -inf;
             for (int j = 0; j < 8; ++j){
                 qDebug()<<p[j];
                 double d =  -p[j].dot(BVH::normals[i]);
-                if (d < bounds.dnear[i]){
-                    bounds.dnear[i] = d;
+                if (d < bounds->dnear[i]){
+                    bounds->dnear[i] = d;
                 }
-                if (d > bounds.dfar[i]){
-                    bounds.dfar[i] = d;
+                if (d > bounds->dfar[i]){
+                    bounds->dfar[i] = d;
                 }
             }
-
         }
+        return bounds;
     }
 };
  
@@ -401,15 +398,17 @@ public:
         return tt;
     }
 
-    virtual void computebounds(){
+    Extents* computebounds(){
+        Extents* bounds = new Extents();
         for (uint8_t i = 0; i < BVH::slabCount; ++i){
             vec3 slabN = BVH::normals[i];
             double d1 =  -p1.dot(slabN);
             double d2 =  -p2.dot(slabN);
             double d3 =  -p3.dot(slabN);
-            bounds.dnear[i] = fmin(d1, fmin(d2, d3));
-            bounds.dfar[i] = fmax(d1, fmax(d2, d3));
+            bounds->dnear[i] = fmin(d1, fmin(d2, d3));
+            bounds->dfar[i] = fmax(d1, fmax(d2, d3));
         }
+        return bounds;
     }
 };
 

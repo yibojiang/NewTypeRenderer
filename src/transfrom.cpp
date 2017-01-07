@@ -94,7 +94,20 @@ Transform::Transform() {
                  0,  0,  0,  1);
     parent = nullptr;
     object = nullptr;
-    // children = new std::vector<Transform*>();
+}
+
+Transform::Transform(Object* obj){
+    translate = mat4 (1, 0, 0, 0,
+                    0, 1, 0, 0,
+                    0, 0, 1, 0,
+                    0, 0, 0, 1);
+    rotation = Quaternion(0, 0, 0, 1);
+    scale = mat4(1, 0,  0,  0,
+                 0,  1, 0,  0,
+                 0,  0,  1, 0,
+                 0,  0,  0,  1);
+    parent = nullptr;
+    object = obj;   
 }
 
 Transform* Transform::addChild(vec3& pos){

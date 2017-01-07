@@ -49,6 +49,8 @@ public:
 
     Transform();
 
+    Transform(Object*);
+
     ~Transform();
     
 };
