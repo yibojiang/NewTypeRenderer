@@ -1,7 +1,7 @@
 #pragma once
 #include "vec.h"
 #include <queue>
-#define SLABCOUNT 3
+#define SLABCOUNT 7
 class Scene;
 class Object;
 struct Ray;
@@ -39,6 +39,7 @@ public:
 
 
     void intersectTest(const Ray &r, Intersection &intersection) const;
+    void intersectTestWireframe(const Ray &r, Intersection &intersection) const;
 };
 
 class BVH{

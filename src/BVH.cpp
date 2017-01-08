@@ -291,6 +291,24 @@ BVH::~BVH(){
     }
 }
 
+// Return wireframe for all the boundingbox. (for Debugging)
+void OctreeNode::intersectTestWireframe(const Ray &r, Intersection &intersection) const{
+    double t = this->extents.intersectWireframe(r);
+
+    // Hit the bounding box.
+    if (t > eps && t < intersection.t){
+        intersection.t = t;
+    }
+
+    if (!this->isLeaf){
+        for (int i = 0; i < 8; ++i){
+            if (this->children[i]){
+                this->children[i]->intersectTestWireframe(r, intersection);
+            }            
+        }
+    }
+}
+
 
 void OctreeNode::intersectTest(const Ray &r, Intersection &intersection) const{
     double test = this->extents.intersect(r);
@@ -328,13 +346,16 @@ Intersection BVH::intersectBoundingBox(const Ray& ray) const{
 }
 
 Intersection BVH::intersectBVH(const Ray& ray) const{
+    // std::priority_queue<OctreeNode> closeNode;
     Intersection closestIntersection;
-    return closestIntersection;
+    octree.intersectTestWireframe(ray, closestIntersection);
+    // closestIntersection.t = octree.extents.intersectWireframe(ray);
+    return closestIntersection;   
 }
 
+
 Intersection BVH::intersect(const Ray& ray) const{
-    // qDebug() << "intersect";
-    std::priority_queue<OctreeNode> closeNode;
+    // std::priority_queue<OctreeNode> closeNode;
     Intersection closestIntersection;
     octree.intersectTest(ray, closestIntersection);
     return closestIntersection;   
@@ -344,10 +365,10 @@ const vec3 BVH::normals[SLABCOUNT] = {
     vec3(1, 0, 0),
     vec3(0, 1, 0),
     vec3(0, 0, 1),
-    // vec3(sqrt(3.0)/3.0, sqrt(3.0)/3.0, sqrt(3.0)/3.0),
-    // vec3(-sqrt(3.0)/3.0, sqrt(3.0)/3.0, sqrt(3.0)/3.0),
-    // vec3(-sqrt(3.0)/3.0, -sqrt(3.0)/3.0, sqrt(3.0)/3.0),
-    // vec3(sqrt(3.0)/3.0, -sqrt(3.0)/3.0, sqrt(3.0)/3.0)
+    vec3(sqrt(3.0)/3.0, sqrt(3.0)/3.0, sqrt(3.0)/3.0),
+    vec3(-sqrt(3.0)/3.0, sqrt(3.0)/3.0, sqrt(3.0)/3.0),
+    vec3(-sqrt(3.0)/3.0, -sqrt(3.0)/3.0, sqrt(3.0)/3.0),
+    vec3(sqrt(3.0)/3.0, -sqrt(3.0)/3.0, sqrt(3.0)/3.0)
 
 };
 

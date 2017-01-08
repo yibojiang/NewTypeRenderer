@@ -326,12 +326,12 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
             directColor = vec3(0,0,0);
             boundingBoxColor = vec3(0,0,0);
 
-            Intersection intersectionBox = bvh.intersectBoundingBox(Ray(ro, rd));
+            Intersection intersectionBox = bvh.intersectBVH(Ray(ro, rd));
             // Intersection intersectionBox = bvh.octree->extents->intersect(Ray(ro, rd));
             // if (intersectionBox.t > 0 && intersectionBox.t<inf) {
-            // if (bvh.octree.extents->intersect(Ray(ro, rd)) > eps){
-            // if (bvh.octree.children[7]->extents->intersect(Ray(ro, rd)) > eps){
-            if (intersectionBox.object){
+            // if (bvh.octree.extents.intersectWireframe(Ray(ro, rd)) > eps){
+            // if (bvh.octree.children[7]->extents.intersectWireframe(Ray(ro, rd)) > eps){
+            if (intersectionBox.t > eps && intersectionBox.t < inf){
                 boundingBoxImage.setPixel(j, i, qRgb(0, 255, 0));
             }
 
