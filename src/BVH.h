@@ -1,25 +1,40 @@
 #pragma once
 #include "vec.h"
-
+#include <queue>
 class Scene;
 class Object;
 struct Ray;
 class Intersection;
-class Extents;
+// class Extents;
 
+class Extents {
+public:
+    double dnear[7], dfar[7];
+    Extents();
+    ~Extents();
+    vec3 getCentriod();
+    // Extents group(Extents &);
+    void extendBy(Extents &);
+    double intersect(const Ray &r)const;
 
+};
 
 class OctreeNode{
 public:
     OctreeNode();
     OctreeNode(OctreeNode*);
     ~OctreeNode();
+    int depth;
+    bool isLeaf;
     OctreeNode *parent;
     OctreeNode *children[8];
     Object *object;
-    Extents *extents;
+    Extents extents;
     void addObject(Object *);
-    void Traverse();
+    void traverse();
+
+
+    void intersectTest(const Ray &r, Intersection &intersection) const;
 };
 
 class BVH{
@@ -30,20 +45,15 @@ public:
     BVH();
     void setup(Scene &);
     Intersection intersect(const Ray&) const;
+    Intersection intersectBoundingBox(const Ray&) const;
+    
     ~BVH();
     std::vector<Extents *> extentsList;
     OctreeNode octree;
+
+
 };
 
-class Extents {
-public:
-    double dnear[BVH::slabCount], dfar[BVH::slabCount];
-    Extents();
-    ~Extents();
-    vec3 getCentriod();
-    // Extents group(Extents &);
-    void extendBy(Extents &);
-    double intersect(const Ray &r);
-};
+
 
 

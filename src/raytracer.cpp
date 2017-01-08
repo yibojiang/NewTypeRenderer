@@ -69,13 +69,18 @@ inline double clamp(double x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
 vec3 Raytracer::tracing(const Ray &ray, int depth, unsigned short *Xi){
    
     Intersection intersection = scene.intersect(ray);
+    // Intersection intersection = bvh.intersect(ray);
+    
     if (!intersection.object) return vec3(0);
+
 
     const Object &obj = *intersection.object;
     vec3 hit = ray.origin + ray.dir * intersection.t;
+
     vec3 N = obj.getNormal(hit);
     // vec3 nl = N.dot(ray.dir) < 0 ? N: N * -1;
     vec3 f = obj.getDiffuse();
+    // return f;
     // Russian roulette: starting at depth 5, each recursive step will stop with a probability of 0.1
     if (++depth > 5){
         double rrStopProbability = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // max refl
@@ -164,27 +169,70 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     
     
     Object *light = (Object*)new Box(vec3(50, 0.1, 50),       vec3(12, 12, 12), vec3(), DIFF);
+    light->name = "light";
     Transform *lightxform = new Transform(light);
     lightxform->setTranslate(50, 81, 60);
     scene.root->addChild(lightxform);
 
     for (int i = 0; i < 4; ++i){
         for (int j = 0; j < 3; ++j){
+            for (int k = 0; k < 3; ++k){
             // Object *cube = new Box(vec3(20, 20, 20), vec3(), vec3(1, 1, 1)*.999, DIFF);
             // Transform *t = new Transform();
             // t->addObject((Object*)cube);
             // t->setScale(1, 0.5, 1);
             // // t->rotateY(M_PI/6);
             // t->setTranslate(i * 30, j*30, 50);
-            // scene.root->addChild(t);
+            // scene.root->addChild(t); 
 
-            Object *sphere = new Sphere(10.0, vec3(), vec3(1, 1, 1)*.999, DIFF);
-            Transform *t = new Transform(sphere);
-            t->setScale(1, 0.5, 1);
-            t->setTranslate(i * 30, j*30, 50);
-            scene.root->addChild(t);
+                Object *sphere = new Sphere(10.0, vec3(), vec3(1, 1, 1)*.999, DIFF);
+                sphere->name = "sphere" + std::to_string(i + j * 10 + k * 100);
+                Transform *t = new Transform(sphere);
+                t->setScale(1, 0.5, 1);
+                t->setTranslate(i * 30, j*30, 50 - k * 30);
+                scene.root->addChild(t);
+            }
         }
     }
+
+    // Object *floor = (Object*)new Box(vec3(250, 0.1, 250),       vec3(), vec3(1,1,1), DIFF);
+    // floor->name = "floor";
+    // Transform *xform = new Transform(floor);
+    // xform->setTranslate(50, 10, 50);
+    // scene.root->addChild(xform);
+
+
+    // Object *left = (Object*)new Box(vec3(0.1, 250, 250),       vec3(), vec3(1,1,1), DIFF);
+    // left->name = "left";
+    // Transform *xform1 = new Transform(left);
+    // xform1->setTranslate(0, 20, 50);
+    // scene.root->addChild(xform1);
+
+
+    // Object *right = (Object*)new Box(vec3(0.1, 250, 250),       vec3(), vec3(1,1,1), DIFF);
+    // right->name = "right";
+    // Transform *xform2 = new Transform(right);
+    // xform2->setTranslate(100, 20, 50);
+    // scene.root->addChild(xform2);
+
+
+    // Object *ceil = (Object*)new Box(vec3(250, 0.1, 250),       vec3(), vec3(1,1,1), DIFF);
+    // ceil->name = "ceil";
+    // Transform *xform3 = new Transform(ceil);
+    // xform3->setTranslate(50, 81.6, 50);
+    // scene.root->addChild(xform3);
+
+    // Object *front = (Object*)new Box(vec3(250, 250, 0.1),       vec3(), vec3(1,1,1), DIFF);
+    // front->name = "front";
+    // Transform *xform4 = new Transform(front);
+    // xform4->setTranslate(100, 20, 0);
+    // scene.root->addChild(xform4);
+
+    // Object *back = (Object*)new Box(vec3(250, 250, 0.1),       vec3(), vec3(1,1,1), DIFF);
+    // back->name = "back";
+    // Transform *xform5 = new Transform(back);
+    // xform5->setTranslate(100, 20, 296);
+    // scene.root->addChild(xform5);
 
     scene.updateTransform(scene.root, mat4());
     // scene.add((Object*)new Plane(vec3(1, 0, 0), 0,       vec3(), vec3(.75, .25, .25), DIFF)); //Left
@@ -205,6 +253,7 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     // scene.add((Object*)new Triangle(vec3(30, 20, 60), vec3(50, 50, 60),  vec3(80, 10, 60),       vec3(), vec3(1, 1, 1)*.999, DIFF)); 
     scene.fov = M_PI/3; // hotirzontal fov 60
     scene.ro = vec3(50, 52, 295.6);
+    // scene.ro = vec3(50, 52, 185.6);
     // scene.ro = vec3(0, 52, 295.6);
     scene.ta = scene.ro + vec3(0, -0.042612, -1).normalize(); 
     scene.ca = setCamera(scene.ro, scene.ta, 0.0);
@@ -273,20 +322,21 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
             v = (v * 2.0 - 1.0);
             u = u * width/height;
             vec3 rd = ca * (vec3(u, v, near)).normalize();
-            
-
-
-            
             normalColor = vec3(0,0,0);
             directColor = vec3(0,0,0);
             boundingBoxColor = vec3(0,0,0);
 
-            Intersection intersectionBox = bvh.intersect(Ray(ro, rd));
-            if (intersectionBox.t > 0 && intersectionBox.t<inf) {
+            Intersection intersectionBox = bvh.intersectBoundingBox(Ray(ro, rd));
+            // Intersection intersectionBox = bvh.octree->extents->intersect(Ray(ro, rd));
+            // if (intersectionBox.t > 0 && intersectionBox.t<inf) {
+            // if (bvh.octree.extents->intersect(Ray(ro, rd)) > eps){
+            // if (bvh.octree.children[7]->extents->intersect(Ray(ro, rd)) > eps){
+            if (intersectionBox.object){
                 boundingBoxImage.setPixel(j, i, qRgb(0, 255, 0));
             }
 
-            Intersection intersection = scene.intersect(Ray(ro, rd));
+            
+            Intersection intersection = bvh.intersect(Ray(ro, rd));
             if (intersection.object) {
                 const Object &obj = *intersection.object;
                 vec3 hit = ro + rd * intersection.t;
@@ -312,12 +362,20 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
                 // }
                 // Shadow
 
-                Intersection shadow = scene.intersect(Ray(hit + ld*0.01, ld));
-                // Intersection shadow = bvh.intersect(Ray(hit + ld*0.01, ld));
+                Intersection shadow = bvh.intersect(Ray(hit, ld));
                 double distToLight = (pointLig - hit).length();
                 if (shadow.object && shadow.t <= distToLight){
-                    directColor = directColor * clamp(3.8 * shadow.t/(distToLight), 0.0, 1.0); 
+                    // directColor = directColor * clamp(3.8 * shadow.t/(distToLight), 0.0, 1.0); 
+                    directColor = vec3();
                 }
+
+                // if (shadow.t == inf){
+                //     directColor = vec3(255,0,0);   
+                // }
+                
+                // if (!shadow.object){
+                //     directColor = vec3();   
+                // }
 
                 directColor = directColor + ambColor * 255; 
                 directColor = clamp(directColor, vec3(0,0,0), vec3(255,255,255));

@@ -16,11 +16,13 @@ enum Refl_t { DIFF, SPEC, REFR };  // material types, used in radiance()
 
 class Object {
 protected:
+
     vec3 emission;
     vec3 color;
     Refl_t refl; // reflection type (DIFFuse, SPECular, REFRactive)
-    // Extents bounds;
+    Extents* bounds;
 public:
+    std::string name;
     Object(){}
     virtual ~Object(){}
     virtual vec3 getNormal(const vec3 &) const{ return vec3(1);}
@@ -42,13 +44,14 @@ public:
 
     }
 
-    virtual Extents* computebounds(){
-        return new Extents();
+    virtual void computebounds(){
+        
+
     }
 
-    // virtual Extents getBounds(){
-    //     return bounds;
-    // }
+    Extents* getBounds(){
+        return bounds;
+    }
     // virtual vec3 debug(vec3 _pos) const{return vec3(0);}
 };
 
@@ -123,17 +126,17 @@ public:
         center = vec3(pos.x, pos.y, pos.z);
     }
 
-    Extents* computebounds(){
-        Extents *bounds = new Extents();
+    void computebounds(){
+        bounds = new Extents();
         for (uint8_t i = 0; i < BVH::slabCount; ++i){
             vec3 slabN = BVH::normals[i];
             double d = center.dot(slabN);
             bounds->dnear[i] = -rad - d;
             bounds->dfar[i] = rad - d;
         }
-        return bounds;
     }
 
+    
     // virtual vec3 debug(vec3 _pos) const{return vec3(1);}
 };
 
@@ -283,13 +286,13 @@ public:
         updatePlane();
     }
 
-    Extents* computebounds(){
-        Extents *bounds = new Extents();
+    void computebounds(){
+        bounds = new Extents();
         for (uint8_t i = 0; i < BVH::slabCount; ++i){
             bounds->dnear[i] = inf;
             bounds->dfar[i] = -inf;
             for (int j = 0; j < 8; ++j){
-                qDebug()<<p[j];
+                // qDebug()<<p[j];
                 double d =  -p[j].dot(BVH::normals[i]);
                 if (d < bounds->dnear[i]){
                     bounds->dnear[i] = d;
@@ -299,7 +302,6 @@ public:
                 }
             }
         }
-        return bounds;
     }
 };
  
@@ -398,8 +400,8 @@ public:
         return tt;
     }
 
-    Extents* computebounds(){
-        Extents* bounds = new Extents();
+    void computebounds(){
+        bounds = new Extents();
         for (uint8_t i = 0; i < BVH::slabCount; ++i){
             vec3 slabN = BVH::normals[i];
             double d1 =  -p1.dot(slabN);
@@ -408,7 +410,7 @@ public:
             bounds->dnear[i] = fmin(d1, fmin(d2, d3));
             bounds->dfar[i] = fmax(d1, fmax(d2, d3));
         }
-        return bounds;
+        
     }
 };
 
