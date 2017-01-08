@@ -138,6 +138,10 @@ BVH::BVH(){
 }
 
 void BVH::setup(Scene &scene){
+    struct timeval start, end;
+    gettimeofday(&start, NULL);
+    qDebug() << "building bvh...";
+
     this->scene = &scene;
     Extents sceneExtents;
     for (uint32_t i = 0; i < scene.objects.size(); ++i) {
@@ -151,14 +155,16 @@ void BVH::setup(Scene &scene){
     // Construct bvh hierarchy.
     for (uint32_t i = 0; i < scene.objects.size(); ++i){
     // for (uint32_t i = 0; i < 2; ++i){
-        qDebug() << "add to bvh" << scene.objects[i]->name.c_str();
+        // qDebug() << "add to bvh" << scene.objects[i]->name.c_str();
         octree.addObject(scene.objects[i]);
-        qDebug();
+        // qDebug();
     }
 
-    qDebug() << "build bvh done.";
+    gettimeofday(&end, NULL);
+    double time = ((end.tv_sec  - start.tv_sec) * 1000000u + end.tv_usec - start.tv_usec) / 1.e6;
+    qDebug() << "build bvh done." << " time: " << time;
     octree.isLeaf = false;
-    octree.traverse();
+    // octree.traverse();
 }
 
 
@@ -211,14 +217,14 @@ void OctreeNode::traverse(){
 }
 
 void OctreeNode::addObject(Object *obj){
-    qDebug() << "addObject: " << obj->name.c_str() << "depth: " << depth;
+    // qDebug() << "addObject: " << obj->name.c_str() << "depth: " << depth;
     // qDebug() << "leaf" << isLeaf;
     // Extents *e = obj->computebounds();
     // Extents *e = new Extents(*obj->getBounds());
     Extents e = obj->getBounds();
     vec3 pos = e.getCentriod() - this->extents.getCentriod();
-    qDebug() << "obj cernter" << e.getCentriod();
-    qDebug() << "extents center" << this->extents.getCentriod();
+    // qDebug() << "obj cernter" << e.getCentriod();
+    // qDebug() << "extents center" << this->extents.getCentriod();
 
     int childIdx = 0;
 
@@ -226,7 +232,6 @@ void OctreeNode::addObject(Object *obj){
         return ;
     }
 
-    qDebug() << "pos: " << pos;
     if (pos.x >= 0 && pos.y >= 0 && pos.z >= 0){
         childIdx = 0;  
     }
@@ -252,9 +257,9 @@ void OctreeNode::addObject(Object *obj){
         childIdx = 7;
     }
 
-    qDebug() << "add to child" << childIdx;
+    // qDebug() << "add to child" << childIdx;
     if (!this->children[childIdx]){
-        qDebug() << "new child at " << depth << childIdx;;
+        // qDebug() << "new child at " << depth << childIdx;;
         this->children[childIdx] = new OctreeNode(this);
         this->children[childIdx]->depth = depth + 1;
         this->children[childIdx]->object = obj;
@@ -263,17 +268,17 @@ void OctreeNode::addObject(Object *obj){
         
     }
     else{
-        qDebug() << "occupied, at " << depth << childIdx;
-        qDebug() << "extent center" << this->children[childIdx]->extents.getCentriod();
+        // qDebug() << "occupied, at " << depth << childIdx;
+        // qDebug() << "extent center" << this->children[childIdx]->extents.getCentriod();
         this->children[childIdx]->extents.extendBy(e);
-        qDebug() << "after extent center" << this->children[childIdx]->extents.getCentriod();
+        // qDebug() << "after extent center" << this->children[childIdx]->extents.getCentriod();
         this->children[childIdx]->isLeaf = false;
         
-        qDebug() << "create new children";
+        // qDebug() << "create new children";
         
         Object* childObj = this->children[childIdx]->object;
         if (childObj){
-            qDebug() << "*****************existing: " << childObj->name.c_str();
+            // qDebug() << "*****************existing: " << childObj->name.c_str();
             this->children[childIdx]->object = nullptr;
             this->children[childIdx]->addObject(childObj);            
         }
@@ -336,7 +341,8 @@ void OctreeNode::intersectTest(const Ray &r, Intersection &intersection) const{
 Intersection BVH::intersectBoundingBox(const Ray& ray) const{
     Intersection closestIntersection;
     for (uint8_t i = 0; i < scene->objects.size(); ++i){
-        double t = scene->objects[i]->getBounds().intersectWireframe(ray);
+        // double t = scene->objects[i]->getBounds().intersectWireframe(ray);
+        double t = scene->objects[i]->getBounds().intersect(ray);
         if (t > eps && t < closestIntersection.t) {
             closestIntersection.t = t;
             closestIntersection.object = scene->objects[i];
@@ -349,7 +355,6 @@ Intersection BVH::intersectBVH(const Ray& ray) const{
     // std::priority_queue<OctreeNode> closeNode;
     Intersection closestIntersection;
     octree.intersectTestWireframe(ray, closestIntersection);
-    // closestIntersection.t = octree.extents.intersectWireframe(ray);
     return closestIntersection;   
 }
 
@@ -361,6 +366,9 @@ Intersection BVH::intersect(const Ray& ray) const{
     return closestIntersection;   
 }
 
+
+
+#if SLABCOUNT == 7
 const vec3 BVH::normals[SLABCOUNT] = {
     vec3(1, 0, 0),
     vec3(0, 1, 0),
@@ -371,4 +379,12 @@ const vec3 BVH::normals[SLABCOUNT] = {
     vec3(sqrt(3.0)/3.0, -sqrt(3.0)/3.0, sqrt(3.0)/3.0)
 
 };
+#endif
 
+#if SLABCOUNT == 3
+const vec3 BVH::normals[SLABCOUNT] = {
+    vec3(1, 0, 0),
+    vec3(0, 1, 0),
+    vec3(0, 0, 1)
+};
+#endif

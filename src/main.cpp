@@ -77,7 +77,12 @@ Window::Window(QWidget *parent) :
     rgbBox->addItem(tr("G"));
     rgbBox->addItem(tr("B"));
     rgbBox->addItem(tr("Grey"));
-    
+
+    QSlider *camRotateXSlider = new QSlider(this);
+    camRotateXSlider->setGeometry(QRect(QPoint(0, 200), QSize(200, 50)));
+    camRotateXSlider->setOrientation(Qt::Horizontal);
+    // camRotateXSlider->setMinimum(0.0);
+    // camRotateXSlider->setMaximum(M_PI);
 
     toolbar->addWidget(channelBox);
     toolbar->addWidget(rgbBox);
@@ -121,6 +126,10 @@ Window::Window(QWidget *parent) :
     connect(gammaCheckbox, SIGNAL(stateChanged(int)),
         this, SLOT(gammaState(int)));
 
+
+    connect(camRotateXSlider, SIGNAL(valueChanged(int)),
+        this, SLOT(camRotateY(int)));
+
     tracer = new Raytracer(width, height, samples);
 
     normalImage = QImage(width, height, QImage::Format_RGB32);
@@ -134,6 +143,15 @@ Window::Window(QWidget *parent) :
     update();
 
  }
+
+void Window::camRotateY(int rotateY){
+    // qDebug() << "camRotateY: " << rotateY;
+    tracer->rotateCamera(0, rotateY * 0.02f * M_PI, 0);
+    double directTime;
+    tracer->renderDirect(directTime, directImage, normalImage, boundingBoxImage);
+    update();
+}
+
 void Window::changeSample(const QString& _text){
     // debugLabel->setText(_text);
     samples = _text.toInt();

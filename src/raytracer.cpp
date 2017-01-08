@@ -67,7 +67,7 @@ inline double clamp(double x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
 
 
 vec3 Raytracer::tracing(const Ray &ray, int depth, unsigned short *Xi){
-   
+    // Intersection intersection = bvh.intersectBoundingBox(ray);
     // Intersection intersection = scene.intersect(ray);
     Intersection intersection = bvh.intersect(ray);
     
@@ -149,13 +149,23 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     samples = _samples;
 
     Mesh *mesh = new Mesh();
+    mesh->name = "mesh";
     ObjLoader *loader = new ObjLoader();
     // loader->loadObj("teapot.obj", mesh);
-    // loader->loadObj("rifle.obj", mesh);
     loader->loadObj("cube.obj", mesh);
+    // loader->loadObj("sponza.obj", mesh);
+    // loader->loadObj("cube.obj", mesh);
     
     delete loader;
     qDebug() << "Object Loaded";
+
+    scene.fov = M_PI/3; // hotirzontal fov 60
+    float rtY = 1.5* M_PI;
+    float camDist = 250;
+    scene.ro = vec3(50 + camDist * cos(rtY), 60, 50 -camDist * sin(rtY));
+    scene.ta = vec3(50, 50, 50);
+    scene.ca = setCamera(scene.ro, scene.ta, 0.0);
+    scene.near = 2.0/tan(scene.fov/2);
 
     // for (uint32_t i = 0; i < mesh->triangles.size(); ++i){
     //     qDebug() << i << ":" << mesh->triangles[i]->p1;
@@ -166,73 +176,91 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     // }
     // mesh->scale(0.8, 0.8, 0.8);
 
+
     
     
     Object *light = (Object*)new Box(vec3(50, 0.1, 50),       vec3(12, 12, 12), vec3(), DIFF);
     light->name = "light";
     Transform *lightxform = new Transform(light);
-    lightxform->setTranslate(50, 81, 60);
+    lightxform->setTranslate(50, 99.9, 60);
+
     scene.root->addChild(lightxform);
 
-    for (int i = 0; i < 3; ++i){
-        for (int j = 0; j < 3; ++j){
-            for (int k = 0; k < 3; ++k){
-            // Object *cube = new Box(vec3(20, 20, 20), vec3(), vec3(1, 1, 1)*.999, DIFF);
-            // Transform *t = new Transform();
-            // t->addObject((Object*)cube);
-            // t->setScale(1, 0.5, 1);
-            // // t->rotateY(M_PI/6);
-            // t->setTranslate(i * 30, j*30, 50);
-            // scene.root->addChild(t); 
 
-                Object *sphere = new Sphere(10.0, vec3(), vec3(1, 1, 1)*.999, DIFF);
-                sphere->name = "sphere" + std::to_string(i + j * 10 + k * 100);
-                Transform *t = new Transform(sphere);
-                t->setScale(1, 0.5, 1);
-                t->setTranslate(i * 50, j*40, 50 - k * 50);
-                scene.root->addChild(t);
-            }
-        }
-    }
+    Transform *meshxform = new Transform(mesh);
+    meshxform->rotateY(M_PI*0.5);
+    meshxform->setTranslate(50, 50, 50);
+    scene.root->addChild(meshxform);
 
-    // Object *floor = (Object*)new Box(vec3(250, 0.1, 250),       vec3(), vec3(1,1,1), DIFF);
-    // floor->name = "floor";
-    // Transform *xform = new Transform(floor);
-    // xform->setTranslate(50, 10, 50);
-    // scene.root->addChild(xform);
+    // for (int i = 0; i < 3; ++i){
+    //     for (int j = 0; j < 3; ++j){
+    //         for (int k = 0; k < 3; ++k){
+    //         // Object *cube = new Box(vec3(20, 20, 20), vec3(), vec3(1, 1, 1)*.999, DIFF);
+    //         // Transform *t = new Transform();
+    //         // t->addObject((Object*)cube);
+    //         // t->setScale(1, 0.5, 1);
+    //         // // t->rotateY(M_PI/6);
+    //         // t->setTranslate(i * 30, j*30, 50);
+    //         // scene.root->addChild(t); 
+
+    //             Object *sphere = new Sphere(10.0, vec3(), vec3(1, 1, 1)*.999, DIFF);
+    //             sphere->name = "sphere" + std::to_string(i + j * 10 + k * 100);
+    //             Transform *t = new Transform(sphere);
+    //             t->setScale(1, 0.5, 1);
+    //             t->setTranslate(i * 50, j*40,  k * 50);
+    //             scene.root->addChild(t);
+    //         }
+    //     }
+    // }
+
+    Object *floor = (Object*)new Box(vec3(100, 0.1, 250),       vec3(), vec3(.75, .75, .75), DIFF);
+    floor->name = "floor";
+    Transform *xform = new Transform(floor);
+    xform->setTranslate(50, 0, 50);
+    scene.root->addChild(xform);
 
 
-    // Object *left = (Object*)new Box(vec3(0.1, 250, 250),       vec3(), vec3(1,1,1), DIFF);
+    // Object *left = (Object*)new Box(vec3(0.1, 100, 260),       vec3(), vec3(.75, .25, .25), DIFF);
     // left->name = "left";
     // Transform *xform1 = new Transform(left);
-    // xform1->setTranslate(0, 20, 50);
+    // xform1->setTranslate(0, 50, 50);
     // scene.root->addChild(xform1);
 
 
-    // Object *right = (Object*)new Box(vec3(0.1, 250, 250),       vec3(), vec3(1,1,1), DIFF);
+    // Object *right = (Object*)new Box(vec3(0.1, 100, 260),       vec3(), vec3(.25, .75, .25), DIFF);
     // right->name = "right";
     // Transform *xform2 = new Transform(right);
-    // xform2->setTranslate(100, 20, 50);
+    // xform2->setTranslate(100, 50, 50);
     // scene.root->addChild(xform2);
 
 
-    // Object *ceil = (Object*)new Box(vec3(250, 0.1, 250),       vec3(), vec3(1,1,1), DIFF);
+    // Object *ceil = (Object*)new Box(vec3(100, 0.2, 260),       vec3(), vec3(.75, .75, .75), DIFF);
     // ceil->name = "ceil";
     // Transform *xform3 = new Transform(ceil);
-    // xform3->setTranslate(50, 81.6, 50);
+    // xform3->setTranslate(50, 100, 50);
     // scene.root->addChild(xform3);
 
-    // Object *front = (Object*)new Box(vec3(250, 250, 0.1),       vec3(), vec3(1,1,1), DIFF);
+    // Object *front = (Object*)new Box(vec3(100, 100, 0.1),       vec3(), vec3(.75, .75, .75), DIFF);
     // front->name = "front";
     // Transform *xform4 = new Transform(front);
-    // xform4->setTranslate(100, 20, 0);
+    // xform4->setTranslate(50, 50, -70);
     // scene.root->addChild(xform4);
 
-    // Object *back = (Object*)new Box(vec3(250, 250, 0.1),       vec3(), vec3(1,1,1), DIFF);
+    // Object *back = (Object*)new Box(vec3(100, 100, 0.1),       vec3(), vec3(1,1,1), DIFF);
     // back->name = "back";
     // Transform *xform5 = new Transform(back);
-    // xform5->setTranslate(100, 20, 296);
+    // xform5->setTranslate(50, 50, 300);
     // scene.root->addChild(xform5);
+
+    
+    
+    // Transform *camTransform = new Transform();
+    // camTransform->rotateY(M_PI * 0.1);
+    // camTransform->setTranslate(scene.ta.x, scene.ta.y, scene.ta.z);
+    // vec4 ro4 = vec4(scene.ro, 1);
+    // ro4 = camTransform.getTransformMatrix() * ro4;
+    // scene.ro = vec3(ro4.x, ro4.y, ro4.z);
+    
 
     scene.updateTransform(scene.root, mat4());
     // scene.add((Object*)new Plane(vec3(1, 0, 0), 0,       vec3(), vec3(.75, .25, .25), DIFF)); //Left
@@ -251,15 +279,17 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     // scene.add((Object*)cube); //Glas
     
     // scene.add((Object*)new Triangle(vec3(30, 20, 60), vec3(50, 50, 60),  vec3(80, 10, 60),       vec3(), vec3(1, 1, 1)*.999, DIFF)); 
-    scene.fov = M_PI/3; // hotirzontal fov 60
-    scene.ro = vec3(50, 52, 295.6);
-    // scene.ro = vec3(50, 52, 185.6);
-    // scene.ro = vec3(0, 52, 295.6);
-    scene.ta = scene.ro + vec3(0, -0.042612, -1).normalize(); 
-    scene.ca = setCamera(scene.ro, scene.ta, 0.0);
-    scene.near = 2.0/tan(scene.fov/2);
+    
 
     bvh.setup(scene);
+}
+
+void Raytracer::rotateCamera(float x, float y, float z){
+    float camDist = 250;
+    scene.ro = vec3(50 + 250 * cos(y), 50, 50 -250 * sin(y));
+    scene.ta = vec3(50, 50, 50);
+    scene.ca = setCamera(scene.ro, scene.ta, 0.0);
+    scene.near = 2.0f/tan(scene.fov*0.5f);
 }
 
 vec3 Raytracer::render_pixel(unsigned short i, unsigned short j, unsigned short *Xi){
@@ -331,8 +361,10 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
             // if (intersectionBox.t > 0 && intersectionBox.t<inf) {
             // if (bvh.octree.extents.intersectWireframe(Ray(ro, rd)) > eps){
             // if (bvh.octree.children[7]->extents.intersectWireframe(Ray(ro, rd)) > eps){
+            
             if (intersectionBox.t > eps && intersectionBox.t < inf){
-                boundingBoxImage.setPixel(j, i, qRgb(0, 255, 0));
+                boundingBoxColor = vec3(0, 1, 0);
+                
             }
 
             
@@ -344,43 +376,24 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
                 normalColor = vec3((N.x + 1)*0.5, (N.y + 1)*0.5, (N.z+1) * 0.25 + 0.5) * 255;
                 // normalColor = obj.c * 255;
                 vec3 ld = (pointLig - hit).normalize();
-                directColor = obj.getDiffuse() * fmax(ld.dot(N), 0) * 255;
-                // directColor = obj.getDiffuse() * 255;
+                directColor = obj.getDiffuse() * fmax(ld.dot(N), 0);
 
-                // for (int k = 0; k < scene.objects.size(); ++k) {
-                //     const Object &ligObj = *scene.objects[k];
-                //     if (ligObj.getEmission().x + ligObj.getEmission().y + ligObj.getEmission().z > 0) {
-                //         vec3 ld = (ligObj. - hit).normalize();
-                //         Intersection shadow = scene.intersect(Ray(hit + ld, ld);
-                //         if (*shadow.object == ligObj){
-                            
-                //         }   
-                //         else{
-                //             directColor = directColor * 0.2; 
-                //         }     
-                //     }
-                // }
-                // Shadow
 
                 Intersection shadow = bvh.intersect(Ray(hit, ld));
                 double distToLight = (pointLig - hit).length();
                 if (shadow.object && shadow.t <= distToLight){
-                    // directColor = directColor * clamp(3.8 * shadow.t/(distToLight), 0.0, 1.0); 
-                    directColor = vec3();
+                    directColor = directColor * clamp(3.8 * shadow.t/(distToLight), 0.0, 1.0); 
+                    // directColor = vec3();
                 }
-
-                // if (shadow.t == inf){
-                //     directColor = vec3(255,0,0);   
-                // }
+                directColor = directColor + ambColor;
                 
-                // if (!shadow.object){
-                //     directColor = vec3();   
-                // }
-
-                directColor = directColor + ambColor * 255; 
-                directColor = clamp(directColor, vec3(0,0,0), vec3(255,255,255));
             }
 
+            boundingBoxColor = boundingBoxColor * 255;
+            directColor = directColor * 255;
+            directColor = (directColor + boundingBoxColor); 
+            directColor = clamp(directColor, vec3(0,0,0), vec3(255,255,255));
+            boundingBoxImage.setPixel(j, i, qRgb(boundingBoxColor.x, boundingBoxColor.y, boundingBoxColor.z));
             normalImage.setPixel(j, i, qRgb(normalColor.x, normalColor.y, normalColor.z));
             directImage.setPixel(j, i, qRgb(directColor.x, directColor.y, directColor.z));
             

@@ -17,6 +17,7 @@
 #include <QStatusBar>
 #include <QCheckBox>
 #include <QColor>
+#include <QSlider>
 
 class Window : public QMainWindow
 {
@@ -38,6 +39,7 @@ class Window : public QMainWindow
     Raytracer *tracer;
     QCheckBox *gammaCheckbox;
     QComboBox *rgbBox;
+    // QSlider *camRotateXSlider;
 private slots:
     void render();
     void saveImage();
@@ -47,7 +49,8 @@ private slots:
     void changeResolutionWidth(const QString&);
     void changeResolutionHeight(const QString&);
     void gammaState(int state);
-    QImage postProcess(const QImage &image);
+    QImage postProcess(const QImage&);
+    void camRotateY(int);
 private:
     int displayMode; // 0 - render, 1 - normal
 

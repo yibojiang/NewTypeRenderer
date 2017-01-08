@@ -38,6 +38,7 @@ public:
     }
 
     void addMesh(Mesh* mesh) {
+
         for (uint32_t i = 0; i < mesh->faces.size(); ++i) {
             Triangle *triangle = new Triangle(mesh->faces[i]->v1, mesh->faces[i]->v2, mesh->faces[i]->v3);
             add((Object*)triangle);
@@ -77,14 +78,17 @@ public:
 
     void updateTransform(Transform* transform, mat4 mt) {
 
-
         mt = mt * transform->getTransformMatrix();
-
         if (transform->object){
-            add(transform->object);
-            // qDebug() << mt;
             transform->object->updateTransformMatrix(mt);
 
+            qDebug()<<"add mesh:" << transform->object->name.c_str();
+            if (transform->object->isMesh){
+                addMesh((Mesh*)transform->object);    
+            }
+            else{
+                add(transform->object);    
+            }
         }
 
         for (unsigned int i = 0; i < transform->children.size(); ++i){
@@ -96,7 +100,7 @@ public:
     vec3 ro;
     vec3 ta;
     float fov;
-    float near;    
+    float near;
 };
 
 
@@ -116,5 +120,6 @@ public:
     unsigned short width;
     unsigned short height;
     void setResolution(const int &width, const int &height);
+    void rotateCamera(float, float, float);
 };
 

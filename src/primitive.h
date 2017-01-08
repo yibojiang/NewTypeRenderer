@@ -21,8 +21,10 @@ protected:
     vec3 color;
     Refl_t refl; // reflection type (DIFFuse, SPECular, REFRactive)
     Extents bounds;
+
 public:
     std::string name;
+    bool isMesh;
     Object(){}
     virtual ~Object(){}
     virtual vec3 getNormal(const vec3 &) const{ return vec3(1);}
@@ -68,6 +70,7 @@ public:
         emission = _e;
         color = _c;
         refl = _refl;
+        isMesh = false;
     }
 
     Plane(vec3 _nor, double _off) { off = _off; normal = _nor; }
@@ -106,6 +109,7 @@ public:
         emission = _e;
         color = _c;
         refl = _refl;
+        isMesh = false;
     }
 
     Sphere(double _rad, vec3 _pos) { rad = _rad; center = _pos; }
@@ -173,6 +177,8 @@ public:
         p[6] = center + vec3(-half_size.x, half_size.y, -half_size.z);
         p[7] = center + vec3(-half_size.x, -half_size.y, -half_size.z);
         updatePlane();
+
+        isMesh = false;
         
     }
 
@@ -323,6 +329,7 @@ public:
         u = p2 - p1;
         v = p3 - p1;
         normal = u.cross(v).normalize();              // cross product
+        isMesh = false;
     }
     ~Triangle(){
 
@@ -401,7 +408,6 @@ public:
     }
 
     void computebounds(){
-        
         for (uint8_t i = 0; i < SLABCOUNT; ++i){
             vec3 slabN = BVH::normals[i];
             double d1 =  -p1.dot(slabN);
@@ -410,7 +416,6 @@ public:
             bounds.dnear[i] = fmin(d1, fmin(d2, d3));
             bounds.dfar[i] = fmax(d1, fmax(d2, d3));
         }
-        
     }
 };
 
@@ -452,7 +457,7 @@ public:
     std::vector<Face*> faces;
     
     Mesh() {
-
+        isMesh = true;
     }
 
     ~Mesh(){
@@ -462,16 +467,20 @@ public:
     }
 
     void updateTransformMatrix(const mat4& m){
+        // qDebug()<<"update mesh matrix";
         for (uint32_t i = 0; i < faces.size(); ++i){
             vec4 v1(faces[i]->v1, 1.0);
             vec4 v2(faces[i]->v2, 1.0);
             vec4 v3(faces[i]->v3, 1.0);
+            // qDebug() << v1 << v2 << v3;
             v1 = m * v1;
             v2 = m * v2;
             v3 = m * v3;
+            // qDebug() << "after: " << v1 << v2 << v3;
             faces[i]->v1 = vec3(v1.x, v1.y, v1.z);
             faces[i]->v2 = vec3(v2.x, v2.y, v2.z);
             faces[i]->v3 = vec3(v3.x, v3.y, v3.z);
+
         }
     }
 
