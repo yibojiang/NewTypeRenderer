@@ -68,8 +68,8 @@ inline double clamp(double x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
 
 vec3 Raytracer::tracing(const Ray &ray, int depth, unsigned short *Xi){
    
-    Intersection intersection = scene.intersect(ray);
-    // Intersection intersection = bvh.intersect(ray);
+    // Intersection intersection = scene.intersect(ray);
+    Intersection intersection = bvh.intersect(ray);
     
     if (!intersection.object) return vec3(0);
 
@@ -174,7 +174,7 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     lightxform->setTranslate(50, 81, 60);
     scene.root->addChild(lightxform);
 
-    for (int i = 0; i < 4; ++i){
+    for (int i = 0; i < 3; ++i){
         for (int j = 0; j < 3; ++j){
             for (int k = 0; k < 3; ++k){
             // Object *cube = new Box(vec3(20, 20, 20), vec3(), vec3(1, 1, 1)*.999, DIFF);
@@ -189,7 +189,7 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
                 sphere->name = "sphere" + std::to_string(i + j * 10 + k * 100);
                 Transform *t = new Transform(sphere);
                 t->setScale(1, 0.5, 1);
-                t->setTranslate(i * 30, j*30, 50 - k * 30);
+                t->setTranslate(i * 50, j*40, 50 - k * 50);
                 scene.root->addChild(t);
             }
         }

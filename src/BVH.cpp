@@ -1,7 +1,7 @@
 #include "BVH.h"
 #include "raytracer.h"
 Extents::Extents(){
-    for (uint8_t i = 0; i < BVH::slabCount; ++i){
+    for (uint8_t i = 0; i < SLABCOUNT; ++i){
         dnear[i] = inf;
         dfar[i] = -inf;
     }
@@ -16,7 +16,7 @@ vec3 Extents::getCentriod(){
 }
 
 void Extents::extendBy(Extents &extents){
-    for (int i = 0; i < BVH::slabCount; ++i){
+    for (int i = 0; i < SLABCOUNT; ++i){
         dnear[i] = fmin(extents.dnear[i], dnear[i]);
         dfar[i] = fmax(extents.dfar[i], dfar[i]);
     }
@@ -26,7 +26,7 @@ double Extents::intersect(const Ray &r) const{ // returns distance, 0 if nohit
     
     double tmin = -inf;
     double tmax = inf;
-    for (uint8_t i = 0; i < BVH::slabCount; ++i){
+    for (uint8_t i = 0; i < SLABCOUNT; ++i){
         double tNear = (-dnear[i] - r.origin.dot(BVH::normals[i])) / r.dir.dot(BVH::normals[i]);
         double tFar = (-dfar[i] - r.origin.dot(BVH::normals[i])) / r.dir.dot(BVH::normals[i]);
 
@@ -54,15 +54,81 @@ double Extents::intersect(const Ray &r) const{ // returns distance, 0 if nohit
         return 0;
     }
 
-    // return tmin;
-    // return fabs(tmin);
     if (tmin < 0){
         return tmax;
     }
-    else{
-        return tmin;
-    }
+    
     return tmin;
+    
+}
+
+double Extents::intersectWireframe(const Ray &r) const{ // returns distance, 0 if nohit    
+    
+    double tmin = -inf;
+    double tmax = inf;
+    for (uint8_t i = 0; i < SLABCOUNT; ++i){
+        double tNear = (-dnear[i] - r.origin.dot(BVH::normals[i])) / r.dir.dot(BVH::normals[i]);
+        double tFar = (-dfar[i] - r.origin.dot(BVH::normals[i])) / r.dir.dot(BVH::normals[i]);
+
+        // Swap near and far t.
+        if (tNear > tFar){
+            double tmp = tFar;
+            tFar = tNear;
+            tNear = tmp;
+        }
+
+        if (tNear > tmin){
+            tmin = tNear;
+        }
+
+        if (tFar < tmax){
+            tmax = tFar;
+        }
+    }
+
+    if (tmax < 0){
+        return 0;
+    }
+
+    if (tmin > tmax){
+        return 0;
+    }
+    double width = 0.4;
+    int count = 0;
+    double t = tmin;
+    vec3 hit = r.origin + r.dir * t;
+    for (int i = 0; i < SLABCOUNT; ++i) {
+        if ( fabs(-dnear[i] - hit.dot(BVH::normals[i])) < width){
+            count ++;
+        }
+        else if ( fabs(-dfar[i] - hit.dot(BVH::normals[i])) < width){
+            count ++;
+        }
+    }   
+
+    if (count > 1){
+        return t;
+    }
+
+    count = 0;
+    t = tmax;
+    hit = r.origin + r.dir * t;
+    for (int i = 0; i < SLABCOUNT; ++i) {
+        if ( fabs(-dnear[i] - hit.dot(BVH::normals[i])) < width){
+            count ++;
+        }
+        else if ( fabs(-dfar[i] - hit.dot(BVH::normals[i])) < width){
+            count ++;
+        }
+
+    }
+
+    if (count > 1){
+        return t;
+    }
+    else{
+        return 0;
+    }
     
 }
 
@@ -76,7 +142,7 @@ void BVH::setup(Scene &scene){
     Extents sceneExtents;
     for (uint32_t i = 0; i < scene.objects.size(); ++i) {
         scene.objects[i]->computebounds();
-        Extents e = *scene.objects[i]->getBounds();
+        Extents e = scene.objects[i]->getBounds();
         sceneExtents.extendBy(e);
     }
     
@@ -149,7 +215,7 @@ void OctreeNode::addObject(Object *obj){
     // qDebug() << "leaf" << isLeaf;
     // Extents *e = obj->computebounds();
     // Extents *e = new Extents(*obj->getBounds());
-    Extents e = *obj->getBounds();
+    Extents e = obj->getBounds();
     vec3 pos = e.getCentriod() - this->extents.getCentriod();
     qDebug() << "obj cernter" << e.getCentriod();
     qDebug() << "extents center" << this->extents.getCentriod();
@@ -252,12 +318,17 @@ void OctreeNode::intersectTest(const Ray &r, Intersection &intersection) const{
 Intersection BVH::intersectBoundingBox(const Ray& ray) const{
     Intersection closestIntersection;
     for (uint8_t i = 0; i < scene->objects.size(); ++i){
-        double t = scene->objects[i]->getBounds()->intersect(ray);
+        double t = scene->objects[i]->getBounds().intersectWireframe(ray);
         if (t > eps && t < closestIntersection.t) {
             closestIntersection.t = t;
             closestIntersection.object = scene->objects[i];
         }
     }
+    return closestIntersection;
+}
+
+Intersection BVH::intersectBVH(const Ray& ray) const{
+    Intersection closestIntersection;
     return closestIntersection;
 }
 
@@ -269,14 +340,14 @@ Intersection BVH::intersect(const Ray& ray) const{
     return closestIntersection;   
 }
 
-const vec3 BVH::normals[BVH::slabCount] = {
+const vec3 BVH::normals[SLABCOUNT] = {
     vec3(1, 0, 0),
     vec3(0, 1, 0),
     vec3(0, 0, 1),
-    vec3(sqrt(3.0)/3.0, sqrt(3.0)/3.0, sqrt(3.0)/3.0),
-    vec3(-sqrt(3.0)/3.0, sqrt(3.0)/3.0, sqrt(3.0)/3.0),
-    vec3(-sqrt(3.0)/3.0, -sqrt(3.0)/3.0, sqrt(3.0)/3.0),
-    vec3(sqrt(3.0)/3.0, -sqrt(3.0)/3.0, sqrt(3.0)/3.0)
+    // vec3(sqrt(3.0)/3.0, sqrt(3.0)/3.0, sqrt(3.0)/3.0),
+    // vec3(-sqrt(3.0)/3.0, sqrt(3.0)/3.0, sqrt(3.0)/3.0),
+    // vec3(-sqrt(3.0)/3.0, -sqrt(3.0)/3.0, sqrt(3.0)/3.0),
+    // vec3(sqrt(3.0)/3.0, -sqrt(3.0)/3.0, sqrt(3.0)/3.0)
 
 };
 
