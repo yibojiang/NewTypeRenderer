@@ -1,7 +1,7 @@
 #pragma once
 #include "vec.h"
 #include <queue>
-#define SLABCOUNT 3
+#define SLABCOUNT 7
 class Scene;
 class Object;
 struct Ray;
@@ -15,11 +15,19 @@ public:
     double dnear[SLABCOUNT], dfar[SLABCOUNT];
     Extents();
     ~Extents();
-    vec3 getCentriod();
+    vec3 getCentriod() const;
     // Extents group(Extents &);
     void extendBy(Extents &);
-    double intersect(const Ray &r)const;
-    double intersectWireframe(const Ray &r)const;
+    double intersect(const Ray &r) const;
+    double intersectWireframe(const Ray &r) const;
+    friend bool operator==(Extents a, const Extents& b){
+        if (a.getCentriod() == b.getCentriod()){
+            return true;
+        }
+        else{
+            return false;   
+        }
+    }
 
 };
 

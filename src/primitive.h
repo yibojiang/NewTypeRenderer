@@ -34,6 +34,8 @@ public:
         return color;
     }
 
+    virtual vec3 getCentriod() const{ return vec3(); }
+
     virtual vec3 getEmission() const{
         return emission;
     }
@@ -42,14 +44,9 @@ public:
         return refl;
     }
 
-    virtual void updateTransformMatrix(const mat4&){
+    virtual void updateTransformMatrix(const mat4&){}
 
-    }
-
-    virtual void computebounds(){
-        
-
-    }
+    virtual void computebounds(){}
 
     Extents getBounds(){
         return bounds;
@@ -104,6 +101,8 @@ public:
     double rad;
     vec3 center;
 
+
+
     Sphere(double _rad, vec3 _e, vec3 _c, Refl_t _refl){
         rad = _rad;
         emission = _e;
@@ -138,6 +137,10 @@ public:
             bounds.dnear[i] = -rad - d;
             bounds.dfar[i] = rad - d;
         }
+    }
+
+    vec3 getCentriod() const{
+        return center;
     }
 
     
@@ -309,6 +312,10 @@ public:
             }
         }
     }
+
+    vec3 getCentriod() const{
+        return center;
+    }
 };
  
 class Triangle : public Object{
@@ -417,6 +424,10 @@ public:
             bounds.dfar[i] = fmax(d1, fmax(d2, d3));
         }
     }
+
+    vec3 getCentriod() const{
+        return (p1 + p2 + p3) / 3.0;
+    }
 };
 
 class Face
@@ -481,6 +492,9 @@ public:
             faces[i]->v2 = vec3(v2.x, v2.y, v2.z);
             faces[i]->v3 = vec3(v3.x, v3.y, v3.z);
 
+            faces[i]->n1 = m * faces[i]->n1;
+            faces[i]->n2 = m * faces[i]->n2;
+            faces[i]->n3 = m * faces[i]->n3;
         }
     }
 

@@ -41,6 +41,7 @@ public:
 
         for (uint32_t i = 0; i < mesh->faces.size(); ++i) {
             Triangle *triangle = new Triangle(mesh->faces[i]->v1, mesh->faces[i]->v2, mesh->faces[i]->v3);
+            triangle->name = mesh->name + '_' + std::to_string(i);
             add((Object*)triangle);
         }
     }
@@ -121,5 +122,6 @@ public:
     unsigned short height;
     void setResolution(const int &width, const int &height);
     void rotateCamera(float, float, float);
+    void setupScene();
 };
 

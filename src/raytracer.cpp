@@ -95,17 +95,25 @@ vec3 Raytracer::tracing(const Ray &ray, int depth, unsigned short *Xi){
     
 
     if (obj.getReflectionType() == DIFF) {
-        vec3 randd = cosineSampleHemisphere(erand48(Xi), erand48(Xi));
-        vec3 rotatedDir;
-        vec3 rotX, rotY;
-        ons(N, rotX, rotY);
-        rotatedDir.x = vec3(rotX.x, rotY.x, N.x).dot(randd);
-        rotatedDir.y = vec3(rotX.y, rotY.y, N.y).dot(randd);
-        rotatedDir.z = vec3(rotX.z, rotY.z, N.z).dot(randd);
-        vec3 d = rotatedDir; // Normalized
-        // vec3 d = N + uniformSampleHemisphere(erand48(Xi), erand48(Xi));
-        // double cost = d.dot(N);
-        return obj.getEmission() + f * tracing(Ray(hit, d), depth, Xi);
+        // vec3 randd = cosineSampleHemisphere(erand48(Xi), erand48(Xi));
+        // vec3 rotatedDir;
+        // vec3 rotX, rotY;
+        // ons(N, rotX, rotY);
+        // rotatedDir.x = vec3(rotX.x, rotY.x, N.x).dot(randd);
+        // rotatedDir.y = vec3(rotX.y, rotY.y, N.y).dot(randd);
+        // rotatedDir.z = vec3(rotX.z, rotY.z, N.z).dot(randd);
+        // vec3 d = rotatedDir; // Normalized
+        // // vec3 d = N + uniformSampleHemisphere(erand48(Xi), erand48(Xi));
+        // return obj.getEmission() + f * tracing(Ray(hit, d), depth, Xi);
+
+        double r1 = 2 * M_PI * erand48(Xi);
+        double r2 = erand48(Xi);
+        double r2s = sqrt(r2);
+        vec3 w = N;
+        vec3 u = ((fabs(w.x) > .1 ? vec3(0, 1) : vec3(1)).cross(w)).normalize();
+        vec3 v = w.cross(u);
+        vec3 d = (u * cos(r1) * r2s + v * sin(r1) * r2s + w * sqrt(1 - r2)).normalize();
+        return obj.getEmission() + f*(tracing(Ray(hit, d), depth, Xi));
     }
     if (obj.getReflectionType() == SPEC){            // Ideal SPECULAR reflection
         // r=d−2(d⋅n)n
@@ -143,18 +151,14 @@ vec3 Raytracer::tracing(const Ray &ray, int depth, unsigned short *Xi){
     
 }
 
-Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
-    width = _width;
-    height = _height;
-    samples = _samples;
-
+void Raytracer::setupScene(){
     Mesh *mesh = new Mesh();
     mesh->name = "mesh";
     ObjLoader *loader = new ObjLoader();
-    // loader->loadObj("teapot.obj", mesh);
+    // loader->loadObj("rifle.obj", mesh);
     loader->loadObj("cube.obj", mesh);
     // loader->loadObj("sponza.obj", mesh);
-    // loader->loadObj("cube.obj", mesh);
+    
     
     delete loader;
     qDebug() << "Object Loaded";
@@ -167,23 +171,12 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     scene.ca = setCamera(scene.ro, scene.ta, 0.0);
     scene.near = 2.0/tan(scene.fov/2);
 
-    // for (uint32_t i = 0; i < mesh->triangles.size(); ++i){
-    //     qDebug() << i << ":" << mesh->triangles[i]->p1;
-    //     qDebug() << i << ":" << mesh->triangles[i]->p2;
-    //     qDebug() << i << ":"  << mesh->triangles[i]->p3;
-    //     qDebug() << "normal:"  << mesh->triangles[i]->normal;
-    //     qDebug() << "";
-    // }
-    // mesh->scale(0.8, 0.8, 0.8);
-
-
     
     
     Object *light = (Object*)new Box(vec3(50, 0.1, 50),       vec3(12, 12, 12), vec3(), DIFF);
     light->name = "light";
     Transform *lightxform = new Transform(light);
     lightxform->setTranslate(50, 99.9, 60);
-
     scene.root->addChild(lightxform);
 
 
@@ -191,6 +184,7 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     meshxform->rotateY(M_PI*0.5);
     meshxform->setTranslate(50, 50, 50);
     scene.root->addChild(meshxform);
+
 
     // for (int i = 0; i < 3; ++i){
     //     for (int j = 0; j < 3; ++j){
@@ -220,37 +214,37 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     scene.root->addChild(xform);
 
 
-    // Object *left = (Object*)new Box(vec3(0.1, 100, 260),       vec3(), vec3(.75, .25, .25), DIFF);
-    // left->name = "left";
-    // Transform *xform1 = new Transform(left);
-    // xform1->setTranslate(0, 50, 50);
-    // scene.root->addChild(xform1);
+    Object *left = (Object*)new Box(vec3(0.1, 100, 260),       vec3(), vec3(.75, .25, .25), DIFF);
+    left->name = "left";
+    Transform *xform1 = new Transform(left);
+    xform1->setTranslate(0, 50, 50);
+    scene.root->addChild(xform1);
 
 
-    // Object *right = (Object*)new Box(vec3(0.1, 100, 260),       vec3(), vec3(.25, .75, .25), DIFF);
-    // right->name = "right";
-    // Transform *xform2 = new Transform(right);
-    // xform2->setTranslate(100, 50, 50);
-    // scene.root->addChild(xform2);
+    Object *right = (Object*)new Box(vec3(0.1, 100, 260),       vec3(), vec3(.25, .75, .25), DIFF);
+    right->name = "right";
+    Transform *xform2 = new Transform(right);
+    xform2->setTranslate(100, 50, 50);
+    scene.root->addChild(xform2);
 
 
-    // Object *ceil = (Object*)new Box(vec3(100, 0.2, 260),       vec3(), vec3(.75, .75, .75), DIFF);
-    // ceil->name = "ceil";
-    // Transform *xform3 = new Transform(ceil);
-    // xform3->setTranslate(50, 100, 50);
-    // scene.root->addChild(xform3);
+    Object *ceil = (Object*)new Box(vec3(100, 0.2, 260),       vec3(), vec3(.75, .75, .75), DIFF);
+    ceil->name = "ceil";
+    Transform *xform3 = new Transform(ceil);
+    xform3->setTranslate(50, 100, 50);
+    scene.root->addChild(xform3);
 
-    // Object *front = (Object*)new Box(vec3(100, 100, 0.1),       vec3(), vec3(.75, .75, .75), DIFF);
-    // front->name = "front";
-    // Transform *xform4 = new Transform(front);
-    // xform4->setTranslate(50, 50, -70);
-    // scene.root->addChild(xform4);
+    Object *front = (Object*)new Box(vec3(100, 100, 0.1),       vec3(), vec3(.75, .75, .75), DIFF);
+    front->name = "front";
+    Transform *xform4 = new Transform(front);
+    xform4->setTranslate(50, 50, -70);
+    scene.root->addChild(xform4);
 
-    // Object *back = (Object*)new Box(vec3(100, 100, 0.1),       vec3(), vec3(1,1,1), DIFF);
-    // back->name = "back";
-    // Transform *xform5 = new Transform(back);
-    // xform5->setTranslate(50, 50, 300);
-    // scene.root->addChild(xform5);
+    Object *back = (Object*)new Box(vec3(100, 100, 0.1),       vec3(), vec3(1,1,1), DIFF);
+    back->name = "back";
+    Transform *xform5 = new Transform(back);
+    xform5->setTranslate(50, 50, 300);
+    scene.root->addChild(xform5);
 
     
     
@@ -260,8 +254,14 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     // vec4 ro4 = vec4(scene.ro, 1);
     // ro4 = camTransform.getTransformMatrix() * ro4;
     // scene.ro = vec3(ro4.x, ro4.y, ro4.z);
-    
+}
 
+Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
+    width = _width;
+    height = _height;
+    samples = _samples;
+
+    setupScene();
     scene.updateTransform(scene.root, mat4());
     // scene.add((Object*)new Plane(vec3(1, 0, 0), 0,       vec3(), vec3(.75, .25, .25), DIFF)); //Left
     // scene.add((Object*)new Plane(vec3(-1, 0, 0), 99,       vec3(), vec3(.25, .25, .75), DIFF)); //Right
@@ -275,9 +275,7 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     // scene.add((Object*)new Sphere(16.5, vec3(50, 0, 90),       vec3(), vec3(1, 1, 1)*.999, SPEC)); //Glas
     // scene.add((Object*)new Sphere(16.5, vec3(73, 16.5, 78),       vec3(), vec3(1, 1, 1)*.999, SPEC)); //Glas
     // scene.add((Object*)new Sphere(16.5, vec3(20, 16.5, 90),       vec3(), vec3(1, 1, 1)*.999, REFR)); //Glas
-
     // scene.add((Object*)cube); //Glas
-    
     // scene.add((Object*)new Triangle(vec3(30, 20, 60), vec3(50, 50, 60),  vec3(80, 10, 60),       vec3(), vec3(1, 1, 1)*.999, DIFF)); 
     
 
@@ -286,7 +284,7 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
 
 void Raytracer::rotateCamera(float x, float y, float z){
     float camDist = 250;
-    scene.ro = vec3(50 + 250 * cos(y), 50, 50 -250 * sin(y));
+    scene.ro = vec3(50 + camDist * cos(y), 50, 50 -camDist * sin(y));
     scene.ta = vec3(50, 50, 50);
     scene.ca = setCamera(scene.ro, scene.ta, 0.0);
     scene.near = 2.0f/tan(scene.fov*0.5f);
@@ -356,7 +354,8 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
             directColor = vec3(0,0,0);
             boundingBoxColor = vec3(0,0,0);
 
-            Intersection intersectionBox = bvh.intersectBVH(Ray(ro, rd));
+            Intersection intersectionBox = bvh.intersectBoundingBox(Ray(ro, rd));
+            // Intersection intersectionBox = bvh.intersectBVH(Ray(ro, rd));
             // Intersection intersectionBox = bvh.octree->extents->intersect(Ray(ro, rd));
             // if (intersectionBox.t > 0 && intersectionBox.t<inf) {
             // if (bvh.octree.extents.intersectWireframe(Ray(ro, rd)) > eps){

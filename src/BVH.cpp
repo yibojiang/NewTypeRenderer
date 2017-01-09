@@ -11,7 +11,7 @@ Extents::~Extents(){
 
 }
 
-vec3 Extents::getCentriod(){
+vec3 Extents::getCentriod() const{
     return vec3(-(dnear[0] + dfar[0]) * 0.5, -(dnear[1] + dfar[1]) * 0.5, -(dnear[2] + dfar[2]) * 0.5);
 }
 
@@ -32,9 +32,10 @@ double Extents::intersect(const Ray &r) const{ // returns distance, 0 if nohit
 
         // Swap near and far t.
         if (tNear > tFar){
-            double tmp = tFar;
-            tFar = tNear;
-            tNear = tmp;
+            // double tmp = tFar;
+            // tFar = tNear;
+            // tNear = tmp;
+            std::swap(tFar, tNear);
         }
 
         if (tNear > tmin){
@@ -164,7 +165,7 @@ void BVH::setup(Scene &scene){
     double time = ((end.tv_sec  - start.tv_sec) * 1000000u + end.tv_usec - start.tv_usec) / 1.e6;
     qDebug() << "build bvh done." << " time: " << time;
     octree.isLeaf = false;
-    // octree.traverse();
+    octree.traverse();
 }
 
 
@@ -199,13 +200,14 @@ void OctreeNode::traverse(){
     // qDebug() << "children i:"
     
     if (isLeaf){
+        qDebug() << "leaf: " << this->object->name.c_str();
         return;
     }
     
     for (int i = 0; i < 8; ++i){
         
         if (children[i]){
-            qDebug() << "depth: " << depth << "cid:" << i;
+            // qDebug() << "depth: " << depth << "cid:" << i;
             children[i]->traverse();  
 
             // debugInfo += "\n";  
@@ -216,6 +218,11 @@ void OctreeNode::traverse(){
     
 }
 
+// friend bool Extents::operator==(Extents a, const Extents& b){
+//     return false;
+// }
+
+// TODO: bug exiests when two geometry share the same bounds.
 void OctreeNode::addObject(Object *obj){
     // qDebug() << "addObject: " << obj->name.c_str() << "depth: " << depth;
     // qDebug() << "leaf" << isLeaf;
@@ -223,39 +230,52 @@ void OctreeNode::addObject(Object *obj){
     // Extents *e = new Extents(*obj->getBounds());
     Extents e = obj->getBounds();
     vec3 pos = e.getCentriod() - this->extents.getCentriod();
-    // qDebug() << "obj cernter" << e.getCentriod();
+    // vec3 pos = obj->getCentriod() - this->extents.getCentriod();
+    // qDebug() << obj->name.c_str() << " center: " << obj->getCentriod();
+    // qDebug() << obj->name.c_str() << " center: " << e.getCentriod();
     // qDebug() << "extents center" << this->extents.getCentriod();
+    // qDebug() << "pos: " << pos;
 
     int childIdx = 0;
 
-    if (depth >5){
-        return ;
+    if (depth > 30){
+        return;
     }
 
-    if (pos.x >= 0 && pos.y >= 0 && pos.z >= 0){
+    
+    if (pos.x > 0 && pos.y > 0 && pos.z > 0){
         childIdx = 0;  
     }
-    else if (pos.x < 0 && pos.y >= 0 && pos.z >= 0){
+    else if (pos.x < 0 && pos.y > 0 && pos.z > 0){
         childIdx = 1;
     }
-    else if (pos.x < 0 && pos.y < 0 && pos.z >= 0){
+    else if (pos.x < 0 && pos.y < 0 && pos.z > 0){
         childIdx = 2;
     }
-    else if (pos.x >= 0 && pos.y < 0 && pos.z >= 0){
+    else if (pos.x > 0 && pos.y < 0 && pos.z > 0){
         childIdx = 3;
     }
-    else if (pos.x >= 0 && pos.y >= 0 && pos.z < 0){
+    else if (pos.x > 0 && pos.y > 0 && pos.z < 0){
         childIdx = 4;
     }
-    else if (pos.x < 0 && pos.y >= 0 && pos.z < 0){
+    else if (pos.x < 0 && pos.y > 0 && pos.z < 0){
         childIdx = 5;
     }
     else if (pos.x < 0 && pos.y < 0 && pos.z < 0){
         childIdx = 6;
     }
-    else if (pos.x >= 0 && pos.y < 0 && pos.z < 0){
+    else if (pos.x > 0 && pos.y < 0 && pos.z < 0){
         childIdx = 7;
     }
+    else{
+        for (int i = 0; i < 8; ++i){
+            if (!this->children[i]){
+                childIdx = i;
+                break;
+            }
+        }        
+    }
+
 
     // qDebug() << "add to child" << childIdx;
     if (!this->children[childIdx]){
@@ -268,23 +288,23 @@ void OctreeNode::addObject(Object *obj){
         
     }
     else{
+
+        
         // qDebug() << "occupied, at " << depth << childIdx;
+        Object* childObj = this->children[childIdx]->object;
+        this->children[childIdx]->isLeaf = false;
+
         // qDebug() << "extent center" << this->children[childIdx]->extents.getCentriod();
         this->children[childIdx]->extents.extendBy(e);
         // qDebug() << "after extent center" << this->children[childIdx]->extents.getCentriod();
-        this->children[childIdx]->isLeaf = false;
-        
-        // qDebug() << "create new children";
-        
-        Object* childObj = this->children[childIdx]->object;
         if (childObj){
+            // qDebug() << "create new children";
             // qDebug() << "*****************existing: " << childObj->name.c_str();
             this->children[childIdx]->object = nullptr;
-            this->children[childIdx]->addObject(childObj);            
+            this->children[childIdx]->addObject(childObj); 
+            
         }
-
         this->children[childIdx]->addObject(obj);
-        
         
     }
     
@@ -341,8 +361,8 @@ void OctreeNode::intersectTest(const Ray &r, Intersection &intersection) const{
 Intersection BVH::intersectBoundingBox(const Ray& ray) const{
     Intersection closestIntersection;
     for (uint8_t i = 0; i < scene->objects.size(); ++i){
-        // double t = scene->objects[i]->getBounds().intersectWireframe(ray);
-        double t = scene->objects[i]->getBounds().intersect(ray);
+        double t = scene->objects[i]->getBounds().intersectWireframe(ray);
+        // double t = scene->objects[i]->getBounds().intersect(ray);
         if (t > eps && t < closestIntersection.t) {
             closestIntersection.t = t;
             closestIntersection.object = scene->objects[i];
