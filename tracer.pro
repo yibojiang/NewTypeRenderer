@@ -6,3 +6,4 @@ QMAKE_LINK = /usr/local/bin/clang-omp++
 LIBS += -fopenmp
 HEADERS += src/*.h
 SOURCES += src/*.cpp
+SOURCES += src/*.cc

@@ -155,13 +155,18 @@ vec3 Raytracer::tracing(const Ray &ray, int depth, unsigned short *Xi){
 void Raytracer::setupScene(){
     Mesh *mesh = new Mesh();
     mesh->name = "mesh";
-    ObjLoader *loader = new ObjLoader();
-    loader->loadObj("rifle.obj", mesh);
+    
+    ObjLoader loader;
+    // loader.loadObj("rifle.obj", mesh);
     // loader->loadObj("cube.obj", mesh);
     // loader->loadObj("sponza.obj", mesh);
+    // loader.loadModel("sponza.obj", mesh);
+    loader.loadModel("sponza.obj", mesh);
+    // loader.loadModel("rifle.obj", mesh);
+    // loader.loadModel("cube.obj", mesh);
     
     
-    delete loader;
+    // delete loader;
     qDebug() << "Object Loaded";
 
     scene.fov = M_PI/3; // hotirzontal fov 60
@@ -185,7 +190,8 @@ void Raytracer::setupScene(){
 
     Transform *meshxform = new Transform(mesh);
     meshxform->rotateY(M_PI*0.5);
-    meshxform->setTranslate(50, 50, 50);
+    meshxform->setTranslate(50, 0, 50);
+    meshxform->setScale(100, 100, 100);
     scene.root->addChild(meshxform);
 
 
@@ -210,18 +216,18 @@ void Raytracer::setupScene(){
     //     }
     // }
 
-    Object *floor = (Object*)new Box(vec3(150, 0.1, 300),       vec3(), vec3(.75, .75, .75), DIFF);
-    floor->name = "floor";
-    Transform *xform = new Transform(floor);
-    xform->setTranslate(50, 0, 0);
-    scene.root->addChild(xform);
+    // Object *floor = (Object*)new Box(vec3(150, 0.1, 300),       vec3(), vec3(.75, .75, .75), DIFF);
+    // floor->name = "floor";
+    // Transform *xform = new Transform(floor);
+    // xform->setTranslate(50, 0, 0);
+    // scene.root->addChild(xform);
 
 
-    Object *left = (Object*)new Box(vec3(0.1, 300, 300),       vec3(), vec3(.75, .25, .25), DIFF);
-    left->name = "left";
-    Transform *xform1 = new Transform(left);
-    xform1->setTranslate(0, 150, 0);
-    scene.root->addChild(xform1);
+    // Object *left = (Object*)new Box(vec3(0.1, 300, 300),       vec3(), vec3(.75, .25, .25), DIFF);
+    // left->name = "left";
+    // Transform *xform1 = new Transform(left);
+    // xform1->setTranslate(0, 150, 0);
+    // scene.root->addChild(xform1);
 
 
     // Object *right = (Object*)new Box(vec3(0.1, 100, 300),       vec3(), vec3(.25, .75, .25), DIFF);
@@ -349,12 +355,15 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
             directColor = vec3(0,0,0);
             boundingBoxColor = vec3(0,0,0);
 
+
             // Intersection intersectionBox = bvh.intersectBoundingBox(Ray(ro, rd));
 
-            // Intersection intersectionBox = bvh.intersectBVH(Ray(ro, rd));
-            // if (intersectionBox.t > eps && intersectionBox.t < inf){
-            //     boundingBoxColor = vec3(0, 1, 0);
-            // }
+            #ifdef WIREFRAME_ON
+            Intersection intersectionBox = bvh.intersectBVH(Ray(ro, rd));
+            if (intersectionBox.t > eps && intersectionBox.t < inf){
+                boundingBoxColor = vec3(0, 1, 0);
+            }
+            #endif
 
             
             Intersection intersection = bvh.intersect(Ray(ro, rd));

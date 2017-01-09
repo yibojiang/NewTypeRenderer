@@ -215,8 +215,8 @@ void Window::render(){
     tracer->setResolution(width, height);
     tracer->samples = samples;
     
-    double directTime;
-    tracer->renderDirect(directTime, directImage, normalImage, boundingBoxImage);
+    // double directTime;
+    // tracer->renderDirect(directTime, directImage, normalImage, boundingBoxImage);
 
     double indirectTime;
     tracer->renderIndirect(indirectTime, indirectImage);

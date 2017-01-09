@@ -32,9 +32,6 @@ double Extents::intersect(const Ray &r) const{ // returns distance, 0 if nohit
 
         // Swap near and far t.
         if (tNear > tFar){
-            // double tmp = tFar;
-            // tFar = tNear;
-            // tNear = tmp;
             std::swap(tFar, tNear);
         }
 
@@ -103,15 +100,16 @@ double Extents::intersectWireframe(const Ray &r) const{ // returns distance, 0 i
     for (int i = 0; i < SLABCOUNT; ++i) {
         if ( fabs(-dnear[i] - hit.dot(BVH::normals[i])) < width){
             count ++;
+
         }
         else if ( fabs(-dfar[i] - hit.dot(BVH::normals[i])) < width){
             count ++;
         }
-    }   
 
-    if (count > 1){
-        return t;
-    }
+        if (count > 1){
+            return t;
+        }
+    }   
 
     count = 0;
     t = tmax;
@@ -124,14 +122,15 @@ double Extents::intersectWireframe(const Ray &r) const{ // returns distance, 0 i
             count ++;
         }
 
+        if (count > 1){
+            return t;
+        }
+
     }
 
-    if (count > 1){
-        return t;
-    }
-    else{
-        return 0;
-    }
+    
+    return 0;
+    
     
 }
 
@@ -167,7 +166,7 @@ void BVH::setup(Scene &scene){
     double time = ((end.tv_sec  - start.tv_sec) * 1000000u + end.tv_usec - start.tv_usec) / 1.e6;
     qDebug() << "build bvh done." << " time: " << time;
     octree.isLeaf = false;
-    octree.traverse();
+    // octree.traverse();
 }
 
 
@@ -240,7 +239,8 @@ void OctreeNode::addObject(Object *obj){
 
     int childIdx = 0;
 
-    if (depth > 30){
+    if (depth > 100){
+        // qDebug() << "over 100";
         return;
     }
 

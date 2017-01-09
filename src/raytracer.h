@@ -14,6 +14,8 @@
 #include "transform.h"
 #include "modelloader.h"
 
+// #define WIREFRAME_ON
+
 
 class Intersection {
     public:
