@@ -78,7 +78,7 @@ vec3 Raytracer::tracing(const Ray &ray, int depth, unsigned short *Xi){
     vec3 hit = ray.origin + ray.dir * intersection.t;
 
     vec3 N = obj.getNormal(hit);
-    // vec3 nl = N.dot(ray.dir) < 0 ? N: N * -1;
+    vec3 nl = N.dot(ray.dir) < 0 ? N: N * -1;
     vec3 f = obj.getDiffuse();
     // return f;
     // Russian roulette: starting at depth 5, each recursive step will stop with a probability of 0.1
@@ -95,22 +95,11 @@ vec3 Raytracer::tracing(const Ray &ray, int depth, unsigned short *Xi){
     
 
     if (obj.getReflectionType() == DIFF) {
-        // vec3 randd = cosineSampleHemisphere(erand48(Xi), erand48(Xi));
-        // vec3 rotatedDir;
-        // vec3 rotX, rotY;
-        // ons(N, rotX, rotY);
-        // rotatedDir.x = vec3(rotX.x, rotY.x, N.x).dot(randd);
-        // rotatedDir.y = vec3(rotX.y, rotY.y, N.y).dot(randd);
-        // rotatedDir.z = vec3(rotX.z, rotY.z, N.z).dot(randd);
-        // vec3 d = rotatedDir; // Normalized
-        // // vec3 d = N + uniformSampleHemisphere(erand48(Xi), erand48(Xi));
-        // return obj.getEmission() + f * tracing(Ray(hit, d), depth, Xi);
-
         double r1 = 2 * M_PI * erand48(Xi);
         double r2 = erand48(Xi);
         double r2s = sqrt(r2);
         vec3 w = N;
-        vec3 u = ((fabs(w.x) > .1 ? vec3(0, 1) : vec3(1)).cross(w)).normalize();
+        vec3 u = ((fabs(w.x) > .1 ? vec3(0, 1, 0) : vec3(1, 0, 0)).cross(w)).normalize();
         vec3 v = w.cross(u);
         vec3 d = (u * cos(r1) * r2s + v * sin(r1) * r2s + w * sqrt(1 - r2)).normalize();
         return obj.getEmission() + f*(tracing(Ray(hit, d), depth, Xi));
@@ -121,30 +110,42 @@ vec3 Raytracer::tracing(const Ray &ray, int depth, unsigned short *Xi){
         return obj.getEmission() + f * tracing(Ray(hit, refl), depth, Xi);
     }
     
-    if (obj.getReflectionType() == REFR){
-        double n = 1.5;
-        double R0 = (1.0-n)/(1.0+n);
-        R0 = R0*R0;
-        if(N.dot(ray.dir)>0) { // we're inside the medium
-            N = N*-1;
-            n = 1/n;
-        }
-        n=1/n;
-        double cost1 = (N.dot(ray.dir))*-1; // cosine of theta_1
-        double cost2 = 1.0 - n*n*(1.0-cost1*cost1); // cosine of theta_2
-        double Rprob = R0 + (1.0-R0) * pow(1.0 - cost1, 5.0); // Schlick-approximation
-        vec3 d;
-        if (cost2 > 0 && erand48(Xi) > Rprob) { // refraction direction
-            d = ((ray.dir*n)+(N*(n*cost1-sqrt(cost2)))).normalize();
-        }
-        else { // reflection direction
-            // d = (ray.dir+N*(cost1*2)).normalize();
-            d = ray.dir.reflect(N);
-        }
+    // if (obj.getReflectionType() == REFR){
 
-        return obj.getEmission() +  f * tracing(Ray(hit, d), depth, Xi);
-        // clr = clr + tmp * 1.15 * rrFactor;
-    }
+    // }
+      Ray reflRay(hit, ray.dir - N * 2 * N.dot(ray.dir)); // Ideal dielectric REFRACTION
+      bool into = N.dot(nl) > 0;              // Ray from outside going in?
+      double nc = 1, nt = 1.5, nnt = into ? nc / nt : nt / nc, ddn = ray.dir.dot(nl), cos2t;
+      if ((cos2t = 1 - nnt * nnt * (1 - ddn * ddn)) < 0) // Total internal reflection
+        return obj.getEmission() + f * tracing(reflRay, depth, Xi);
+      vec3 tdir = (ray.dir * nnt - N * ((into ? 1 : -1) * (ddn * nnt + sqrt(cos2t)))).normalize();
+      double a = nt - nc, b = nt + nc, R0 = a * a / (b * b), c = 1 - (into ? -ddn : tdir.dot(N));
+      double Re = R0 + (1 - R0) * c * c * c * c * c, Tr = 1 - Re, P = .25 + .5 * Re, RP = Re / P, TP = Tr / (1 - P);
+      return obj.getEmission() + f * (depth > 2 ? (erand48(Xi) < P ? // Russian roulette
+                            tracing(reflRay, depth, Xi) * RP : tracing(Ray(hit, tdir), depth, Xi) * TP) :
+                            tracing(reflRay, depth, Xi) * Re + tracing(Ray(hit, tdir), depth, Xi) * Tr);
+    // {
+    //     double n = 1.5;
+    //     double R0 = (1.0-n)/(1.0+n);
+    //     R0 = R0*R0;
+    //     if(N.dot(ray.dir)>0) { // we're inside the medium
+    //         N = N*-1;
+    //         n = 1/n;
+    //     }
+    //     n=1/n;
+    //     double cost1 = (N.dot(ray.dir))*-1; // cosine of theta_1
+    //     double cost2 = 1.0 - n*n*(1.0-cost1*cost1); // cosine of theta_2
+    //     double Rprob = R0 + (1.0-R0) * pow(1.0 - cost1, 5.0); // Schlick-approximation
+    //     vec3 d;
+    //     if (cost2 > 0 && erand48(Xi) > Rprob) { // refraction direction
+    //         d = ((ray.dir*n)+(N*(n*cost1-sqrt(cost2)))).normalize();
+    //     }
+    //     else { // reflection direction
+    //         d = ray.dir.reflect(N);
+    //     }
+
+    //     return obj.getEmission() +  f * tracing(Ray(hit, d), depth, Xi);
+    // }
     
     // return vec3(1);
     return vec3();
@@ -155,8 +156,8 @@ void Raytracer::setupScene(){
     Mesh *mesh = new Mesh();
     mesh->name = "mesh";
     ObjLoader *loader = new ObjLoader();
-    // loader->loadObj("rifle.obj", mesh);
-    loader->loadObj("cube.obj", mesh);
+    loader->loadObj("rifle.obj", mesh);
+    // loader->loadObj("cube.obj", mesh);
     // loader->loadObj("sponza.obj", mesh);
     
     
@@ -164,19 +165,21 @@ void Raytracer::setupScene(){
     qDebug() << "Object Loaded";
 
     scene.fov = M_PI/3; // hotirzontal fov 60
-    float rtY = 1.5* M_PI;
-    float camDist = 250;
-    scene.ro = vec3(50 + camDist * cos(rtY), 60, 50 -camDist * sin(rtY));
-    scene.ta = vec3(50, 50, 50);
-    scene.ca = setCamera(scene.ro, scene.ta, 0.0);
-    scene.near = 2.0/tan(scene.fov/2);
+    // float rtY = 1.5* M_PI;
+    // float camDist = 250;
+    // scene.ro = vec3(50 + camDist * cos(rtY), 60, 50 -camDist * sin(rtY));
+    // scene.ta = vec3(50, 50, 50);
+    // scene.ca = setCamera(scene.ro, scene.ta, 0.0);
+    
+    scene.near = 2.0f/tan(scene.fov*0.5f);
+    rotateCamera(0, 0.5* M_PI, 0);
 
     
     
-    Object *light = (Object*)new Box(vec3(50, 0.1, 50),       vec3(12, 12, 12), vec3(), DIFF);
+    Object *light = (Object*)new Box(vec3(50, 0.1, 50),       vec3(9, 9, 9), vec3(), DIFF);
     light->name = "light";
     Transform *lightxform = new Transform(light);
-    lightxform->setTranslate(50, 99.9, 60);
+    lightxform->setTranslate(50, 120, 60);
     scene.root->addChild(lightxform);
 
 
@@ -201,59 +204,51 @@ void Raytracer::setupScene(){
     //             sphere->name = "sphere" + std::to_string(i + j * 10 + k * 100);
     //             Transform *t = new Transform(sphere);
     //             t->setScale(1, 0.5, 1);
-    //             t->setTranslate(i * 50, j*40,  k * 50);
+    //             t->setTranslate(i * 30 + 20, j*30 + 25,  k * 30);
     //             scene.root->addChild(t);
     //         }
     //     }
     // }
 
-    Object *floor = (Object*)new Box(vec3(100, 0.1, 250),       vec3(), vec3(.75, .75, .75), DIFF);
+    Object *floor = (Object*)new Box(vec3(150, 0.1, 300),       vec3(), vec3(.75, .75, .75), DIFF);
     floor->name = "floor";
     Transform *xform = new Transform(floor);
-    xform->setTranslate(50, 0, 50);
+    xform->setTranslate(50, 0, 0);
     scene.root->addChild(xform);
 
 
-    Object *left = (Object*)new Box(vec3(0.1, 100, 260),       vec3(), vec3(.75, .25, .25), DIFF);
+    Object *left = (Object*)new Box(vec3(0.1, 300, 300),       vec3(), vec3(.75, .25, .25), DIFF);
     left->name = "left";
     Transform *xform1 = new Transform(left);
-    xform1->setTranslate(0, 50, 50);
+    xform1->setTranslate(0, 150, 0);
     scene.root->addChild(xform1);
 
 
-    Object *right = (Object*)new Box(vec3(0.1, 100, 260),       vec3(), vec3(.25, .75, .25), DIFF);
-    right->name = "right";
-    Transform *xform2 = new Transform(right);
-    xform2->setTranslate(100, 50, 50);
-    scene.root->addChild(xform2);
+    // Object *right = (Object*)new Box(vec3(0.1, 100, 300),       vec3(), vec3(.25, .75, .25), DIFF);
+    // right->name = "right";
+    // Transform *xform2 = new Transform(right);
+    // xform2->setTranslate(100, 50, 0);
+    // scene.root->addChild(xform2);
 
 
-    Object *ceil = (Object*)new Box(vec3(100, 0.2, 260),       vec3(), vec3(.75, .75, .75), DIFF);
-    ceil->name = "ceil";
-    Transform *xform3 = new Transform(ceil);
-    xform3->setTranslate(50, 100, 50);
-    scene.root->addChild(xform3);
+    // Object *ceil = (Object*)new Box(vec3(100, 0.1, 300),       vec3(), vec3(.75, .75, .75), DIFF);
+    // ceil->name = "ceil";
+    // Transform *xform3 = new Transform(ceil);
+    // xform3->setTranslate(50, 100, 0);
+    // scene.root->addChild(xform3);
 
-    Object *front = (Object*)new Box(vec3(100, 100, 0.1),       vec3(), vec3(.75, .75, .75), DIFF);
-    front->name = "front";
-    Transform *xform4 = new Transform(front);
-    xform4->setTranslate(50, 50, -70);
-    scene.root->addChild(xform4);
+    // Object *front = (Object*)new Box(vec3(100, 100, 0.1),       vec3(), vec3(.75, .75, .75), DIFF);
+    // front->name = "front";
+    // Transform *xform4 = new Transform(front);
+    // xform4->setTranslate(50, 50, -150);
+    // scene.root->addChild(xform4);
 
-    Object *back = (Object*)new Box(vec3(100, 100, 0.1),       vec3(), vec3(1,1,1), DIFF);
-    back->name = "back";
-    Transform *xform5 = new Transform(back);
-    xform5->setTranslate(50, 50, 300);
-    scene.root->addChild(xform5);
+    // Object *back = (Object*)new Box(vec3(100, 100, 0.1),       vec3(), vec3(1,1,1), DIFF);
+    // back->name = "back";
+    // Transform *xform5 = new Transform(back);
+    // xform5->setTranslate(50, 50, 150);
+    // scene.root->addChild(xform5);
 
-    
-    
-    // Transform *camTransform = new Transform();
-    // camTransform->rotateY(M_PI * 0.1);
-    // camTransform->setTranslate(scene.ta.x, scene.ta.y, scene.ta.z);
-    // vec4 ro4 = vec4(scene.ro, 1);
-    // ro4 = camTransform.getTransformMatrix() * ro4;
-    // scene.ro = vec3(ro4.x, ro4.y, ro4.z);
 }
 
 Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
@@ -283,11 +278,11 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
 }
 
 void Raytracer::rotateCamera(float x, float y, float z){
-    float camDist = 250;
+    float camDist = 200;
     scene.ro = vec3(50 + camDist * cos(y), 50, 50 -camDist * sin(y));
     scene.ta = vec3(50, 50, 50);
     scene.ca = setCamera(scene.ro, scene.ta, 0.0);
-    scene.near = 2.0f/tan(scene.fov*0.5f);
+    
 }
 
 vec3 Raytracer::render_pixel(unsigned short i, unsigned short j, unsigned short *Xi){
@@ -341,7 +336,7 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
     vec3 pointLig(50 , 78, 60);
 
 
-    // #pragma omp parallel for schedule(dynamic, 1)  private(directColor, normalColor)    // OpenMP
+    #pragma omp parallel for schedule(dynamic, 1)  private(directColor, normalColor, boundingBoxColor)    // OpenMP
     for (unsigned short i = 0; i < height; ++i){
         for (unsigned short j = 0; j < width; ++j){
             double u = j * 1.0 / width;
@@ -354,17 +349,12 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
             directColor = vec3(0,0,0);
             boundingBoxColor = vec3(0,0,0);
 
-            Intersection intersectionBox = bvh.intersectBoundingBox(Ray(ro, rd));
+            // Intersection intersectionBox = bvh.intersectBoundingBox(Ray(ro, rd));
+
             // Intersection intersectionBox = bvh.intersectBVH(Ray(ro, rd));
-            // Intersection intersectionBox = bvh.octree->extents->intersect(Ray(ro, rd));
-            // if (intersectionBox.t > 0 && intersectionBox.t<inf) {
-            // if (bvh.octree.extents.intersectWireframe(Ray(ro, rd)) > eps){
-            // if (bvh.octree.children[7]->extents.intersectWireframe(Ray(ro, rd)) > eps){
-            
-            if (intersectionBox.t > eps && intersectionBox.t < inf){
-                boundingBoxColor = vec3(0, 1, 0);
-                
-            }
+            // if (intersectionBox.t > eps && intersectionBox.t < inf){
+            //     boundingBoxColor = vec3(0, 1, 0);
+            // }
 
             
             Intersection intersection = bvh.intersect(Ray(ro, rd));

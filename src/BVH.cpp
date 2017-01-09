@@ -73,9 +73,10 @@ double Extents::intersectWireframe(const Ray &r) const{ // returns distance, 0 i
 
         // Swap near and far t.
         if (tNear > tFar){
-            double tmp = tFar;
-            tFar = tNear;
-            tNear = tmp;
+            // double tmp = tFar;
+            // tFar = tNear;
+            // tNear = tmp;
+            std::swap(tFar, tNear);
         }
 
         if (tNear > tmin){
@@ -94,6 +95,7 @@ double Extents::intersectWireframe(const Ray &r) const{ // returns distance, 0 i
     if (tmin > tmax){
         return 0;
     }
+    
     double width = 0.4;
     int count = 0;
     double t = tmin;

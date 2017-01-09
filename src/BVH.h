@@ -1,7 +1,7 @@
 #pragma once
 #include "vec.h"
 #include <queue>
-#define SLABCOUNT 7
+#define SLABCOUNT 3
 class Scene;
 class Object;
 struct Ray;

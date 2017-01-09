@@ -221,6 +221,7 @@ void Window::render(){
     double indirectTime;
     tracer->renderIndirect(indirectTime, indirectImage);
     postImage = postProcess(indirectImage);
+    displayMode = 0;
     update();
     statusBar()->showMessage("time: " + QString::number(indirectTime));
     
