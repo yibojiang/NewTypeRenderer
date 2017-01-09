@@ -14,6 +14,9 @@ struct Ray {
 
 enum Refl_t { DIFF, SPEC, REFR };  // material types, used in radiance()
 
+
+
+
 class Object {
 protected:
 
@@ -29,6 +32,10 @@ public:
     virtual ~Object(){}
     virtual vec3 getNormal(const vec3 &) const{ return vec3(1);}
     virtual double intersect(const Ray &){ return 0;}
+
+    virtual double getProjectAngleToSphere(){
+        return M_PI;
+    }
 
     virtual vec3 getDiffuse() const{
         return color;
@@ -61,6 +68,7 @@ public:
     }
     // virtual vec3 debug(vec3 _pos) const{return vec3(0);}
 };
+
 
 
 class Plane: public Object{
@@ -109,6 +117,7 @@ public:
     double rad;
     vec3 center;
 
+    
 
 
     Sphere(double _rad, vec3 _e, vec3 _c, Refl_t _refl){

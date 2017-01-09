@@ -8,10 +8,90 @@
 #include <QDebug>
 #include <QFileDialog>
 
+RenderThread::RenderThread(QObject *parent)
+    : QThread(parent)
+{
+    restart = false;
+    abort = false;
+}
+
+void RenderThread::setTracer(Raytracer *tracer){
+    this->tracer = tracer;
+    
+}
+
+RenderThread::~RenderThread()
+{
+    mutex.lock();
+    abort = true;
+    condition.wakeOne();
+    mutex.unlock();
+    // wait();
+}
+
+void RenderThread::run()
+{
+    while(!abort) {
+        mutex.lock();
+        double width = tracer->width;
+        double height = tracer->height;
+        QImage image(width, height, QImage::Format_RGB32);
+        mutex.unlock();
+
+        double indirectTime;
+
+        if (restart){
+            break;
+        }
+
+        if (abort){
+            return;
+        }
+
+        tracer->renderIndirect(indirectTime, image);
+        // emit updateProgress(tracer->progress);
+
+        
+        
+
+        if (!restart){
+            qDebug()<<"done.";
+            emit renderedImage(image);
+        }
+
+        mutex.lock();
+        if (!restart)
+            condition.wait(&mutex);
+        restart = false;
+        mutex.unlock();
+
+    }
+}
+
+void RenderThread::render()
+{
+    QMutexLocker locker(&mutex);
+    // this->centerX = centerX;
+    // this->centerY = centerY;
+    // this->scaleFactor = scaleFactor;
+    // this->resultSize = resultSize;
+
+    if (!isRunning()) {
+        start(LowPriority);
+    } else {
+        restart = true;
+        condition.wakeOne();
+    }
+}
+
+
+
 Window::Window(QWidget *parent) :
  QMainWindow(parent) {
     width = 800, height = 600;
     resize(width, height);
+
+
 
     
     
@@ -136,13 +216,34 @@ Window::Window(QWidget *parent) :
     directImage = QImage(width, height, QImage::Format_RGB32);
     indirectImage = QImage(width, height, QImage::Format_RGB32);
     boundingBoxImage = QImage(width, height, QImage::Format_RGB32);
-    double directTime;
-    tracer->renderDirect(directTime, directImage, normalImage, boundingBoxImage);
     
+    // double directTime;
+    // tracer->renderDirect(directTime, directImage, normalImage, boundingBoxImage);
+
+    renderThread.setTracer(tracer);
+    
+
+    connect(&renderThread, SIGNAL(renderedImage(QImage)),
+            this, SLOT(updateIndirect(QImage)));
+
+    connect(&renderThread, SIGNAL(updateProgress(double)),
+            this, SLOT(updateProgress(double)));
     displayMode = 2;
     update();
 
  }
+
+void Window::updateIndirect(const QImage &image){
+    qDebug() << "update image";
+    indirectImage = image;
+    postImage = postProcess(indirectImage);
+    displayMode = 0;
+    // pixmap = QPixmap::fromImage(image);
+    // pixmapOffset = QPoint();
+    // lastDragPos = QPoint();
+    // pixmapScale = scaleFactor;
+    update();
+}
 
 void Window::camRotateY(int rotateY){
     // qDebug() << "camRotateY: " << rotateY;
@@ -209,32 +310,25 @@ void Window::switchRGBChannel(const QString&){
     update();
 }
 
+void Window::updateProgress(double progress){
+    statusBar()->showMessage("Rendering..." + QString::number(progress) + '%');
+}
+
 void Window::render(){
     statusBar()->showMessage("Rendering...");
     resize(width, height);
     tracer->setResolution(width, height);
     tracer->samples = samples;
     
-    // double directTime;
-    // tracer->renderDirect(directTime, directImage, normalImage, boundingBoxImage);
 
-    double indirectTime;
-    tracer->renderIndirect(indirectTime, indirectImage);
-    postImage = postProcess(indirectImage);
-    displayMode = 0;
-    update();
-    statusBar()->showMessage("time: " + QString::number(indirectTime));
-    
+    // double indirectTime;
+    // tracer->renderIndirect(indirectTime, indirectImage);
+    // postImage = postProcess(indirectImage);
+    // displayMode = 0;
+    // update();
+    // statusBar()->showMessage("time: " + QString::number(indirectTime));
 
-    // #pragma omp parallel for schedule(dynamic, 1)        // OpenMP
-    // for (unsigned short i = 0; i < height; ++i){
-    //     unsigned short Xi[3] = {0, 0, i*i * i};
-    //     for (unsigned short j = 0; j < width; ++j){
-    //         vec3 color = tracer.render_pixel(i, j, Xi);
-    //         painter.setPen(QColor(color.x, color.y, color.z));
-    //         painter.drawPoint(j, i);
-    //     }
-    // }
+    renderThread.render();
 }
 
 QImage Window::postProcess(const QImage &image){

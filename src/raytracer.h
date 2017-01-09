@@ -15,6 +15,7 @@
 #include "modelloader.h"
 
 #define WIREFRAME_ON
+#define EXPLICIT_LIGHT_SAMPLE
 
 
 class Intersection {
@@ -24,6 +25,7 @@ class Intersection {
     operator bool() { return object != nullptr; }
     double t;
     Object* object;
+
 };
 
 class Scene
@@ -31,6 +33,7 @@ class Scene
 public:
     Transform *root;
     std::vector<Object*> objects;
+    std::vector<Object*> lights;
     Scene(){
         root = new Transform();
 
@@ -93,6 +96,11 @@ public:
             else{
                 add(transform->object);    
             }
+
+            if (transform->object->getEmission().length() > eps ){
+                lights.push_back(transform->object);
+                qDebug() << "add light:" << transform->object->name.c_str();
+            }
         }
 
         for (unsigned int i = 0; i < transform->children.size(); ++i){
@@ -114,9 +122,11 @@ public:
     Scene scene;
     BVH bvh;
     int samples;
+    double progress;
+    double ratio;
     Raytracer(unsigned width, unsigned height,int _samples);
     ~Raytracer();
-    vec3 tracing(const Ray &ray, int depth, unsigned short *Xi);
+    vec3 tracing(const Ray &ray, int depth, unsigned short *Xi, int E);
     vec3 render_pixel(unsigned short i, unsigned short j, unsigned short *Xi);
     // QImage render(double &time) ;
     void renderIndirect(double &time, QImage &image);

@@ -18,6 +18,47 @@
 #include <QCheckBox>
 #include <QColor>
 #include <QSlider>
+#include <QThread>
+#include <QMutex>
+#include <QWaitCondition>
+
+class RenderThread : public QThread
+{
+    Q_OBJECT
+
+public:
+    Raytracer *tracer;
+
+    
+    RenderThread(QObject *parent = 0);
+    ~RenderThread();
+    void setTracer(Raytracer *);
+    void render();
+
+signals:
+    void renderedImage(const QImage &image);
+    void updateProgress(const QImage &image);
+
+protected:
+    void run();
+
+private:
+    uint rgbFromWaveLength(double wave);
+    QMutex mutex;
+    QWaitCondition condition;
+    double centerX;
+    double centerY;
+    double scaleFactor;
+    QSize resultSize;
+    bool restart;
+    bool abort;
+
+    double width;
+    double height;
+
+    enum { ColormapSize = 512 };
+    uint colormap[ColormapSize];
+};
 
 class Window : public QMainWindow
 {
@@ -39,6 +80,9 @@ class Window : public QMainWindow
     Raytracer *tracer;
     QCheckBox *gammaCheckbox;
     QComboBox *rgbBox;
+
+    RenderThread renderThread;
+
     // QSlider *camRotateXSlider;
 private slots:
     void render();
@@ -50,11 +94,14 @@ private slots:
     void changeResolutionHeight(const QString&);
     void gammaState(int state);
     QImage postProcess(const QImage&);
+    void updateIndirect(const QImage&);
     void camRotateY(int);
+    void updateProgress(double);
 private:
     int displayMode; // 0 - render, 1 - normal
 
 };
+
 
 
 // class RenderWidget : public QWidget

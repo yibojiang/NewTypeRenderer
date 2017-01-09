@@ -66,7 +66,7 @@ inline vec3 gammaCorrect(vec3 &v) {
 inline double clamp(double x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
 
 
-vec3 Raytracer::tracing(const Ray &ray, int depth, unsigned short *Xi){
+vec3 Raytracer::tracing(const Ray &ray, int depth, unsigned short *Xi, int E = 1){
     // Intersection intersection = bvh.intersectBoundingBox(ray);
     // Intersection intersection = scene.intersect(ray);
     Intersection intersection = bvh.intersect(ray);
@@ -82,27 +82,71 @@ vec3 Raytracer::tracing(const Ray &ray, int depth, unsigned short *Xi){
     vec3 f = obj.getDiffuse();
     // return f;
     // Russian roulette: starting at depth 5, each recursive step will stop with a probability of 0.1
-    if (++depth > 5){
-        // double rrStopProbability = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // max refl
-        const double rrStopProbability = 0.1;
-        if (erand48(Xi) < rrStopProbability){
-            f = f * (1 / rrStopProbability); 
+
+    double p = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // max refl
+    if (++depth > 5 || !p) {
+        if (erand48(Xi) < p){
+            f = f * (1 / p); 
         } 
         else{
-            return obj.getEmission(); //R.R.  
-        }
+            return obj.getEmission() * E;    
+        } 
     }
+    // if (++depth > 5){
+    //     // double rrStopProbability = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // max refl
+    //     const double rrStopProbability = 0.1;
+    //     if (erand48(Xi) < rrStopProbability){
+    //         f = f * (1 / rrStopProbability); 
+    //     } 
+    //     else{
+    //         return obj.getEmission() * E; //R.R.  
+    //     }
+    // }
     
 
     if (obj.getReflectionType() == DIFF) {
-        double r1 = 2 * M_PI * erand48(Xi);
-        double r2 = erand48(Xi);
+        double r1 = 2 * M_PI * erand48(Xi); // random angle
+        double r2 = erand48(Xi); // random distance from sphere center
         double r2s = sqrt(r2);
         vec3 w = N;
-        vec3 u = ((fabs(w.x) > .1 ? vec3(0, 1, 0) : vec3(1, 0, 0)).cross(w)).normalize();
-        vec3 v = w.cross(u);
+        vec3 u = ((fabs(w.x) > 0.1 ? vec3(0, 1, 0) : vec3(1, 0, 0)).cross(w)).normalize();
+        vec3 v = w.cross(u);  
         vec3 d = (u * cos(r1) * r2s + v * sin(r1) * r2s + w * sqrt(1 - r2)).normalize();
-        return obj.getEmission() + f*(tracing(Ray(hit, d), depth, Xi));
+
+        // Explicit light sample.
+        #ifdef EXPLICIT_LIGHT_SAMPLE
+        vec3 e;
+        for (unsigned int i = 0; i < scene.lights.size(); i++) {
+            Object* light = scene.lights[i];
+            vec3 sw = light->getCentriod() - hit;
+            vec3 su = ((fabs(sw.x) > .1 ? vec3(0, 1, 0) : vec3(1, 0, 0)).cross(sw)).normalize();
+            vec3 sv = sw.cross(su);
+            
+            // Sphere light
+            Sphere* s = (Sphere*)light;
+            double cos_a_max = sqrt(1 - s->rad * s->rad / (hit - s->getCentriod()).dot(hit - s->getCentriod()));
+            double eps1 = erand48(Xi), eps2 = erand48(Xi);
+            double cos_a = 1 - eps1 + eps1 * cos_a_max;
+            double sin_a = sqrt(1 - cos_a * cos_a);
+            double phi = 2 * M_PI * eps2;
+            vec3 l = su * cos(phi) * sin_a + sv * sin(phi) * sin_a + sw * cos_a;
+            l.normalize();
+
+            
+            Intersection shadow = bvh.intersect(Ray(hit, l));
+            
+            if (shadow.object && shadow.object == light){
+                double omega = 2 * M_PI * (1 - cos_a_max);
+                e = e + f * M_1_PI * (light->getEmission() * l.dot(nl) * omega); // 1/pi for brdf
+            }
+        }
+        return obj.getEmission() * E + e + f * (tracing(Ray(hit, d), depth, Xi, 0));
+        #else
+
+        return obj.getEmission() + f * (tracing(Ray(hit, d), depth, Xi));
+
+        #endif
+        
     }
     if (obj.getReflectionType() == SPEC){            // Ideal SPECULAR reflection
         // r=d−2(d⋅n)n
@@ -179,23 +223,23 @@ void Raytracer::setupScene(){
     rotateCamera(0, 0.5 * M_PI, 0);
 
     
-    
-    Object *light = (Object*)new Box(vec3(40, 0.1, 40),       vec3(9, 9, 9), vec3(), DIFF);
+    // Object *light = (Object*)new Box(vec3(40, 0.1, 40),       vec3(9, 9, 9), vec3(), DIFF);
+    Object *light = (Object*)new Sphere(20,       vec3(12, 12, 12), vec3(), DIFF);
     light->name = "light";
     Transform *lightxform = new Transform(light);
     lightxform->setTranslate(50, 99, 60);
     scene.root->addChild(lightxform);
 
 
-    Mesh *mesh = new Mesh();
-    mesh->name = "mesh";
-    loader.loadModel("rifle.obj", mesh);
-    mesh->setMaterial(SPEC);
-    Transform *meshxform = new Transform(mesh);
-    meshxform->rotateY(M_PI*0.3);
-    meshxform->setTranslate(50, 50, 50);
-    meshxform->setScale(0.8, 0.8, 0.8);
-    scene.root->addChild(meshxform);
+    // Mesh *mesh = new Mesh();
+    // mesh->name = "mesh";
+    // loader.loadModel("rifle.obj", mesh);
+    // mesh->setMaterial(SPEC);
+    // Transform *meshxform = new Transform(mesh);
+    // meshxform->rotateY(M_PI*0.3);
+    // meshxform->setTranslate(50, 50, 50);
+    // meshxform->setScale(0.8, 0.8, 0.8);
+    // scene.root->addChild(meshxform);
 
 
     // for (int i = 0; i < 3; ++i){
@@ -409,36 +453,32 @@ void Raytracer::renderIndirect(double &time, QImage &image) {
     struct timeval start, end;
     gettimeofday(&start, NULL);
 
-    float near = scene.near;
     const int gridSize = 2;
     int samps = samples / (gridSize * gridSize);
-    mat3 ca = scene.ca;
-    vec3 ro = scene.ro;
-
+    
     vec3 r(0,0,0);
+    vec3 raw(0,0,0);
     #pragma omp parallel for schedule(dynamic, 1) private(r)       // OpenMP
     for (unsigned short i = 0; i < height; ++i){
+        this -> progress = 100.*i / (height - 1);
         // fprintf(stderr, "\rRendering (%d spp) %5.2f%%", samps * gridSize * gridSize, 100.*i / (height - 1));
         qDebug() << "Rendering " << "spp:" <<samps * gridSize * gridSize << " " << 100.*i / (height - 1) << '%';
         unsigned short Xi[3] = {0, 0, i*i * i};
         for (unsigned short j = 0; j < width; ++j){
-            // unsigned int idx = i*width + j;
             vec3 color;
             for (int sy = 0; sy < 2; ++sy) { // 2x2 subpixel rows
                 for (int sx = 0; sx < 2; ++sx) { // 2x2 subpixel cols
                     r = vec3();
-
                     for (int s = 0; s < samps; ++s) {
-
                         double r1 = 2 * erand48(Xi), dx = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
                         double r2 = 2 * erand48(Xi), dy = r2 < 1 ? sqrt(r2) - 1 : 1 - sqrt(2 - r2);
                         double u = (j + (sy - 0.5 + dy * 0.5) * 0.5  ) / width;
                         double v = (height - (i + (sx - 0.5 + dx * 0.5) * 0.5 ) ) / height;
                         u = (u * 2.0 - 1.0);
                         v = (v * 2.0 - 1.0);
-                        u = u * width/height;
-                        vec3 rd = ca * (vec3(u, v, near)).normalize();
-                        r = r + tracing(Ray(ro, rd), 0, Xi) * (1.0 / samps);
+                        u = u * this->ratio;
+                        vec3 rd = scene.ca * (vec3(u, v, scene.near)).normalize();
+                        r = r + tracing(Ray(scene.ro, rd), 0, Xi) * (1.0 / samps);
                     }
                     
                 }
@@ -446,29 +486,14 @@ void Raytracer::renderIndirect(double &time, QImage &image) {
                 color = color + vec3(clamp(r.x), clamp(r.y), clamp(r.z)) * .25;
                 
             }
-            // vec3 correct = gammaCorrect(color) * 255;
-            vec3 raw = color * 255;
-            // QRgb value = qRgb(correct.x, correct.y, correct.z); // 0xffbd9527
-            // image.setPixel(j, i, qRgb(correct.x, correct.y, correct.z));
+
+            raw = color * 255;
             image.setPixel(j, i, qRgb(raw.x, raw.y, raw.z));
-            // Post process effects.
         }
     }
 
-
-    
-
-    // for (int i = 0; i < width * height; i++){
-    //     c[i] = gammaCorrect(c[i]) * 255;
-    // }
-    // FILE *f = fopen("test_image.ppm", "w");         // Write image to PPM file.
-    // fprintf(f, "P3\n%d %d\n%d\n", w, h, 255);
-    // for (int i = 0; i < w * h; i++)
-    //     fprintf(f, "%d %d %d ", int(c[i].x), int(c[i].y), int(c[i].z));
-
     gettimeofday(&end, NULL);
     time = ((end.tv_sec  - start.tv_sec) * 1000000u + end.tv_usec - start.tv_usec) / 1.e6;
-
     qDebug() << "Render time: " << time;
 
     
@@ -477,6 +502,7 @@ void Raytracer::renderIndirect(double &time, QImage &image) {
 void Raytracer::setResolution(const int &width, const int &height){
     this->width = width;
     this->height = height;
+    this->ratio = width / height;
 }
 
 Raytracer::~Raytracer(){
