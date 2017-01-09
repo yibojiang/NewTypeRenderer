@@ -156,10 +156,7 @@ void BVH::setup(Scene &scene){
     octree.depth = 0;
     // Construct bvh hierarchy.
     for (uint32_t i = 0; i < scene.objects.size(); ++i){
-    // for (uint32_t i = 0; i < 2; ++i){
-        // qDebug() << "add to bvh" << scene.objects[i]->name.c_str();
         octree.addObject(scene.objects[i]);
-        // qDebug();
     }
 
     gettimeofday(&end, NULL);
@@ -225,7 +222,10 @@ void OctreeNode::traverse(){
 
 // TODO: bug exiests when two geometry share the same bounds.
 void OctreeNode::addObject(Object *obj){
-    // qDebug() << "addObject: " << obj->name.c_str() << "depth: " << depth;
+    if (depth > 90){
+        qDebug() << "addObject: " << obj->name.c_str() << "depth: " << depth;     
+    }
+    
     // qDebug() << "leaf" << isLeaf;
     // Extents *e = obj->computebounds();
     // Extents *e = new Extents(*obj->getBounds());
@@ -233,55 +233,102 @@ void OctreeNode::addObject(Object *obj){
     vec3 pos = e.getCentriod() - this->extents.getCentriod();
     // vec3 pos = obj->getCentriod() - this->extents.getCentriod();
     // qDebug() << obj->name.c_str() << " center: " << obj->getCentriod();
-    // qDebug() << obj->name.c_str() << " center: " << e.getCentriod();
+    
     // qDebug() << "extents center" << this->extents.getCentriod();
-    // qDebug() << "pos: " << pos;
+    if (depth > 90) qDebug() << "pos: " << pos;
 
-    int childIdx = 0;
+    int childIdx = -1;
 
-    if (depth > 100){
-        // qDebug() << "over 100";
+    std::vector<int> vec;
+    vec.push_back(0);
+    vec.push_back(1);
+    vec.push_back(2);
+    vec.push_back(3);
+    vec.push_back(4);
+    vec.push_back(5);
+    vec.push_back(6);
+    vec.push_back(7);
+
+    if (depth > 90){
+        qDebug() << "available size" << vec.size();
+    }
+
+    if (pos.z > 0){
+        vec.erase(std::remove(vec.begin(), vec.end(), 4), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 5), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 6), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 7), vec.end());    
+        if (depth > 90)  qDebug() << "remove -z: " << vec.size();
+        
+    }
+    else if (pos.z < 0){
+        vec.erase(std::remove(vec.begin(), vec.end(), 0), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 1), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 2), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 3), vec.end());       
+        if (depth > 90)  qDebug() << "remove +z: " << vec.size();
+    }
+
+    if (pos.x > 0){
+        vec.erase(std::remove(vec.begin(), vec.end(), 1), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 2), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 5), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 7), vec.end()); 
+        if (depth > 90)  qDebug() << "remove -x: " << vec.size();   
+    }
+    else if (pos.x < 0){
+        vec.erase(std::remove(vec.begin(), vec.end(), 0), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 3), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 4), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 6), vec.end());
+        if (depth > 90)  qDebug() << "remove +x: " << vec.size();   
+    }
+
+    if (pos.y > 0){
+        vec.erase(std::remove(vec.begin(), vec.end(), 2), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 3), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 6), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 7), vec.end());  
+        if (depth > 90)  qDebug() << "remove -y: " << vec.size();  
+    }
+    else if (pos.y < 0){
+        vec.erase(std::remove(vec.begin(), vec.end(), 1), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 0), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 5), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 4), vec.end()); 
+        if (depth > 90)  qDebug() << "remove +y: " << vec.size();   
+    }
+    
+    if (depth > 90) qDebug() << "after available size" << vec.size();
+    
+    
+    for (unsigned int i = 0; i < vec.size(); ++i){
+        childIdx = vec[i];
+
+        if (depth > 90) qDebug() << "pos: " << pos << "available: " << vec[i];
+        
+        if (!this->children[vec[i]]){
+            childIdx = vec[i];
+            break;
+        }
+    }       
+
+    if (depth > 100){   
         return;
     }
 
-    
-    if (pos.x > 0 && pos.y > 0 && pos.z > 0){
-        childIdx = 0;  
-    }
-    else if (pos.x < 0 && pos.y > 0 && pos.z > 0){
-        childIdx = 1;
-    }
-    else if (pos.x < 0 && pos.y < 0 && pos.z > 0){
-        childIdx = 2;
-    }
-    else if (pos.x > 0 && pos.y < 0 && pos.z > 0){
-        childIdx = 3;
-    }
-    else if (pos.x > 0 && pos.y > 0 && pos.z < 0){
-        childIdx = 4;
-    }
-    else if (pos.x < 0 && pos.y > 0 && pos.z < 0){
-        childIdx = 5;
-    }
-    else if (pos.x < 0 && pos.y < 0 && pos.z < 0){
-        childIdx = 6;
-    }
-    else if (pos.x > 0 && pos.y < 0 && pos.z < 0){
-        childIdx = 7;
-    }
-    else{
-        for (int i = 0; i < 8; ++i){
-            if (!this->children[i]){
-                childIdx = i;
-                break;
-            }
-        }        
+    if (childIdx == -1){
+        qDebug() << "pos" << pos <<" child: " << childIdx;
+        qDebug() << "error idx";
+        return;
     }
 
+
+    
 
     // qDebug() << "add to child" << childIdx;
     if (!this->children[childIdx]){
-        // qDebug() << "new child at " << depth << childIdx;;
+        qDebug() << "new child at " << depth << childIdx;
         this->children[childIdx] = new OctreeNode(this);
         this->children[childIdx]->depth = depth + 1;
         this->children[childIdx]->object = obj;
@@ -292,21 +339,29 @@ void OctreeNode::addObject(Object *obj){
     else{
 
         
-        // qDebug() << "occupied, at " << depth << childIdx;
         Object* childObj = this->children[childIdx]->object;
         this->children[childIdx]->isLeaf = false;
+        if (depth > 90){
+            qDebug() << "occupied, at " << depth << childIdx;
+            qDebug() << "extent center" << this->children[childIdx]->extents.getCentriod();
+        }
 
         // qDebug() << "extent center" << this->children[childIdx]->extents.getCentriod();
         this->children[childIdx]->extents.extendBy(e);
-        // qDebug() << "after extent center" << this->children[childIdx]->extents.getCentriod();
+
+        if (depth > 90) qDebug() << "after extent center" << this->children[childIdx]->extents.getCentriod();
+        
+
+        this->children[childIdx]->addObject(obj);
         if (childObj){
-            // qDebug() << "create new children";
-            // qDebug() << "*****************existing: " << childObj->name.c_str();
+            qDebug() << "create new children";
+            if (depth > 90) qDebug() << "*****************existing: " << childObj->name.c_str();
+            
             this->children[childIdx]->object = nullptr;
             this->children[childIdx]->addObject(childObj); 
             
         }
-        this->children[childIdx]->addObject(obj);
+        
         
     }
     

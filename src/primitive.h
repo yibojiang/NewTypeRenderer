@@ -34,6 +34,14 @@ public:
         return color;
     }
 
+    virtual void setMaterial(Refl_t refl){
+        this->refl = refl;
+    }
+
+    Refl_t getMaterial() const{
+        return refl;
+    }
+
     virtual vec3 getCentriod() const{ return vec3(); }
 
     virtual vec3 getEmission() const{

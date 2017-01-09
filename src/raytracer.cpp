@@ -83,8 +83,8 @@ vec3 Raytracer::tracing(const Ray &ray, int depth, unsigned short *Xi){
     // return f;
     // Russian roulette: starting at depth 5, each recursive step will stop with a probability of 0.1
     if (++depth > 5){
-        double rrStopProbability = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // max refl
-        // const double rrStopProbability = 0.1;
+        // double rrStopProbability = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // max refl
+        const double rrStopProbability = 0.1;
         if (erand48(Xi) < rrStopProbability){
             f = f * (1 / rrStopProbability); 
         } 
@@ -153,17 +153,16 @@ vec3 Raytracer::tracing(const Ray &ray, int depth, unsigned short *Xi){
 }
 
 void Raytracer::setupScene(){
-    Mesh *mesh = new Mesh();
-    mesh->name = "mesh";
+    
     
     ObjLoader loader;
     // loader.loadObj("rifle.obj", mesh);
     // loader->loadObj("cube.obj", mesh);
     // loader->loadObj("sponza.obj", mesh);
     // loader.loadModel("sponza.obj", mesh);
-    loader.loadModel("sponza.obj", mesh);
+    // loader.loadModel("sponza.obj", mesh);
     // loader.loadModel("rifle.obj", mesh);
-    // loader.loadModel("cube.obj", mesh);
+
     
     
     // delete loader;
@@ -177,21 +176,25 @@ void Raytracer::setupScene(){
     // scene.ca = setCamera(scene.ro, scene.ta, 0.0);
     
     scene.near = 2.0f/tan(scene.fov*0.5f);
-    rotateCamera(0, 0.5* M_PI, 0);
+    rotateCamera(0, 0.5 * M_PI, 0);
 
     
     
-    Object *light = (Object*)new Box(vec3(50, 0.1, 50),       vec3(9, 9, 9), vec3(), DIFF);
+    Object *light = (Object*)new Box(vec3(40, 0.1, 40),       vec3(9, 9, 9), vec3(), DIFF);
     light->name = "light";
     Transform *lightxform = new Transform(light);
-    lightxform->setTranslate(50, 120, 60);
+    lightxform->setTranslate(50, 99, 60);
     scene.root->addChild(lightxform);
 
 
+    Mesh *mesh = new Mesh();
+    mesh->name = "mesh";
+    loader.loadModel("rifle.obj", mesh);
+    mesh->setMaterial(SPEC);
     Transform *meshxform = new Transform(mesh);
-    meshxform->rotateY(M_PI*0.5);
-    meshxform->setTranslate(50, 0, 50);
-    meshxform->setScale(100, 100, 100);
+    meshxform->rotateY(M_PI*0.3);
+    meshxform->setTranslate(50, 50, 50);
+    meshxform->setScale(0.8, 0.8, 0.8);
     scene.root->addChild(meshxform);
 
 
@@ -216,44 +219,44 @@ void Raytracer::setupScene(){
     //     }
     // }
 
-    // Object *floor = (Object*)new Box(vec3(150, 0.1, 300),       vec3(), vec3(.75, .75, .75), DIFF);
-    // floor->name = "floor";
-    // Transform *xform = new Transform(floor);
-    // xform->setTranslate(50, 0, 0);
-    // scene.root->addChild(xform);
+    Object *floor = (Object*)new Box(vec3(150, 0.1, 300),       vec3(), vec3(.75, .75, .75), DIFF);
+    floor->name = "floor";
+    Transform *xform = new Transform(floor);
+    xform->setTranslate(50, 0, 0);
+    scene.root->addChild(xform);
 
 
-    // Object *left = (Object*)new Box(vec3(0.1, 300, 300),       vec3(), vec3(.75, .25, .25), DIFF);
-    // left->name = "left";
-    // Transform *xform1 = new Transform(left);
-    // xform1->setTranslate(0, 150, 0);
-    // scene.root->addChild(xform1);
+    Object *left = (Object*)new Box(vec3(0.1, 300, 300),       vec3(), vec3(.75, .25, .25), DIFF);
+    left->name = "left";
+    Transform *xform1 = new Transform(left);
+    xform1->setTranslate(0, 150, 0);
+    scene.root->addChild(xform1);
 
 
-    // Object *right = (Object*)new Box(vec3(0.1, 100, 300),       vec3(), vec3(.25, .75, .25), DIFF);
-    // right->name = "right";
-    // Transform *xform2 = new Transform(right);
-    // xform2->setTranslate(100, 50, 0);
-    // scene.root->addChild(xform2);
+    Object *right = (Object*)new Box(vec3(0.1, 100, 300),       vec3(), vec3(.25, .75, .25), DIFF);
+    right->name = "right";
+    Transform *xform2 = new Transform(right);
+    xform2->setTranslate(100, 50, 0);
+    scene.root->addChild(xform2);
 
 
-    // Object *ceil = (Object*)new Box(vec3(100, 0.1, 300),       vec3(), vec3(.75, .75, .75), DIFF);
-    // ceil->name = "ceil";
-    // Transform *xform3 = new Transform(ceil);
-    // xform3->setTranslate(50, 100, 0);
-    // scene.root->addChild(xform3);
+    Object *ceil = (Object*)new Box(vec3(100, 0.1, 300),       vec3(), vec3(.75, .75, .75), DIFF);
+    ceil->name = "ceil";
+    Transform *xform3 = new Transform(ceil);
+    xform3->setTranslate(50, 100, 0);
+    scene.root->addChild(xform3);
 
-    // Object *front = (Object*)new Box(vec3(100, 100, 0.1),       vec3(), vec3(.75, .75, .75), DIFF);
-    // front->name = "front";
-    // Transform *xform4 = new Transform(front);
-    // xform4->setTranslate(50, 50, -150);
-    // scene.root->addChild(xform4);
+    Object *front = (Object*)new Box(vec3(100, 100, 0.1),       vec3(), vec3(.75, .75, .75), DIFF);
+    front->name = "front";
+    Transform *xform4 = new Transform(front);
+    xform4->setTranslate(50, 50, -150);
+    scene.root->addChild(xform4);
 
-    // Object *back = (Object*)new Box(vec3(100, 100, 0.1),       vec3(), vec3(1,1,1), DIFF);
-    // back->name = "back";
-    // Transform *xform5 = new Transform(back);
-    // xform5->setTranslate(50, 50, 150);
-    // scene.root->addChild(xform5);
+    Object *back = (Object*)new Box(vec3(100, 100, 0.1),       vec3(), vec3(1,1,1), DIFF);
+    back->name = "back";
+    Transform *xform5 = new Transform(back);
+    xform5->setTranslate(50, 50, 150);
+    scene.root->addChild(xform5);
 
 }
 
