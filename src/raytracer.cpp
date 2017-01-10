@@ -224,10 +224,10 @@ void Raytracer::setupScene(){
 
     
     // Object *light = (Object*)new Box(vec3(40, 0.1, 40),       vec3(9, 9, 9), vec3(), DIFF);
-    Object *light = (Object*)new Sphere(20,       vec3(12, 12, 12), vec3(), DIFF);
+    Object *light = (Object*)new Sphere(10,       vec3(150, 150, 150), vec3(), DIFF);
     light->name = "light";
     Transform *lightxform = new Transform(light);
-    lightxform->setTranslate(50, 99, 40);
+    lightxform->setTranslate(50, 99, -5);
     scene.root->addChild(lightxform);
 
 
@@ -252,12 +252,23 @@ void Raytracer::setupScene(){
             // // t->rotateY(M_PI/6);
             // t->setTranslate(i * 30, j*30, 50);
             // scene.root->addChild(t); 
-
-                Object *sphere = new Sphere(6.0, vec3(), vec3(i*0.3, j*0.3, k*0.3)*.999, DIFF);
+                Refl_t mat;
+                if (i == 0){
+                     mat = DIFF;
+                }
+                else if (i == 1){
+                    mat = SPEC;
+                }
+                else if (i == 2){
+                    mat = REFR;
+                }
+                
+                
+                Object *sphere = new Sphere(7.0, vec3(), vec3(i*0.3, j*0.3, k*0.3)*.999, mat);
                 sphere->name = "sphere" + std::to_string(i + j * 10 + k * 100);
                 Transform *t = new Transform(sphere);
                 t->setScale(1, 1, 1);
-                t->setTranslate(i * 20 + 30, j*20 + 20,  k * 20);
+                t->setTranslate(i * 20 + 30, j*20 + 30, k * 45 - 20);
                 scene.root->addChild(t);
             }
         }
@@ -423,7 +434,6 @@ void Raytracer::renderIndirectProgressive(vec3 *colorArray, int &samples) {
         this -> progress = 100.*i / (height - 1);
         // fprintf(stderr, "\rRendering (%d spp) %5.2f%%", samps * gridSize * gridSize, 100.*i / (height - 1));
         qDebug() << "Rendering " << "spp:" << (samples + 1) * 4 << " " << 100.*i / (height - 1) << '%';
-        // unsigned short Xi[3] = {0, 0, i*i * i};
 
         for (unsigned short j = 0; j < width; ++j){
             color = colorArray[i*width+j];
@@ -446,8 +456,6 @@ void Raytracer::renderIndirectProgressive(vec3 *colorArray, int &samples) {
 
             color = (color * samples + vec3(clamp(r.x), clamp(r.y), clamp(r.z))) * (1.0/ (samples + 1));
             colorArray[i*width+j] = color;
-            // colorArray[i*width+j] = vec3(drand48(), drand48(), drand48());
-            // image.setPixel(j, i, qRgb(raw.x, raw.y, raw.z));
         }
     }
 
@@ -469,7 +477,6 @@ void Raytracer::renderIndirect(double &time, QImage &image) {
         this -> progress = 100.*i / (height - 1);
         // fprintf(stderr, "\rRendering (%d spp) %5.2f%%", samps * gridSize * gridSize, 100.*i / (height - 1));
         qDebug() << "Rendering " << "spp:" <<samps * gridSize * gridSize << " " << 100.*i / (height - 1) << '%';
-        unsigned short Xi[3] = {0, 0, i*i * i};
         for (unsigned short j = 0; j < width; ++j){
             vec3 color;
             for (int sy = 0; sy < 2; ++sy) { // 2x2 subpixel rows

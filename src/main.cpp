@@ -30,7 +30,7 @@ RenderThread::~RenderThread()
     condition.wakeOne();
     mutex.unlock();
     // terminate();
-    // wait();
+    wait();
 }
 
 void RenderThread::run()
@@ -52,6 +52,7 @@ void RenderThread::run()
             return;
         }
 
+        // window->renderAction->setEnabled(false);
         // ((Window*)parentWidget())->render -> setEnabled(false); 
         // tracer->renderIndirect(indirectTime, image);        
         int samples = tracer->samples;
@@ -66,6 +67,15 @@ void RenderThread::run()
             qDebug() << "samples: " << s;
             qDebug() << "before color: " << colorArray[0];
             tracer->renderIndirectProgressive(colorArray, s);
+            
+            if (abort){
+                return;
+            }
+
+            if (restart){
+                break;
+            }
+
             for (int i = 0; i < height; ++i){
                 for (int j = 0; j < width; ++j){
                     vec3 c = colorArray[i*width+j] * 255;
@@ -74,17 +84,18 @@ void RenderThread::run()
                 }
                 emit renderedImage(indirectTime, s, image); 
             }   
-            // qDebug() << "color: " << image.pixel(0,0);
+            
         }
 
         
         
         gettimeofday(&end, NULL);
         indirectTime = ((end.tv_sec  - start.tv_sec) * 1000000u + end.tv_usec - start.tv_usec) / 1.e6;
-        qDebug() << "Render time: " << indirectTime;
+        // qDebug() << "Render time: " << indirectTime;
 
         tracer->isRendering = false;
         if (!restart){
+            // window->renderAction->setEnabled(true);
             qDebug()<<"done.";
             emit renderedImage(indirectTime, samples, image);
         }
@@ -178,6 +189,7 @@ Window::Window(QWidget *parent) :
     QSlider *camRotateXSlider = new QSlider(this);
     camRotateXSlider->setGeometry(QRect(QPoint(0, 200), QSize(200, 50)));
     camRotateXSlider->setOrientation(Qt::Horizontal);
+    camRotateXSlider->hide();
     // camRotateXSlider->setMinimum(0.0);
     // camRotateXSlider->setMaximum(M_PI);
 
@@ -196,7 +208,7 @@ Window::Window(QWidget *parent) :
 
 
     status = new QStatusBar(this);
-    status->setStyleSheet("QStatusBar{padding-left:8px;background:rgba(255,0,0,255);color:black;font-weight:bold;}");
+    status->setStyleSheet("QStatusBar{padding-left:8px;background:rgba(128,128,128,255);color:black;font-weight:bold;}");
     setStatusBar(status);
     status->showMessage("test", 10000);
     // status->addWidget(stat0,1);
@@ -233,6 +245,7 @@ Window::Window(QWidget *parent) :
     tracer->renderDirect(directTime, directImage, normalImage, boundingBoxImage);
 
     renderThread.setTracer(tracer);
+    renderThread.window = this;
     
 
     connect(&renderThread, SIGNAL(renderedImage(double, double, const QImage&)),
@@ -252,10 +265,7 @@ void Window::updateIndirect(double time, double samples, const QImage &image){
     postImage = image;
 
     displayMode = 0;
-    // pixmap = QPixmap::fromImage(image);
-    // pixmapOffset = QPoint();
-    // lastDragPos = QPoint();
-    // pixmapScale = scaleFactor;
+    
     update();
 }
 
@@ -335,7 +345,11 @@ void Window::updateProgress(){
 
 void Window::render(){
     statusBar()->showMessage("Rendering...");
-    resize(width, height);
+    
+    if (tracer->width != width || tracer->height != height){
+        resize(width, height);
+    }
+    
     tracer->setResolution(width, height);
     tracer->samples = samples;
     

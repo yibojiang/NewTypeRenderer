@@ -22,14 +22,13 @@
 #include <QMutex>
 #include <QWaitCondition>
 
-
+class Window;
 class RenderThread : public QThread {
     Q_OBJECT
 
 public:
     Raytracer *tracer;
-    
-    
+    Window *window;
     RenderThread(QObject *parent = 0);
     ~RenderThread();
     void setTracer(Raytracer *);
