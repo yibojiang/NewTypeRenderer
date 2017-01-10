@@ -13,7 +13,7 @@
 #include "primitive.h"
 #include "transform.h"
 #include "modelloader.h"
-
+#include <QColor>
 #define WIREFRAME_ON
 #define EXPLICIT_LIGHT_SAMPLE
 
@@ -123,14 +123,15 @@ public:
     BVH bvh;
     int samples;
     double progress;
-    double ratio;
     bool isRendering;
-    
+
     Raytracer(unsigned width, unsigned height,int _samples);
     ~Raytracer();
-    vec3 tracing(const Ray &ray, int depth, unsigned short *Xi, int E);
-    vec3 render_pixel(unsigned short i, unsigned short j, unsigned short *Xi);
-    // QImage render(double &time) ;
+    vec3 tracing(const Ray &ray, int depth, int E);
+    
+    
+    void renderIndirectProgressive(vec3 *colorArray, int &samples);
+    
     void renderIndirect(double &time, QImage &image);
     void renderDirect(double &time, QImage &directImage, QImage &normalImage, QImage &boundingBoxImage);
     unsigned short width;

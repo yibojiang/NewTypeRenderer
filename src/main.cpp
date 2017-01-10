@@ -37,12 +37,12 @@ void RenderThread::run()
 {
     while(!abort) {
         mutex.lock();
-        double width = tracer->width;
-        double height = tracer->height;
+        int width = tracer->width;
+        int height = tracer->height;
         QImage image(width, height, QImage::Format_RGB32);
         mutex.unlock();
 
-        double indirectTime;
+        double indirectTime = 0;
 
         if (restart){
             break;
@@ -52,11 +52,41 @@ void RenderThread::run()
             return;
         }
 
-        tracer->renderIndirect(indirectTime, image);        
+        // ((Window*)parentWidget())->render -> setEnabled(false); 
+        // tracer->renderIndirect(indirectTime, image);        
+        int samples = tracer->samples;
+        vec3 *colorArray = new vec3[width*height];
+        
 
+        struct timeval start, end;
+        gettimeofday(&start, NULL);
+
+        tracer->isRendering = true;
+        for (int  s = 0; s < samples; ++s) {
+            qDebug() << "samples: " << s;
+            qDebug() << "before color: " << colorArray[0];
+            tracer->renderIndirectProgressive(colorArray, s);
+            for (int i = 0; i < height; ++i){
+                for (int j = 0; j < width; ++j){
+                    vec3 c = colorArray[i*width+j] * 255;
+                    image.setPixel(j, i, qRgb(c.x, c.y, c.z));
+
+                }
+                emit renderedImage(indirectTime, s, image); 
+            }   
+            // qDebug() << "color: " << image.pixel(0,0);
+        }
+
+        
+        
+        gettimeofday(&end, NULL);
+        indirectTime = ((end.tv_sec  - start.tv_sec) * 1000000u + end.tv_usec - start.tv_usec) / 1.e6;
+        qDebug() << "Render time: " << indirectTime;
+
+        tracer->isRendering = false;
         if (!restart){
             qDebug()<<"done.";
-            emit renderedImage(indirectTime, image);
+            emit renderedImage(indirectTime, samples, image);
         }
 
         mutex.lock();
@@ -111,11 +141,12 @@ Window::Window(QWidget *parent) :
     
     // toolbar->addAction(QIcon(openpix), " File");
     toolbar->addSeparator();
-    QAction *render = toolbar->addAction(QIcon(renderpix), "Render" );
+    renderAction = toolbar->addAction(QIcon(renderpix), "Render" );
+
 
     // QAction *quit = toolbar->addAction(QIcon(quitpix), "Quit Application");
 
-    connect(render, SIGNAL(triggered()), this, SLOT(render()));
+    connect(renderAction, SIGNAL(triggered()), this, SLOT(render()));
     // connect(quit, SIGNAL(triggered()), qApp, SLOT(quit()));
 
     QLineEdit *sampleText = new QLineEdit();
@@ -164,12 +195,8 @@ Window::Window(QWidget *parent) :
     gammaCheckbox->setCheckState(Qt::Checked);
 
 
-    // debugLabel = new QLabel(this);
-    // debugLabel->setGeometry(QRect(750, 560, 200, 30));
-    // debugLabel->setText("");
-    // debugLabel->setAlignment(Qt::AlignBottom | Qt::AlignLeft);
-
     status = new QStatusBar(this);
+    status->setStyleSheet("QStatusBar{padding-left:8px;background:rgba(255,0,0,255);color:black;font-weight:bold;}");
     setStatusBar(status);
     status->showMessage("test", 10000);
     // status->addWidget(stat0,1);
@@ -202,14 +229,14 @@ Window::Window(QWidget *parent) :
     indirectImage = QImage(width, height, QImage::Format_RGB32);
     boundingBoxImage = QImage(width, height, QImage::Format_RGB32);
     
-    // double directTime;
-    // tracer->renderDirect(directTime, directImage, normalImage, boundingBoxImage);
+    double directTime;
+    tracer->renderDirect(directTime, directImage, normalImage, boundingBoxImage);
 
     renderThread.setTracer(tracer);
     
 
-    connect(&renderThread, SIGNAL(renderedImage(double, const QImage&)),
-            this, SLOT(updateIndirect(double, QImage)));
+    connect(&renderThread, SIGNAL(renderedImage(double, double, const QImage&)),
+            this, SLOT(updateIndirect(double, double, QImage)));
 
     
     displayMode = 2;
@@ -217,11 +244,13 @@ Window::Window(QWidget *parent) :
 
  }
 
-void Window::updateIndirect(double time, const QImage &image){
+void Window::updateIndirect(double time, double samples, const QImage &image){
     // qDebug() << "update image";
     status->showMessage("time: " + QString::number(time));
     indirectImage = image;
-    postImage = postProcess(indirectImage);
+    // postImage = postProcess(indirectImage);
+    postImage = image;
+
     displayMode = 0;
     // pixmap = QPixmap::fromImage(image);
     // pixmapOffset = QPoint();
@@ -323,16 +352,18 @@ void Window::render(){
 
     QTimer *timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(updateProgress()));
-    timer->start(200);
+    timer->start(16);
 
 }
 
 QImage Window::postProcess(const QImage &image){
+    // qDebug()<<"postProcess";
     QImage reuslt = QImage(image.width(), image.height(), QImage::Format_RGB32);
     
     qDebug() << rgbBox->currentText();
     for (int i = 0; i < image.width(); ++i){
         for (int j = 0; j < image.height(); ++j){
+            // qDebug() << "getpxiel" << i << j;
             QColor color(image.pixel(i, j));
             int r = color.red();
             int g = color.green();
@@ -367,7 +398,7 @@ QImage Window::postProcess(const QImage &image){
             reuslt.setPixel(i, j, qRgb(r, g, b));
         }
     }
-    qDebug()<<"gamma correct on";
+    qDebug()<<"gamma correct";
 
     return reuslt;
 }

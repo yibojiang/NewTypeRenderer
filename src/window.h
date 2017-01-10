@@ -36,7 +36,7 @@ public:
     void render();
 
 signals:
-    void renderedImage(double time, const QImage &image);
+    void renderedImage(double time, double samples, const QImage &image);
 
 
 protected:
@@ -73,6 +73,7 @@ class Window : public QMainWindow
     Raytracer *tracer;
     QCheckBox *gammaCheckbox;
     QComboBox *rgbBox;
+    QAction *renderAction;
 
     RenderThread renderThread;
 
@@ -86,8 +87,7 @@ private slots:
     void changeResolutionHeight(const QString&);
     void gammaState(int state);
     QImage postProcess(const QImage&);
-    // void updateIndirect(double, const QImage&);
-    void updateIndirect(double, const QImage&);
+    void updateIndirect(double, double, const QImage&);
     void camRotateY(int);
     void updateProgress();
 
