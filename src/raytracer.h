@@ -124,6 +124,8 @@ public:
     int samples;
     double progress;
     double ratio;
+    bool isRendering;
+    
     Raytracer(unsigned width, unsigned height,int _samples);
     ~Raytracer();
     vec3 tracing(const Ray &ray, int depth, unsigned short *Xi, int E);

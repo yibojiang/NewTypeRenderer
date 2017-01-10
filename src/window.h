@@ -22,13 +22,13 @@
 #include <QMutex>
 #include <QWaitCondition>
 
-class RenderThread : public QThread
-{
+
+class RenderThread : public QThread {
     Q_OBJECT
 
 public:
     Raytracer *tracer;
-
+    
     
     RenderThread(QObject *parent = 0);
     ~RenderThread();
@@ -36,28 +36,21 @@ public:
     void render();
 
 signals:
-    void renderedImage(const QImage &image);
-    void updateProgress(const QImage &image);
+    void renderedImage(double time, const QImage &image);
+
 
 protected:
     void run();
 
 private:
-    uint rgbFromWaveLength(double wave);
     QMutex mutex;
     QWaitCondition condition;
-    double centerX;
-    double centerY;
-    double scaleFactor;
-    QSize resultSize;
+    
     bool restart;
     bool abort;
 
     double width;
     double height;
-
-    enum { ColormapSize = 512 };
-    uint colormap[ColormapSize];
 };
 
 class Window : public QMainWindow
@@ -75,7 +68,7 @@ class Window : public QMainWindow
     QImage normalImage;
     QImage postImage;
     QImage boundingBoxImage;
-    // QLabel *debugLabel;
+    
     QStatusBar *status;
     Raytracer *tracer;
     QCheckBox *gammaCheckbox;
@@ -83,7 +76,6 @@ class Window : public QMainWindow
 
     RenderThread renderThread;
 
-    // QSlider *camRotateXSlider;
 private slots:
     void render();
     void saveImage();
@@ -94,9 +86,11 @@ private slots:
     void changeResolutionHeight(const QString&);
     void gammaState(int state);
     QImage postProcess(const QImage&);
-    void updateIndirect(const QImage&);
+    // void updateIndirect(double, const QImage&);
+    void updateIndirect(double, const QImage&);
     void camRotateY(int);
-    void updateProgress(double);
+    void updateProgress();
+
 private:
     int displayMode; // 0 - render, 1 - normal
 

@@ -7,6 +7,9 @@
 #include <QByteArray>
 #include <QDebug>
 #include <QFileDialog>
+#include <QTimer>
+
+
 
 RenderThread::RenderThread(QObject *parent)
     : QThread(parent)
@@ -26,6 +29,7 @@ RenderThread::~RenderThread()
     abort = true;
     condition.wakeOne();
     mutex.unlock();
+    // terminate();
     // wait();
 }
 
@@ -48,15 +52,11 @@ void RenderThread::run()
             return;
         }
 
-        tracer->renderIndirect(indirectTime, image);
-        // emit updateProgress(tracer->progress);
-
-        
-        
+        tracer->renderIndirect(indirectTime, image);        
 
         if (!restart){
             qDebug()<<"done.";
-            emit renderedImage(image);
+            emit renderedImage(indirectTime, image);
         }
 
         mutex.lock();
@@ -71,40 +71,27 @@ void RenderThread::run()
 void RenderThread::render()
 {
     QMutexLocker locker(&mutex);
-    // this->centerX = centerX;
-    // this->centerY = centerY;
-    // this->scaleFactor = scaleFactor;
-    // this->resultSize = resultSize;
+
 
     if (!isRunning()) {
         start(LowPriority);
-    } else {
+    } 
+    else {
         restart = true;
         condition.wakeOne();
     }
+
+    
 }
-
-
 
 Window::Window(QWidget *parent) :
  QMainWindow(parent) {
     width = 800, height = 600;
     resize(width, height);
 
-
-
-    
-    
     setWindowTitle("Render View " + QString::number(width) + "x" + QString::number(height));
-    // renderButton = new QPushButton("Render", this);
     displayMode = 0;
     samples = 4;
-    // set size and location of the button
-    // renderButton->setGeometry(QRect(QPoint(0, 0),
-    // QSize(200, 50)));
- 
-    // Connect button signal to appropriate slot
-    // connect(renderButton, SIGNAL (released()), this, SLOT (handleRender()));
 
     QAction *save = new QAction("&Save", this);
 
@@ -125,10 +112,9 @@ Window::Window(QWidget *parent) :
     // toolbar->addAction(QIcon(openpix), " File");
     toolbar->addSeparator();
     QAction *render = toolbar->addAction(QIcon(renderpix), "Render" );
+
     // QAction *quit = toolbar->addAction(QIcon(quitpix), "Quit Application");
 
-
-    
     connect(render, SIGNAL(triggered()), this, SLOT(render()));
     // connect(quit, SIGNAL(triggered()), qApp, SLOT(quit()));
 
@@ -206,7 +192,6 @@ Window::Window(QWidget *parent) :
     connect(gammaCheckbox, SIGNAL(stateChanged(int)),
         this, SLOT(gammaState(int)));
 
-
     connect(camRotateXSlider, SIGNAL(valueChanged(int)),
         this, SLOT(camRotateY(int)));
 
@@ -223,18 +208,18 @@ Window::Window(QWidget *parent) :
     renderThread.setTracer(tracer);
     
 
-    connect(&renderThread, SIGNAL(renderedImage(QImage)),
-            this, SLOT(updateIndirect(QImage)));
+    connect(&renderThread, SIGNAL(renderedImage(double, const QImage&)),
+            this, SLOT(updateIndirect(double, QImage)));
 
-    connect(&renderThread, SIGNAL(updateProgress(double)),
-            this, SLOT(updateProgress(double)));
+    
     displayMode = 2;
     update();
 
  }
 
-void Window::updateIndirect(const QImage &image){
-    qDebug() << "update image";
+void Window::updateIndirect(double time, const QImage &image){
+    // qDebug() << "update image";
+    status->showMessage("time: " + QString::number(time));
     indirectImage = image;
     postImage = postProcess(indirectImage);
     displayMode = 0;
@@ -310,8 +295,13 @@ void Window::switchRGBChannel(const QString&){
     update();
 }
 
-void Window::updateProgress(double progress){
-    statusBar()->showMessage("Rendering..." + QString::number(progress) + '%');
+void Window::updateProgress(){
+    
+    if (tracer->isRendering){
+        statusBar()->showMessage("Rendering..." + QString::number(tracer->progress) + '%');    
+    }
+    
+    
 }
 
 void Window::render(){
@@ -326,9 +316,15 @@ void Window::render(){
     // postImage = postProcess(indirectImage);
     // displayMode = 0;
     // update();
+
     // statusBar()->showMessage("time: " + QString::number(indirectTime));
 
     renderThread.render();
+
+    QTimer *timer = new QTimer(this);
+    connect(timer, SIGNAL(timeout()), this, SLOT(updateProgress()));
+    timer->start(200);
+
 }
 
 QImage Window::postProcess(const QImage &image){

@@ -132,7 +132,7 @@ vec3 Raytracer::tracing(const Ray &ray, int depth, unsigned short *Xi, int E = 1
             vec3 l = su * cos(phi) * sin_a + sv * sin(phi) * sin_a + sw * cos_a;
             l.normalize();
 
-            
+
             Intersection shadow = bvh.intersect(Ray(hit, l));
             
             if (shadow.object && shadow.object == light){
@@ -455,7 +455,7 @@ void Raytracer::renderIndirect(double &time, QImage &image) {
 
     const int gridSize = 2;
     int samps = samples / (gridSize * gridSize);
-    
+    isRendering = true;
     vec3 r(0,0,0);
     vec3 raw(0,0,0);
     #pragma omp parallel for schedule(dynamic, 1) private(r)       // OpenMP
@@ -495,7 +495,7 @@ void Raytracer::renderIndirect(double &time, QImage &image) {
     gettimeofday(&end, NULL);
     time = ((end.tv_sec  - start.tv_sec) * 1000000u + end.tv_usec - start.tv_usec) / 1.e6;
     qDebug() << "Render time: " << time;
-
+    isRendering = false;
     
 }
 
