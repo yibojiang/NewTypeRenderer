@@ -4,8 +4,8 @@ a simple Monte Carlo Pathtracer with qt4 GUI in C++.
 ## Features
  - Mesh Rendering
  - Transform Hierarchy in Scene Management
- - BVH structure acceleration
- - a simple GUI
+ - BVH Structure Acceleration
+ - a Progressively Rendering Renderview
 
 ## Compiling
 Install clang-openmp
