@@ -84,6 +84,10 @@ vec3 Raytracer::tracing(const Ray &ray, int depth, int E = 1){
     // Russian roulette: starting at depth 5, each recursive step will stop with a probability of 0.1
 
     double p = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // max refl
+    if (++depth > 10){
+        return obj.getEmission() * E;    
+    }
+    
     if (++depth > 5 || !p) {
         if (drand48() < p){
             f = f * (1 / p); 
@@ -200,12 +204,9 @@ void Raytracer::setupScene(){
     
     
     ObjLoader loader;
-    // loader.loadObj("rifle.obj", mesh);
-    // loader->loadObj("cube.obj", mesh);
-    // loader->loadObj("sponza.obj", mesh);
-    // loader.loadModel("sponza.obj", mesh);
-    // loader.loadModel("sponza.obj", mesh);
-    // loader.loadModel("rifle.obj", mesh);
+    
+
+    
 
     
     
@@ -224,55 +225,62 @@ void Raytracer::setupScene(){
 
     
     // Object *light = (Object*)new Box(vec3(40, 0.1, 40),       vec3(9, 9, 9), vec3(), DIFF);
-    Object *light = (Object*)new Sphere(10,       vec3(150, 150, 150), vec3(), DIFF);
+    Object *light = (Object*)new Sphere(10,       vec3(60, 60, 60), vec3(), DIFF);
     light->name = "light";
     Transform *lightxform = new Transform(light);
     lightxform->setTranslate(50, 99, -5);
     scene.root->addChild(lightxform);
 
 
-    // Mesh *mesh = new Mesh();
-    // mesh->name = "mesh";
+    Mesh *mesh = new Mesh();
+    mesh->name = "mesh";
+
+    // loader.loadObj("rifle.obj", mesh);
+    // loader->loadObj("cube.obj", mesh);
+    // loader->loadObj("sponza.obj", mesh);
+    // loader.loadModel("sponza.obj", mesh);
+    // loader.loadModel("sponza.obj", mesh);
     // loader.loadModel("rifle.obj", mesh);
-    // mesh->setMaterial(SPEC);
-    // Transform *meshxform = new Transform(mesh);
-    // meshxform->rotateY(M_PI*0.3);
-    // meshxform->setTranslate(50, 50, 50);
-    // meshxform->setScale(0.8, 0.8, 0.8);
-    // scene.root->addChild(meshxform);
+    loader.loadModel("bunny.obj", mesh);
+    mesh->setMaterial(SPEC);
+    Transform *meshxform = new Transform(mesh);
+    meshxform->rotateY(-M_PI*0.9);
+    meshxform->setTranslate(50, 50, 50);
+    meshxform->setScale(30, 30, 30);
+    scene.root->addChild(meshxform);
 
 
-    for (int i = 0; i < 3; ++i){
-        for (int j = 0; j < 3; ++j){
-            for (int k = 0; k < 3; ++k){
-            // Object *cube = new Box(vec3(20, 20, 20), vec3(), vec3(1, 1, 1)*.999, DIFF);
-            // Transform *t = new Transform();
-            // t->addObject((Object*)cube);
-            // t->setScale(1, 0.5, 1);
-            // // t->rotateY(M_PI/6);
-            // t->setTranslate(i * 30, j*30, 50);
-            // scene.root->addChild(t); 
-                Refl_t mat;
-                if (i == 0){
-                     mat = DIFF;
-                }
-                else if (i == 1){
-                    mat = SPEC;
-                }
-                else if (i == 2){
-                    mat = REFR;
-                }
+    // for (int i = 0; i < 3; ++i){
+    //     for (int j = 0; j < 3; ++j){
+    //         for (int k = 0; k < 3; ++k){
+    //         // Object *cube = new Box(vec3(20, 20, 20), vec3(), vec3(1, 1, 1)*.999, DIFF);
+    //         // Transform *t = new Transform();
+    //         // t->addObject((Object*)cube);
+    //         // t->setScale(1, 0.5, 1);
+    //         // // t->rotateY(M_PI/6);
+    //         // t->setTranslate(i * 30, j*30, 50);
+    //         // scene.root->addChild(t); 
+    //             Refl_t mat;
+    //             if (i == 0){
+    //                  mat = DIFF;
+    //             }
+    //             else if (i == 1){
+    //                 mat = SPEC;
+    //             }
+    //             else if (i == 2){
+    //                 mat = REFR;
+    //             }
                 
                 
-                Object *sphere = new Sphere(7.0, vec3(), vec3(i*0.3, j*0.3, k*0.3)*.999, mat);
-                sphere->name = "sphere" + std::to_string(i + j * 10 + k * 100);
-                Transform *t = new Transform(sphere);
-                t->setScale(1, 1, 1);
-                t->setTranslate(i * 20 + 30, j*20 + 30, k * 45 - 20);
-                scene.root->addChild(t);
-            }
-        }
-    }
+    //             Object *sphere = new Sphere(7.0, vec3(), vec3(i*0.3, j*0.3, k*0.3)*.999, mat);
+    //             sphere->name = "sphere" + std::to_string(i + j * 10 + k * 100);
+    //             Transform *t = new Transform(sphere);
+    //             t->setScale(1, 1, 1);
+    //             t->setTranslate(i * 20 + 30, j*20 + 30, k * 45 - 20);
+    //             scene.root->addChild(t);
+    //         }
+    //     }
+    // }
 
     Object *floor = (Object*)new Box(vec3(150, 0.1, 300),       vec3(), vec3(.75, .75, .75), DIFF);
     floor->name = "floor";

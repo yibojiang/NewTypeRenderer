@@ -328,7 +328,7 @@ void OctreeNode::addObject(Object *obj){
 
     // qDebug() << "add to child" << childIdx;
     if (!this->children[childIdx]){
-        qDebug() << "new child at " << depth << childIdx;
+        // qDebug() << "new child at " << depth << childIdx;
         this->children[childIdx] = new OctreeNode(this);
         this->children[childIdx]->depth = depth + 1;
         this->children[childIdx]->object = obj;
@@ -354,7 +354,7 @@ void OctreeNode::addObject(Object *obj){
 
         this->children[childIdx]->addObject(obj);
         if (childObj){
-            qDebug() << "create new children";
+            // qDebug() << "create new children";
             if (depth > 90) qDebug() << "*****************existing: " << childObj->name.c_str();
             
             this->children[childIdx]->object = nullptr;

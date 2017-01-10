@@ -14,7 +14,7 @@
 #include "transform.h"
 #include "modelloader.h"
 #include <QColor>
-#define WIREFRAME_ON
+// #define WIREFRAME_ON
 #define EXPLICIT_LIGHT_SAMPLE
 
 

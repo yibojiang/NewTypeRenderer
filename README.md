@@ -14,6 +14,11 @@ Install clang-openmp
     brew install clang-mp
 ```
 
+Install libiomp
+```
+    brew install libiomp
+```
+
 Install QT4
 ```
     brew install qt4
