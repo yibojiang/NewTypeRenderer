@@ -36,6 +36,7 @@ public:
 
 signals:
     void renderedImage(double time, double samples, const QImage &image);
+    void renderedImagePostProcess(double, double, const QImage &image);
 
 
 protected:
@@ -87,6 +88,7 @@ private slots:
     void gammaState(int state);
     QImage postProcess(const QImage&);
     void updateIndirect(double, double, const QImage&);
+    void updatePostProcess(double, double, const QImage&);
     void camRotateY(int);
     void updateProgress();
 

@@ -66,6 +66,7 @@ void RenderThread::run()
         for (int  s = 0; s < samples; ++s) {
             qDebug() << "samples: " << s;
             qDebug() << "before color: " << colorArray[0];
+            tracer->curSamples = s + 1;
             tracer->renderIndirectProgressive(colorArray, s);
             
             if (abort){
@@ -97,7 +98,8 @@ void RenderThread::run()
         if (!restart){
             // window->renderAction->setEnabled(true);
             qDebug()<<"done.";
-            emit renderedImage(indirectTime, samples, image);
+            // emit renderedImage(indirectTime, samples, image);
+            emit renderedImagePostProcess(indirectTime, samples, image);
         }
 
         mutex.lock();
@@ -251,21 +253,26 @@ Window::Window(QWidget *parent) :
     connect(&renderThread, SIGNAL(renderedImage(double, double, const QImage&)),
             this, SLOT(updateIndirect(double, double, QImage)));
 
+    connect(&renderThread, SIGNAL(renderedImagePostProcess(double, double, const QImage&)),
+            this, SLOT(updatePostProcess(double, double, QImage)));
     
     displayMode = 2;
     update();
+}
 
- }
+void Window::updatePostProcess(double time, double samples, const QImage &image){
 
-void Window::updateIndirect(double time, double samples, const QImage &image){
-    // qDebug() << "update image";
     status->showMessage("time: " + QString::number(time));
     indirectImage = image;
-    // postImage = postProcess(indirectImage);
-    postImage = image;
-
+    postImage = postProcess(indirectImage);
     displayMode = 0;
-    
+    update();
+}
+
+void Window::updateIndirect(double time, double samples, const QImage &image){
+    indirectImage = image;
+    postImage = image;
+    displayMode = 0;
     update();
 }
 
@@ -337,7 +344,7 @@ void Window::switchRGBChannel(const QString&){
 void Window::updateProgress(){
     
     if (tracer->isRendering){
-        statusBar()->showMessage("Rendering..." + QString::number(tracer->progress) + '%');    
+        statusBar()->showMessage("Rendering..." + QString::number(tracer->progress) + '%' +  '(' + QString::number(tracer->curSamples) + '/' + QString::number(tracer->samples) + ')' );    
     }
     
     

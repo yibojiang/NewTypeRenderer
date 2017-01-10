@@ -467,8 +467,8 @@ void Raytracer::renderIndirect(double &time, QImage &image) {
     struct timeval start, end;
     gettimeofday(&start, NULL);
 
-    const int gridSize = 2;
-    int samps = samples / (gridSize * gridSize);
+    
+    int samps = samples / 4;
     isRendering = true;
     vec3 r(0,0,0);
     vec3 raw(0,0,0);
@@ -476,7 +476,7 @@ void Raytracer::renderIndirect(double &time, QImage &image) {
     for (unsigned short i = 0; i < height; ++i){
         this -> progress = 100.*i / (height - 1);
         // fprintf(stderr, "\rRendering (%d spp) %5.2f%%", samps * gridSize * gridSize, 100.*i / (height - 1));
-        qDebug() << "Rendering " << "spp:" <<samps * gridSize * gridSize << " " << 100.*i / (height - 1) << '%';
+        qDebug() << "Rendering " << "spp:" <<samps * 4 << " " << 100.*i / (height - 1) << '%';
         for (unsigned short j = 0; j < width; ++j){
             vec3 color;
             for (int sy = 0; sy < 2; ++sy) { // 2x2 subpixel rows
@@ -515,7 +515,6 @@ void Raytracer::renderIndirect(double &time, QImage &image) {
 void Raytracer::setResolution(const int &width, const int &height){
     this->width = width;
     this->height = height;
-
 }
 
 Raytracer::~Raytracer(){

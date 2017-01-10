@@ -121,6 +121,7 @@ class Raytracer{
 public:
     Scene scene;
     BVH bvh;
+    int curSamples;
     int samples;
     double progress;
     bool isRendering;
