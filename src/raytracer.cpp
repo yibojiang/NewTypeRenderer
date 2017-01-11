@@ -220,7 +220,7 @@ void Raytracer::setupScene(){
 
     
     // Object *light = (Object*)new Box(vec3(40, 0.1, 40),       vec3(9, 9, 9), vec3(), DIFF);
-    Object *light = (Object*)new Sphere(8,       vec3(12, 12, 12), vec3(), DIFF);
+    Object *light = (Object*)new Sphere(8,       vec3(30, 30, 30), vec3(), DIFF);
     light->name = "light";
     Transform *lightxform = new Transform(light);
     lightxform->setTranslate(50, 99, -25);
@@ -238,13 +238,13 @@ void Raytracer::setupScene(){
     // loader.loadModel("rifle.obj", mesh);
     // 
 
-    loader.loadObj("cube.obj", mesh);
-    mesh->setMaterial(DIFF);
-    Transform *meshxform = new Transform(mesh);
-    meshxform->rotateY(-M_PI*0.9);
-    meshxform->setTranslate(50, 50, 50);
-    meshxform->setScale(1, 1, 1);
-    scene.root->addChild(meshxform);
+    // loader.loadObj("cube.obj", mesh);
+    // mesh->setMaterial(DIFF);
+    // Transform *meshxform = new Transform(mesh);
+    // meshxform->rotateY(-M_PI*0.9);
+    // meshxform->setTranslate(50, 50, 50);
+    // meshxform->setScale(1, 1, 1);
+    // scene.root->addChild(meshxform);
 
     // loader.loadModel("bunny.obj", mesh);
     // mesh->setMaterial(DIFF);
@@ -254,13 +254,14 @@ void Raytracer::setupScene(){
     // meshxform->setScale(30, 30, 30);
     // scene.root->addChild(meshxform);
 
-    // loader.loadModel("lucy.obj", mesh);
-    // mesh->setMaterial(DIFF);
-    // Transform *meshxform = new Transform(mesh);
-    // meshxform->rotateY(-M_PI);
-    // meshxform->setTranslate(50, 20, -20);
-    // meshxform->setScale(250, 250, 250);
-    // scene.root->addChild(meshxform);
+    loader.loadModel("lucy.obj", mesh);
+    mesh->setMaterial(DIFF);
+    mesh->setDiffuseColor(vec3(1,1,0));
+    Transform *meshxform = new Transform(mesh);
+    meshxform->rotateY(-M_PI);
+    meshxform->setTranslate(50, 20, -20);
+    meshxform->setScale(250, 250, 250);
+    scene.root->addChild(meshxform);
 
     // for (int i = 0; i < 3; ++i){
     //     for (int j = 0; j < 3; ++j){

@@ -45,6 +45,10 @@ public:
         this->refl = refl;
     }
 
+    virtual void setDiffuseColor(vec3 diff){
+        this->color = diff;
+    }
+
     Refl_t getMaterial() const{
         return refl;
     }
