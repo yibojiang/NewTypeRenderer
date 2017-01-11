@@ -17,6 +17,8 @@ public:
     ~Extents();
     vec3 getCentriod() const;
     // Extents group(Extents &);
+    vec3 getBoundMin() const;
+    vec3 getBoundMax() const;
     void extendBy(Extents &);
     double intersect(const Ray &r) const;
     double intersectWireframe(const Ray &r) const;
@@ -40,14 +42,24 @@ public:
     bool isLeaf;
     OctreeNode *parent;
     OctreeNode *children[8];
+    
+    std::vector<Object*> objects;
+    vec3 boundMin;
+    vec3 boundMax;
+
     Object *object;
     Extents extents;
+    
     void addObject(Object *);
+    void addObject1(Object *);
     void traverse();
 
 
     void intersectTest(const Ray &r, Intersection &intersection) const;
     void intersectTestWireframe(const Ray &r, Intersection &intersection) const;
+    static int maxDepth;
+
+    Extents computeExetents();
 };
 
 class BVH{

@@ -46,6 +46,7 @@ inline void ons(const vec3& v1, vec3& v2, vec3& v3) {
 
 
 inline vec3 cosineSampleHemisphere(double u1, double u2){
+
     const double r = sqrt(u1);
     const double theta = 2 * M_PI * u2;
     const double x = r * cos(theta);
@@ -204,12 +205,6 @@ void Raytracer::setupScene(){
     
     
     ObjLoader loader;
-    
-
-    
-
-    
-    
     // delete loader;
     qDebug() << "Object Loaded";
 
@@ -225,10 +220,10 @@ void Raytracer::setupScene(){
 
     
     // Object *light = (Object*)new Box(vec3(40, 0.1, 40),       vec3(9, 9, 9), vec3(), DIFF);
-    Object *light = (Object*)new Sphere(10,       vec3(60, 60, 60), vec3(), DIFF);
+    Object *light = (Object*)new Sphere(8,       vec3(12, 12, 12), vec3(), DIFF);
     light->name = "light";
     Transform *lightxform = new Transform(light);
-    lightxform->setTranslate(50, 99, -5);
+    lightxform->setTranslate(50, 99, -25);
     scene.root->addChild(lightxform);
 
 
@@ -241,14 +236,31 @@ void Raytracer::setupScene(){
     // loader.loadModel("sponza.obj", mesh);
     // loader.loadModel("sponza.obj", mesh);
     // loader.loadModel("rifle.obj", mesh);
-    loader.loadModel("bunny.obj", mesh);
-    mesh->setMaterial(SPEC);
+    // 
+
+    loader.loadObj("cube.obj", mesh);
+    mesh->setMaterial(DIFF);
     Transform *meshxform = new Transform(mesh);
     meshxform->rotateY(-M_PI*0.9);
     meshxform->setTranslate(50, 50, 50);
-    meshxform->setScale(30, 30, 30);
+    meshxform->setScale(1, 1, 1);
     scene.root->addChild(meshxform);
 
+    // loader.loadModel("bunny.obj", mesh);
+    // mesh->setMaterial(DIFF);
+    // Transform *meshxform = new Transform(mesh);
+    // meshxform->rotateY(-M_PI*0.9);
+    // meshxform->setTranslate(50, 50, 50);
+    // meshxform->setScale(30, 30, 30);
+    // scene.root->addChild(meshxform);
+
+    // loader.loadModel("lucy.obj", mesh);
+    // mesh->setMaterial(DIFF);
+    // Transform *meshxform = new Transform(mesh);
+    // meshxform->rotateY(-M_PI);
+    // meshxform->setTranslate(50, 20, -20);
+    // meshxform->setScale(250, 250, 250);
+    // scene.root->addChild(meshxform);
 
     // for (int i = 0; i < 3; ++i){
     //     for (int j = 0; j < 3; ++j){
@@ -282,44 +294,44 @@ void Raytracer::setupScene(){
     //     }
     // }
 
-    Object *floor = (Object*)new Box(vec3(150, 0.1, 300),       vec3(), vec3(.75, .75, .75), DIFF);
+    Object *floor = (Object*)new Box(vec3(500, 0.1, 300),       vec3(), vec3(.75, .75, .75), DIFF);
     floor->name = "floor";
     Transform *xform = new Transform(floor);
-    xform->setTranslate(50, 0, 0);
+    xform->setTranslate(0, 0, 0);
     scene.root->addChild(xform);
 
 
-    Object *left = (Object*)new Box(vec3(0.1, 300, 300),       vec3(), vec3(.75, .25, .25), DIFF);
-    left->name = "left";
-    Transform *xform1 = new Transform(left);
-    xform1->setTranslate(0, 150, 0);
-    scene.root->addChild(xform1);
+    // Object *left = (Object*)new Box(vec3(0.1, 300, 300),       vec3(), vec3(.75, .25, .25), DIFF);
+    // left->name = "left";
+    // Transform *xform1 = new Transform(left);
+    // xform1->setTranslate(0, 150, 0);
+    // scene.root->addChild(xform1);
 
 
-    Object *right = (Object*)new Box(vec3(0.1, 100, 300),       vec3(), vec3(.25, .75, .25), DIFF);
-    right->name = "right";
-    Transform *xform2 = new Transform(right);
-    xform2->setTranslate(100, 50, 0);
-    scene.root->addChild(xform2);
+    // Object *right = (Object*)new Box(vec3(0.1, 300, 300),       vec3(), vec3(.25, .75, .25), DIFF);
+    // right->name = "right";
+    // Transform *xform2 = new Transform(right);
+    // xform2->setTranslate(100, 50, 0);
+    // scene.root->addChild(xform2);
 
 
-    Object *ceil = (Object*)new Box(vec3(100, 0.1, 300),       vec3(), vec3(.75, .75, .75), DIFF);
-    ceil->name = "ceil";
-    Transform *xform3 = new Transform(ceil);
-    xform3->setTranslate(50, 100, 0);
-    scene.root->addChild(xform3);
+    // Object *ceil = (Object*)new Box(vec3(100, 0.1, 300),       vec3(), vec3(.75, .75, .75), DIFF);
+    // ceil->name = "ceil";
+    // Transform *xform3 = new Transform(ceil);
+    // xform3->setTranslate(50, 100, 0);
+    // scene.root->addChild(xform3);
 
-    Object *front = (Object*)new Box(vec3(100, 100, 0.1),       vec3(), vec3(.75, .75, .75), DIFF);
-    front->name = "front";
-    Transform *xform4 = new Transform(front);
-    xform4->setTranslate(50, 50, -150);
-    scene.root->addChild(xform4);
+    // Object *front = (Object*)new Box(vec3(300, 300, 0.1),       vec3(), vec3(.75, .75, .75), DIFF);
+    // front->name = "front";
+    // Transform *xform4 = new Transform(front);
+    // xform4->setTranslate(50, 50, -150);
+    // scene.root->addChild(xform4);
 
-    Object *back = (Object*)new Box(vec3(100, 100, 0.1),       vec3(), vec3(1,1,1), DIFF);
-    back->name = "back";
-    Transform *xform5 = new Transform(back);
-    xform5->setTranslate(50, 50, 150);
-    scene.root->addChild(xform5);
+    // Object *back = (Object*)new Box(vec3(500, 300, 0.1),       vec3(), vec3(1,1,1), DIFF);
+    // back->name = "back";
+    // Transform *xform5 = new Transform(back);
+    // xform5->setTranslate(1, 50, 150);
+    // scene.root->addChild(xform5);
 
 }
 
@@ -330,22 +342,6 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
 
     setupScene();
     scene.updateTransform(scene.root, mat4());
-    // scene.add((Object*)new Plane(vec3(1, 0, 0), 0,       vec3(), vec3(.75, .25, .25), DIFF)); //Left
-    // scene.add((Object*)new Plane(vec3(-1, 0, 0), 99,       vec3(), vec3(.25, .25, .75), DIFF)); //Right
-    // scene.add((Object*)new Plane(vec3(0, 1, 0), 0,       vec3(), vec3(.75, .75, .75), DIFF)); //Bottom
-    // scene.add((Object*)new Plane(vec3(0, 0, 1), 0,       vec3(), vec3(.25, .75, .25), DIFF)); //Front
-    // scene.add((Object*)new Plane(vec3(0, 0, -1), 296,       vec3(), vec3(.75, .75, .75), DIFF)); // Back
-    // scene.add((Object*)new Plane(vec3(0, -1, 0), 81.6,       vec3(), vec3(.75, .25, .75), DIFF)); //Ceil
-    // scene.add((Object*)light); //Glas
-    // scene.addMesh(mesh);
-    // scene.add((Object*)new Sphere(16.5, vec3(0, 0, 0),       vec3(), vec3(1, 1, 1)*.999, SPEC)); //Glas
-    // scene.add((Object*)new Sphere(16.5, vec3(50, 0, 90),       vec3(), vec3(1, 1, 1)*.999, SPEC)); //Glas
-    // scene.add((Object*)new Sphere(16.5, vec3(73, 16.5, 78),       vec3(), vec3(1, 1, 1)*.999, SPEC)); //Glas
-    // scene.add((Object*)new Sphere(16.5, vec3(20, 16.5, 90),       vec3(), vec3(1, 1, 1)*.999, REFR)); //Glas
-    // scene.add((Object*)cube); //Glas
-    // scene.add((Object*)new Triangle(vec3(30, 20, 60), vec3(50, 50, 60),  vec3(80, 10, 60),       vec3(), vec3(1, 1, 1)*.999, DIFF)); 
-    
-
     bvh.setup(scene);
 }
 
@@ -370,6 +366,12 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
     vec3 ambColor(0.15, 0.15, 0.15);
     // vec3 lig = vec3(-1, -3, -1.5).normalize();
     vec3 pointLig(50 , 78, 60);
+
+    for (unsigned int i = 0; i < scene.lights.size(); i++) {
+        Object* light = scene.lights[i];
+        pointLig = light->getCentriod();
+        break;
+    }
 
 
     #pragma omp parallel for schedule(dynamic, 1)  private(directColor, normalColor, boundingBoxColor)    // OpenMP
@@ -403,6 +405,7 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
                 vec3 N = obj.getNormal(hit);
                 normalColor = vec3((N.x + 1)*0.5, (N.y + 1)*0.5, (N.z+1) * 0.25 + 0.5) * 255;
                 // normalColor = obj.c * 255;
+
                 vec3 ld = (pointLig - hit).normalize();
                 directColor = obj.getDiffuse() * fmax(ld.dot(N), 0);
 

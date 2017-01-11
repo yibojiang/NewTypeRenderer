@@ -15,6 +15,14 @@ vec3 Extents::getCentriod() const{
     return vec3(-(dnear[0] + dfar[0]) * 0.5, -(dnear[1] + dfar[1]) * 0.5, -(dnear[2] + dfar[2]) * 0.5);
 }
 
+vec3 Extents::getBoundMin() const{
+    return vec3(-dfar[0], -dfar[1], -dfar[2]);
+}
+
+vec3 Extents::getBoundMax() const{
+    return vec3(-dnear[0], -dnear[1], -dnear[2]);
+}
+
 void Extents::extendBy(Extents &extents){
     for (int i = 0; i < SLABCOUNT; ++i){
         dnear[i] = fmin(extents.dnear[i], dnear[i]);
@@ -138,6 +146,7 @@ double Extents::intersectWireframe(const Ray &r) const{ // returns distance, 0 i
 BVH::BVH(){
 
 }
+int OctreeNode::maxDepth = 0;
 
 void BVH::setup(Scene &scene){
     struct timeval start, end;
@@ -154,15 +163,24 @@ void BVH::setup(Scene &scene){
     
     octree.extents = sceneExtents;
     octree.depth = 0;
+    // octree.centroid = sceneExtents.getCentriod();
+    octree.boundMin = sceneExtents.getBoundMin();
+    octree.boundMax = sceneExtents.getBoundMax();
+    qDebug() << "min: " << octree.boundMin;
+    qDebug() << "max: " << octree.boundMax;
+    qDebug() << "centroid: " << sceneExtents.getCentriod();
     // Construct bvh hierarchy.
     for (uint32_t i = 0; i < scene.objects.size(); ++i){
-        octree.addObject(scene.objects[i]);
+        octree.addObject1(scene.objects[i]);
     }
+    octree.isLeaf = false;
+    octree.computeExetents();
 
     gettimeofday(&end, NULL);
     double time = ((end.tv_sec  - start.tv_sec) * 1000000u + end.tv_usec - start.tv_usec) / 1.e6;
     qDebug() << "build bvh done." << " time: " << time;
-    octree.isLeaf = false;
+    qDebug() << "max depth: " << OctreeNode::maxDepth;
+    
     // octree.traverse();
 }
 
@@ -198,7 +216,7 @@ void OctreeNode::traverse(){
     // qDebug() << "children i:"
     
     if (isLeaf){
-        qDebug() << "leaf: " << this->object->name.c_str();
+        // qDebug() << "leaf: " << this->object->name.c_str();
         return;
     }
     
@@ -219,23 +237,199 @@ void OctreeNode::traverse(){
 // friend bool Extents::operator==(Extents a, const Extents& b){
 //     return false;
 // }
+Extents OctreeNode::computeExetents(){
+    // qDebug() << this -> depth;
+    if (this->isLeaf){
+        // qDebug() << "leaf node" << this->object->name.c_str();
+        this->extents = this->object->getBounds();
+        return this->extents;
+    }
+    else{
+        for (unsigned int i = 0; i < 8; ++i){
+            if (this->children[i]){
+                // qDebug() << "child: " << i;
+                Extents e = this->children[i]->computeExetents();
+
+                this->extents.extendBy(e);
+            }
+        }    
+        // qDebug() << -this->extents.dnear[0] << -this->extents.dnear[1] << -this->extents.dnear[2];
+
+        return this->extents;
+    }
+    
+}
+
+void OctreeNode::addObject1(Object *obj){
+    int debugDepth = -1;
+    // qDebug() << "debug depth" << debugDepth;
+    if (depth > debugDepth) qDebug() << "=======addObject: " << obj->name.c_str() << "depth: " << depth;     
+
+    if (depth > 40){   
+        qDebug() << "_______________________________________too deep, terminated";
+        return;
+    }
+
+    if (depth > OctreeNode::maxDepth){
+        OctreeNode::maxDepth = depth;
+    }
+
+    Extents e = obj->getBounds();
+    // vec3 pos = e.getCentriod() - this->extents.getCentriod();
+    vec3 center = (boundMin + boundMax) * 0.5;
+    vec3 pos = e.getCentriod() - center;
+
+    
+    int childIdx = -1;
+
+    std::vector<int> vec;
+    vec.push_back(0);
+    vec.push_back(1);
+    vec.push_back(2);
+    vec.push_back(3);
+    vec.push_back(4);
+    vec.push_back(5);
+    vec.push_back(6);
+    vec.push_back(7);
+
+
+    if (pos.z > 0){
+        vec.erase(std::remove(vec.begin(), vec.end(), 4), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 5), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 6), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 7), vec.end());    
+    }
+    else if (pos.z < 0){
+        vec.erase(std::remove(vec.begin(), vec.end(), 0), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 1), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 2), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 3), vec.end());       
+    }
+
+    if (pos.x > 0){
+        vec.erase(std::remove(vec.begin(), vec.end(), 1), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 2), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 5), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 7), vec.end()); 
+          
+    }
+    else if (pos.x < 0){
+        vec.erase(std::remove(vec.begin(), vec.end(), 0), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 3), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 4), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 6), vec.end());        
+    }
+
+    if (pos.y > 0){
+        vec.erase(std::remove(vec.begin(), vec.end(), 2), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 3), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 6), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 7), vec.end());  
+    }
+    else if (pos.y < 0){
+        vec.erase(std::remove(vec.begin(), vec.end(), 1), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 0), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 5), vec.end());
+        vec.erase(std::remove(vec.begin(), vec.end(), 4), vec.end()); 
+    }
+    
+    // if (depth > debugDepth) qDebug() << "available size" << vec.size();
+    for (unsigned int i = 0; i < vec.size(); ++i){
+        childIdx = vec[i];
+
+        if (depth > debugDepth) qDebug() << "pos: " << pos << "available at: " << vec[i];
+        
+        if (!this->children[vec[i]]){
+            childIdx = vec[i];
+            break;
+        }
+    }       
+
+    // qDebug() << "add to child" << childIdx;
+    if (!this->children[childIdx]){
+        if (depth > debugDepth) qDebug() << "new child at " << depth << childIdx;
+        // qDebug() << "new child at " << depth << childIdx;
+        this->children[childIdx] = new OctreeNode(this);
+        this->children[childIdx]->depth = depth + 1;
+        this->children[childIdx]->object = obj;
+        this->children[childIdx]->isLeaf = true;
+
+        // TODO: caculate the child node bounding min and boundg max
+        if (childIdx == 0){
+            this->children[childIdx]->boundMin = center;
+            this->children[childIdx]->boundMax = this->boundMax;
+        }
+        else if (childIdx == 1){
+            this->children[childIdx]->boundMin = vec3(boundMin.x, center.y, center.z);
+            this->children[childIdx]->boundMax = vec3(center.x, boundMax.y, boundMax.z);
+        }
+        else if (childIdx == 2){
+            this->children[childIdx]->boundMin = vec3(boundMin.x, center.y, boundMin.z);
+            this->children[childIdx]->boundMax = vec3(center.x, boundMax.y, center.z);
+        }
+        else if (childIdx == 3){
+            this->children[childIdx]->boundMin = vec3(center.x, center.y, boundMin.z);
+            this->children[childIdx]->boundMax = vec3(boundMax.x, boundMax.y, center.z);
+        }
+        else if (childIdx == 4){
+            this->children[childIdx]->boundMin = vec3(center.x, boundMin.y, center.z);
+            this->children[childIdx]->boundMax = vec3(boundMax.x, center.y, boundMax.z);
+        }
+        else if (childIdx == 5){
+            this->children[childIdx]->boundMin = vec3(boundMin.x, boundMin.y, center.z);
+            this->children[childIdx]->boundMax = vec3(center.x, center.y, boundMax.z);
+        }
+        else if (childIdx == 6){
+            this->children[childIdx]->boundMin = boundMin;
+            this->children[childIdx]->boundMax = center;
+        }
+        else if (childIdx == 7){
+            this->children[childIdx]->boundMin = vec3(center.x, boundMin.y, boundMin.z);
+            this->children[childIdx]->boundMax = vec3(boundMax.x, center.y, center.z);
+        }
+        
+        qDebug() << "child boundmin" << this->children[childIdx]->boundMin;
+        qDebug() << "child boundmax" << this->children[childIdx]->boundMax;
+    }
+    else{
+        
+        
+        // if it is a leaf node
+        if (children[childIdx]->isLeaf){
+            this->children[childIdx]->addObject(obj);
+            Object* childObj = this->children[childIdx]->object;   
+            if (depth > debugDepth) qDebug() << "*****************existing: " << childObj->name.c_str() << " split into new child node";
+            this->children[childIdx]->object = nullptr;
+            this->children[childIdx]->addObject(childObj); 
+            this->children[childIdx]->isLeaf = false;
+
+        }
+        else{
+            this->children[childIdx]->addObject(obj);
+        }
+
+        
+    }
+    
+}
+
 
 // TODO: bug exiests when two geometry share the same bounds.
 void OctreeNode::addObject(Object *obj){
-    if (depth > 90){
-        qDebug() << "addObject: " << obj->name.c_str() << "depth: " << depth;     
-    }
     
-    // qDebug() << "leaf" << isLeaf;
-    // Extents *e = obj->computebounds();
-    // Extents *e = new Extents(*obj->getBounds());
+    if (depth > 90) qDebug() << "=======addObject: " << obj->name.c_str() << "depth: " << depth;     
+
+    if (depth > 900){   
+        qDebug() << "_______________________________________too deep, terminated";
+        return;
+    }
+
+    if (depth > OctreeNode::maxDepth){
+        OctreeNode::maxDepth = depth;
+    }
+
     Extents e = obj->getBounds();
     vec3 pos = e.getCentriod() - this->extents.getCentriod();
-    // vec3 pos = obj->getCentriod() - this->extents.getCentriod();
-    // qDebug() << obj->name.c_str() << " center: " << obj->getCentriod();
-    
-    // qDebug() << "extents center" << this->extents.getCentriod();
-    if (depth > 90) qDebug() << "pos: " << pos;
 
     int childIdx = -1;
 
@@ -249,16 +443,15 @@ void OctreeNode::addObject(Object *obj){
     vec.push_back(6);
     vec.push_back(7);
 
-    if (depth > 90){
-        qDebug() << "available size" << vec.size();
-    }
+    // if (depth > 90) qDebug() << "available size" << vec.size();
+    
 
     if (pos.z > 0){
         vec.erase(std::remove(vec.begin(), vec.end(), 4), vec.end());
         vec.erase(std::remove(vec.begin(), vec.end(), 5), vec.end());
         vec.erase(std::remove(vec.begin(), vec.end(), 6), vec.end());
         vec.erase(std::remove(vec.begin(), vec.end(), 7), vec.end());    
-        if (depth > 90)  qDebug() << "remove -z: " << vec.size();
+        // if (depth > 90)  qDebug() << "remove -z: " << vec.size();
         
     }
     else if (pos.z < 0){
@@ -266,7 +459,7 @@ void OctreeNode::addObject(Object *obj){
         vec.erase(std::remove(vec.begin(), vec.end(), 1), vec.end());
         vec.erase(std::remove(vec.begin(), vec.end(), 2), vec.end());
         vec.erase(std::remove(vec.begin(), vec.end(), 3), vec.end());       
-        if (depth > 90)  qDebug() << "remove +z: " << vec.size();
+        // if (depth > 90)  qDebug() << "remove +z: " << vec.size();
     }
 
     if (pos.x > 0){
@@ -274,14 +467,14 @@ void OctreeNode::addObject(Object *obj){
         vec.erase(std::remove(vec.begin(), vec.end(), 2), vec.end());
         vec.erase(std::remove(vec.begin(), vec.end(), 5), vec.end());
         vec.erase(std::remove(vec.begin(), vec.end(), 7), vec.end()); 
-        if (depth > 90)  qDebug() << "remove -x: " << vec.size();   
+        // if (depth > 90)  qDebug() << "remove -x: " << vec.size();   
     }
     else if (pos.x < 0){
         vec.erase(std::remove(vec.begin(), vec.end(), 0), vec.end());
         vec.erase(std::remove(vec.begin(), vec.end(), 3), vec.end());
         vec.erase(std::remove(vec.begin(), vec.end(), 4), vec.end());
         vec.erase(std::remove(vec.begin(), vec.end(), 6), vec.end());
-        if (depth > 90)  qDebug() << "remove +x: " << vec.size();   
+        // if (depth > 90)  qDebug() << "remove +x: " << vec.size();   
     }
 
     if (pos.y > 0){
@@ -289,23 +482,21 @@ void OctreeNode::addObject(Object *obj){
         vec.erase(std::remove(vec.begin(), vec.end(), 3), vec.end());
         vec.erase(std::remove(vec.begin(), vec.end(), 6), vec.end());
         vec.erase(std::remove(vec.begin(), vec.end(), 7), vec.end());  
-        if (depth > 90)  qDebug() << "remove -y: " << vec.size();  
+        // if (depth > 90)  qDebug() << "remove -y: " << vec.size();  
     }
     else if (pos.y < 0){
         vec.erase(std::remove(vec.begin(), vec.end(), 1), vec.end());
         vec.erase(std::remove(vec.begin(), vec.end(), 0), vec.end());
         vec.erase(std::remove(vec.begin(), vec.end(), 5), vec.end());
         vec.erase(std::remove(vec.begin(), vec.end(), 4), vec.end()); 
-        if (depth > 90)  qDebug() << "remove +y: " << vec.size();   
+        // if (depth > 90)  qDebug() << "remove +y: " << vec.size();   
     }
     
-    if (depth > 90) qDebug() << "after available size" << vec.size();
-    
-    
+    if (depth > 90) qDebug() << "available size" << vec.size();
     for (unsigned int i = 0; i < vec.size(); ++i){
         childIdx = vec[i];
 
-        if (depth > 90) qDebug() << "pos: " << pos << "available: " << vec[i];
+        if (depth > 90) qDebug() << "pos: " << pos << "available at: " << vec[i];
         
         if (!this->children[vec[i]]){
             childIdx = vec[i];
@@ -313,21 +504,15 @@ void OctreeNode::addObject(Object *obj){
         }
     }       
 
-    if (depth > 100){   
-        return;
-    }
-
-    if (childIdx == -1){
-        qDebug() << "pos" << pos <<" child: " << childIdx;
-        qDebug() << "error idx";
-        return;
-    }
-
-
-    
+    // if (childIdx == -1){
+    //     qDebug() << "pos" << pos <<" child: " << childIdx;
+    //     qDebug() << "error idx";
+    //     return;
+    // }
 
     // qDebug() << "add to child" << childIdx;
     if (!this->children[childIdx]){
+        if (depth > 90) qDebug() << "new child at " << depth << childIdx;
         // qDebug() << "new child at " << depth << childIdx;
         this->children[childIdx] = new OctreeNode(this);
         this->children[childIdx]->depth = depth + 1;
@@ -337,31 +522,20 @@ void OctreeNode::addObject(Object *obj){
         
     }
     else{
-
-        
-        Object* childObj = this->children[childIdx]->object;
-        this->children[childIdx]->isLeaf = false;
-        if (depth > 90){
-            qDebug() << "occupied, at " << depth << childIdx;
-            qDebug() << "extent center" << this->children[childIdx]->extents.getCentriod();
-        }
-
-        // qDebug() << "extent center" << this->children[childIdx]->extents.getCentriod();
+        vec3 oldcenter = this->children[childIdx]->extents.getCentriod();
         this->children[childIdx]->extents.extendBy(e);
-
-        if (depth > 90) qDebug() << "after extent center" << this->children[childIdx]->extents.getCentriod();
+        if (depth > 90) qDebug() << "occupied, update extent center from: " << oldcenter << "to" << this->children[childIdx]->extents.getCentriod()
+            << " add to the child node";
         
-
         this->children[childIdx]->addObject(obj);
-        if (childObj){
-            // qDebug() << "create new children";
-            if (depth > 90) qDebug() << "*****************existing: " << childObj->name.c_str();
-            
+        // if it is a leaf node
+        if (children[childIdx]->isLeaf){
+            Object* childObj = this->children[childIdx]->object;   
+            if (depth > 90) qDebug() << "*****************existing: " << childObj->name.c_str() << " split into new child node";
             this->children[childIdx]->object = nullptr;
             this->children[childIdx]->addObject(childObj); 
-            
+            this->children[childIdx]->isLeaf = false;
         }
-        
         
     }
     

@@ -44,5 +44,11 @@
                 }
             ]
         }
-    ]
+    ],
+    "settings":
+     {
+         "sublimegdb_commandline": "gdb -nx -readnow -fullname --interpreter=mi -args ./tracer.app/Contents/MacOS/tracer",
+         "sublimegdb_workingdir": "${folder:${project_path:./tracer.app/Contents/MacOS/tracer}}"
+     }
+
 }
