@@ -220,7 +220,7 @@ void Raytracer::setupScene(){
 
     
     // Object *light = (Object*)new Box(vec3(40, 0.1, 40),       vec3(9, 9, 9), vec3(), DIFF);
-    Object *light = (Object*)new Sphere(8,       vec3(30, 30, 30), vec3(), DIFF);
+    Object *light = (Object*)new Sphere(4,       vec3(50, 50, 50), vec3(), DIFF);
     light->name = "light";
     Transform *lightxform = new Transform(light);
     lightxform->setTranslate(50, 99, -25);
@@ -256,7 +256,7 @@ void Raytracer::setupScene(){
 
     loader.loadModel("lucy.obj", mesh);
     mesh->setMaterial(DIFF);
-    mesh->setDiffuseColor(vec3(1,1,0));
+    mesh->setDiffuseColor(vec3(1,1,1));
     Transform *meshxform = new Transform(mesh);
     meshxform->rotateY(-M_PI);
     meshxform->setTranslate(50, 20, -20);
@@ -295,25 +295,25 @@ void Raytracer::setupScene(){
     //     }
     // }
 
-    Object *floor = (Object*)new Box(vec3(500, 0.1, 300),       vec3(), vec3(.75, .75, .75), DIFF);
+    Object *floor = (Object*)new Box(vec3(500, 0.1, 300),       vec3(), vec3(.15, .15, .15), DIFF);
     floor->name = "floor";
     Transform *xform = new Transform(floor);
     xform->setTranslate(0, 0, 0);
     scene.root->addChild(xform);
 
 
-    // Object *left = (Object*)new Box(vec3(0.1, 300, 300),       vec3(), vec3(.75, .25, .25), DIFF);
-    // left->name = "left";
-    // Transform *xform1 = new Transform(left);
-    // xform1->setTranslate(0, 150, 0);
-    // scene.root->addChild(xform1);
+    Object *left = (Object*)new Box(vec3(0.1, 300, 300),       vec3(), vec3(.25, .25, .75), DIFF);
+    left->name = "left";
+    Transform *xform1 = new Transform(left);
+    xform1->setTranslate(0, 150, 0);
+    scene.root->addChild(xform1);
 
 
-    // Object *right = (Object*)new Box(vec3(0.1, 300, 300),       vec3(), vec3(.25, .75, .25), DIFF);
-    // right->name = "right";
-    // Transform *xform2 = new Transform(right);
-    // xform2->setTranslate(100, 50, 0);
-    // scene.root->addChild(xform2);
+    Object *right = (Object*)new Box(vec3(0.1, 300, 300),       vec3(), vec3(0.75, .25, 0.25), DIFF);
+    right->name = "right";
+    Transform *xform2 = new Transform(right);
+    xform2->setTranslate(100, 50, 0);
+    scene.root->addChild(xform2);
 
 
     // Object *ceil = (Object*)new Box(vec3(100, 0.1, 300),       vec3(), vec3(.75, .75, .75), DIFF);
@@ -322,17 +322,17 @@ void Raytracer::setupScene(){
     // xform3->setTranslate(50, 100, 0);
     // scene.root->addChild(xform3);
 
-    // Object *front = (Object*)new Box(vec3(300, 300, 0.1),       vec3(), vec3(.75, .75, .75), DIFF);
-    // front->name = "front";
-    // Transform *xform4 = new Transform(front);
-    // xform4->setTranslate(50, 50, -150);
-    // scene.root->addChild(xform4);
+    Object *front = (Object*)new Box(vec3(300, 300, 0.1),       vec3(), vec3(.15, .15, .15), DIFF);
+    front->name = "front";
+    Transform *xform4 = new Transform(front);
+    xform4->setTranslate(50, 50, -150);
+    scene.root->addChild(xform4);
 
-    // Object *back = (Object*)new Box(vec3(500, 300, 0.1),       vec3(), vec3(1,1,1), DIFF);
-    // back->name = "back";
-    // Transform *xform5 = new Transform(back);
-    // xform5->setTranslate(1, 50, 150);
-    // scene.root->addChild(xform5);
+    Object *back = (Object*)new Box(vec3(500, 300, 0.1),       vec3(), vec3(.15,.15,0.15), DIFF);
+    back->name = "back";
+    Transform *xform5 = new Transform(back);
+    xform5->setTranslate(1, 50, 150);
+    scene.root->addChild(xform5);
 
 }
 

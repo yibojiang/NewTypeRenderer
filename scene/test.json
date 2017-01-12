@@ -1,0 +1,70 @@
+{    
+    "primitives": [
+        {
+            "name": "floor",
+            "transform": {
+                "position": [
+                    0,
+                    0,
+                    0
+                ],
+                "scale": [
+                    500,
+                    0.1,
+                    300
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "box",
+            "material": "DIFF",
+            "color": [1, 1, 1]
+        },
+        {
+            "name": "mesh",
+            "transform": {
+                "scale": [
+                    250,
+                    250,
+                    250
+                ],
+                "rotation": [
+                    0,
+                    90,
+                    0
+                ]
+            },
+            "type": "mesh",
+            "path": "lucy.obj",
+            "material": "DIFF",
+            "color": [1, 1, 1]
+        },
+        {
+        "camera": {
+            "name": "camera",
+            "transform": {
+                "position": [
+                    0,
+                    2,
+                    0
+                ],
+                "target": [
+                    0,
+                    0,
+                    0
+                ],
+                "up": [
+                    0,
+                    1,
+                    0
+                ]
+            },
+            "fov": 60
+            }
+        }
+    ]
+}

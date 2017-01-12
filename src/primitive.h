@@ -49,6 +49,8 @@ public:
         this->color = diff;
     }
 
+    
+
     Refl_t getMaterial() const{
         return refl;
     }
