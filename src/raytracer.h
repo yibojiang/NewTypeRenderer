@@ -2,7 +2,10 @@
 
 #include <math.h>   
 #include <iostream>
-// #include <fstream>
+#include <string>
+#include <fstream>
+#include <streambuf>
+
 #include <vector>
 #include "sys/time.h"
 #include <QImage>
@@ -17,6 +20,9 @@
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
+
+
+
 // #define WIREFRAME_ON
 #define EXPLICIT_LIGHT_SAMPLE
 
@@ -115,6 +121,7 @@ public:
     mat3 ca;
     vec3 ro;
     vec3 ta;
+    vec3 up;
     float fov;
     float near;
 };

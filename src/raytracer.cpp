@@ -6,10 +6,11 @@
 
 
 
-inline mat3 setCamera( vec3 ro, vec3 ta, float cr )
+inline mat3 setCamera( vec3 ro, vec3 ta, vec3 up )
 {
   vec3 cw = (ta - ro).normalized();
-  vec3 cp = vec3(sin(cr), cos(cr), 0.0);
+  // vec3 cp = vec3(sin(cr), cos(cr), 0.0);
+  vec3 cp = up.normalized();
   vec3 cu = cw.cross(cp).normalized();
   vec3 cv = cu.cross(cw).normalized();
   return mat3( cu, cv, cw );
@@ -220,15 +221,101 @@ void Raytracer::setupScene(){
 
     
     // Object *light = (Object*)new Box(vec3(40, 0.1, 40),       vec3(9, 9, 9), vec3(), DIFF);
-    Object *light = (Object*)new Sphere(4,       vec3(50, 50, 50), vec3(), DIFF);
-    light->name = "light";
-    Transform *lightxform = new Transform(light);
-    lightxform->setTranslate(50, 99, -25);
-    scene.root->addChild(lightxform);
-
+    // Object *light = (Object*)new Sphere(4,       vec3(50, 50, 50), vec3(), DIFF);
+    // light->name = "light";
+    // Transform *lightxform = new Transform(light);
+    // lightxform->setTranslate(50, 99, -25);
+    // scene.root->addChild(lightxform);
 
     Mesh *mesh = new Mesh();
     mesh->name = "mesh";
+    
+    QString path = QDir::currentPath();
+    std::string name = "/scene/test.json";
+    std::string fullpath = path.toUtf8().constData() + name;
+    // FILE *file = fopen( fullpath.c_str(), "r");
+
+    std::ifstream t(fullpath);
+    std::string json((std::istreambuf_iterator<char>(t)),
+                     std::istreambuf_iterator<char>());
+    // const char* json = "{
+    //     "hello": "world",
+    //     "t": true ,
+    //     "f": false,
+    //     "n": null,
+    //     "i": 123,
+    //     "pi": 3.1416,
+    //     "a": [1, 2, 3, 4]
+    // }";
+
+
+    rapidjson::Document document;
+    qDebug()<<json.c_str();
+    document.Parse(json.c_str());
+
+    if (document.HasMember("camera")){
+        rapidjson::Value& camera = document["camera"];
+        // qDebug() << "exist camera";
+        qDebug() << camera["name"].GetString();
+        scene.fov =  document["camera"]["fov"].GetFloat()/M_PI * 180;
+        const rapidjson::Value& position = document["camera"]["transform"]["position"];
+        const rapidjson::Value& target = document["camera"]["transform"]["target"];
+        const rapidjson::Value& up = document["camera"]["transform"]["up"];
+        scene.ro = vec3(position[0].GetFloat(), position[1].GetFloat(), position[2].GetFloat());
+        scene.ta = vec3(target[0].GetFloat(), target[1].GetFloat(), target[2].GetFloat());
+        scene.up = vec3(up[0].GetFloat(), up[1].GetFloat(), up[2].GetFloat()); 
+        scene.ca = setCamera(scene.ro, scene.ta, scene.up);
+        // qDebug() << scene.up;
+        // qDebug()<<scene.ro << scene.ta;
+    }
+
+    if (document.HasMember("primitives")){
+        rapidjson::Value& primitives = document["primitives"];
+        for (rapidjson::SizeType i = 0; i < primitives.Size(); ++i){
+            Object *obj;
+            std::string ptype = primitives[i]["type"].GetString();
+
+            if (ptype == "box"){
+                obj = (Object*)new Box(vec3(1, 1, 1),       vec3(), vec3(.15, .15, .15), DIFF);
+                
+            }
+            else if (ptype == "sphere"){
+                obj = (Object*)new Sphere(1.0, vec3(), vec3(1, 1, 1), DIFF);
+            }
+            else if (ptype == "mesh"){
+                Mesh *mesh = new Mesh();
+                mesh->name = "mesh";
+                std::string modelName = primitives[i]["path"].GetString();
+                loader.loadModel(modelName, mesh);
+                obj = (Object*)mesh;
+            }
+
+
+            rapidjson::Value& t = primitives[i]["transform"];
+            rapidjson::Value& pos = primitives[i]["transform"]["position"];
+            rapidjson::Value& scl = primitives[i]["transform"]["scale"];
+            rapidjson::Value& rot = primitives[i]["transform"]["rotation"];
+            rapidjson::Value& color = primitives[i]["color"];
+            rapidjson::Value& emission = primitives[i]["emission"];
+            rapidjson::Value& material = primitives[i]["material"];
+            
+            Transform *xform = new Transform(obj);
+            xform->setTranslate(pos[0].GetFloat(), pos[1].GetFloat(), pos[2].GetFloat());
+            xform->setScale(scl[0].GetFloat(), scl[1].GetFloat(), scl[2].GetFloat());
+            Quaternion orientation = Quaternion(rot[1].GetFloat() * M_PI/180, rot[0].GetFloat() * M_PI / 180, rot[2].GetFloat() * M_PI / 180);
+            // qDebug() << rot[0].GetFloat()/ 180 * M_PI << ;
+            xform->setRotation(orientation);
+            
+            obj->name = primitives[i]["name"].GetString();
+            obj->setMaterial(material.GetString());
+            obj->setDiffuseColor(vec3(color[0].GetFloat(), color[1].GetFloat(), color[2].GetFloat()));
+            obj->setEmissionColor(vec3(emission[0].GetFloat(), emission[1].GetFloat(), emission[2].GetFloat()));
+
+            scene.root->addChild(xform);
+            qDebug() << "add " << obj->name.c_str() << " to the scene";
+
+        }
+    }
 
     // loader.loadObj("rifle.obj", mesh);
     // loader->loadObj("cube.obj", mesh);
@@ -254,14 +341,14 @@ void Raytracer::setupScene(){
     // meshxform->setScale(30, 30, 30);
     // scene.root->addChild(meshxform);
 
-    loader.loadModel("lucy.obj", mesh);
-    mesh->setMaterial(DIFF);
-    mesh->setDiffuseColor(vec3(1,1,1));
-    Transform *meshxform = new Transform(mesh);
-    meshxform->rotateY(-M_PI);
-    meshxform->setTranslate(50, 20, -20);
-    meshxform->setScale(250, 250, 250);
-    scene.root->addChild(meshxform);
+    // loader.loadModel("lucy.obj", mesh);
+    // mesh->setMaterial(DIFF);
+    // mesh->setDiffuseColor(vec3(1,1,1));
+    // Transform *meshxform = new Transform(mesh);
+    // meshxform->rotateY(-M_PI);
+    // meshxform->setTranslate(50, 20, -20);
+    // meshxform->setScale(250, 250, 250);
+    // scene.root->addChild(meshxform);
 
     // for (int i = 0; i < 3; ++i){
     //     for (int j = 0; j < 3; ++j){
@@ -295,25 +382,25 @@ void Raytracer::setupScene(){
     //     }
     // }
 
-    Object *floor = (Object*)new Box(vec3(500, 0.1, 300),       vec3(), vec3(.15, .15, .15), DIFF);
-    floor->name = "floor";
-    Transform *xform = new Transform(floor);
-    xform->setTranslate(0, 0, 0);
-    scene.root->addChild(xform);
+    // Object *floor = (Object*)new Box(vec3(500, 0.1, 300),       vec3(), vec3(.15, .15, .15), DIFF);
+    // floor->name = "floor";
+    // Transform *xform = new Transform(floor);
+    // xform->setTranslate(0, 0, 0);
+    // scene.root->addChild(xform);
 
 
-    Object *left = (Object*)new Box(vec3(0.1, 300, 300),       vec3(), vec3(.25, .25, .75), DIFF);
-    left->name = "left";
-    Transform *xform1 = new Transform(left);
-    xform1->setTranslate(0, 150, 0);
-    scene.root->addChild(xform1);
+    // Object *left = (Object*)new Box(vec3(0.1, 300, 300),       vec3(), vec3(.25, .25, .75), DIFF);
+    // left->name = "left";
+    // Transform *xform1 = new Transform(left);
+    // xform1->setTranslate(0, 150, 0);
+    // scene.root->addChild(xform1);
 
 
-    Object *right = (Object*)new Box(vec3(0.1, 300, 300),       vec3(), vec3(0.75, .25, 0.25), DIFF);
-    right->name = "right";
-    Transform *xform2 = new Transform(right);
-    xform2->setTranslate(100, 50, 0);
-    scene.root->addChild(xform2);
+    // Object *right = (Object*)new Box(vec3(0.1, 300, 300),       vec3(), vec3(0.75, .25, 0.25), DIFF);
+    // right->name = "right";
+    // Transform *xform2 = new Transform(right);
+    // xform2->setTranslate(100, 50, 0);
+    // scene.root->addChild(xform2);
 
 
     // Object *ceil = (Object*)new Box(vec3(100, 0.1, 300),       vec3(), vec3(.75, .75, .75), DIFF);
@@ -322,17 +409,17 @@ void Raytracer::setupScene(){
     // xform3->setTranslate(50, 100, 0);
     // scene.root->addChild(xform3);
 
-    Object *front = (Object*)new Box(vec3(300, 300, 0.1),       vec3(), vec3(.15, .15, .15), DIFF);
-    front->name = "front";
-    Transform *xform4 = new Transform(front);
-    xform4->setTranslate(50, 50, -150);
-    scene.root->addChild(xform4);
+    // Object *front = (Object*)new Box(vec3(300, 300, 0.1),       vec3(), vec3(.15, .15, .15), DIFF);
+    // front->name = "front";
+    // Transform *xform4 = new Transform(front);
+    // xform4->setTranslate(50, 50, -150);
+    // scene.root->addChild(xform4);
 
-    Object *back = (Object*)new Box(vec3(500, 300, 0.1),       vec3(), vec3(.15,.15,0.15), DIFF);
-    back->name = "back";
-    Transform *xform5 = new Transform(back);
-    xform5->setTranslate(1, 50, 150);
-    scene.root->addChild(xform5);
+    // Object *back = (Object*)new Box(vec3(500, 300, 0.1),       vec3(), vec3(.15,.15,0.15), DIFF);
+    // back->name = "back";
+    // Transform *xform5 = new Transform(back);
+    // xform5->setTranslate(1, 50, 150);
+    // scene.root->addChild(xform5);
 
 }
 
@@ -350,7 +437,8 @@ void Raytracer::rotateCamera(float x, float y, float z){
     float camDist = 200;
     scene.ro = vec3(50 + camDist * cos(y), 50, 50 -camDist * sin(y));
     scene.ta = vec3(50, 50, 50);
-    scene.ca = setCamera(scene.ro, scene.ta, 0.0);
+    // scene.ca = setCamera(scene.ro, scene.ta, 0.0);
+    scene.ca = setCamera(scene.ro, scene.ta, scene.up);
     
 }
 

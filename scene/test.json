@@ -1,4 +1,27 @@
-{    
+{   
+    "camera": 
+    {
+        "name": "camera",
+        "transform": {
+            "position": [
+                50,
+                50,
+                -140
+            ],
+            "target": [
+                50,
+                50,
+                50
+            ],
+            "up": [
+                0,
+                1,
+                0
+            ]
+        },
+        "fov": 30
+    },
+
     "primitives": [
         {
             "name": "floor",
@@ -22,11 +45,92 @@
 
             "type": "box",
             "material": "DIFF",
-            "color": [1, 1, 1]
+            "color": [1, 1, 1],
+            "emission": [0, 0, 0]
         },
         {
-            "name": "mesh",
+            "name": "left",
             "transform": {
+                "position": [
+                    0,
+                    50,
+                    0
+                ],
+                "scale": [
+                    0.1,
+                    300,
+                    300
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "box",
+            "material": "DIFF",
+            "color": [0.75, 0.25, 0.25],
+            "emission": [0, 0, 0]
+        },
+        {
+            "name": "right",
+            "transform": {
+                "position": [
+                    100,
+                    50,
+                    0
+                ],
+                "scale": [
+                    0.1,
+                    300,
+                    300
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "box",
+            "material": "DIFF",
+            "color": [0.25, 0.25, 0.75],
+            "emission": [0, 0, 0]
+        },
+        {
+            "name": "light",
+            "transform": {
+                "position": [
+                    50,
+                    99,
+                    -25
+                ],
+                "scale": [
+                    4,
+                    4,
+                    4
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "sphere",
+            "material": "DIFF",
+            "color": [0, 0, 0],
+            "emission": [50, 50, 50]
+        },
+        {
+            "name": "lucy",
+            "transform": {
+                "position": [
+                    50,
+                    20,
+                    -20
+                ],
                 "scale": [
                     250,
                     250,
@@ -34,37 +138,15 @@
                 ],
                 "rotation": [
                     0,
-                    90,
+                    180,
                     0
                 ]
             },
             "type": "mesh",
             "path": "lucy.obj",
             "material": "DIFF",
-            "color": [1, 1, 1]
-        },
-        {
-        "camera": {
-            "name": "camera",
-            "transform": {
-                "position": [
-                    0,
-                    2,
-                    0
-                ],
-                "target": [
-                    0,
-                    0,
-                    0
-                ],
-                "up": [
-                    0,
-                    1,
-                    0
-                ]
-            },
-            "fov": 60
-            }
+            "color": [1, 1, 1],
+            "emission": [0, 0, 0]
         }
     ]
 }

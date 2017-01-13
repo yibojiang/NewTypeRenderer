@@ -41,12 +41,30 @@ public:
         return color;
     }
 
+    virtual void setMaterial(std::string refl){
+        if (refl == "DIFF"){
+            this->refl = DIFF;    
+        }
+        else if (refl == "REFR"){
+            this->refl = REFR; 
+        }
+        else if (refl == "SPEC"){
+            this->refl = SPEC; 
+        }
+        
+    }
+
     virtual void setMaterial(Refl_t refl){
         this->refl = refl;
+        
     }
 
     virtual void setDiffuseColor(vec3 diff){
         this->color = diff;
+    }
+
+    virtual void setEmissionColor(vec3 emission){
+        this->emission = emission;
     }
 
     
@@ -150,6 +168,9 @@ public:
         vec4 pos = vec4(center, 1);
         pos = m * pos;
         center = vec3(pos.x, pos.y, pos.z);
+
+        vec3 dir = m * vec3(1, 0, 0);
+        rad = dir.length();
     }
 
     void computebounds(){
@@ -304,6 +325,7 @@ public:
         for (int i = 0; i < 3; ++i){
             // vec4 n = m*  vec4(normals[i], 0);
             normals[i] = m * normals[i];   
+            normals[i].normalize();
         }
 
         for (int i = 0; i < 8; ++i){
