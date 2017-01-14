@@ -141,7 +141,7 @@ public:
     vec3 tracing(const Ray &ray, int depth, int E);
     
     
-    void renderIndirectProgressive(vec3 *colorArray, int &samples);
+    void renderIndirectProgressive(vec3 *colorArray, bool& abort, bool& restart, int &samples);
     
     void renderIndirect(double &time, QImage &image);
     void renderDirect(double &time, QImage &directImage, QImage &normalImage, QImage &boundingBoxImage);

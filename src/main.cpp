@@ -23,13 +23,11 @@ void RenderThread::setTracer(Raytracer *tracer){
     
 }
 
-RenderThread::~RenderThread()
-{
+RenderThread::~RenderThread(){
     mutex.lock();
     abort = true;
     condition.wakeOne();
     mutex.unlock();
-    // terminate();
     wait();
 }
 
@@ -67,7 +65,7 @@ void RenderThread::run()
             qDebug() << "samples: " << s;
             qDebug() << "before color: " << colorArray[0];
             tracer->curSamples = s + 1;
-            tracer->renderIndirectProgressive(colorArray, s);
+            tracer->renderIndirectProgressive(colorArray, abort, restart, s);
             
             if (abort){
                 return;
@@ -459,32 +457,9 @@ void Window::paintEvent(QPaintEvent *){
         qDebug() << "mode: boundingBoxImage";
     }
     
-    // if (images){
-    //     for (unsigned short i = 0; i < height; ++i){
-    //         // unsigned short Xi[3] = {0, 0, i*i * i};
-    //         for (unsigned short j = 0; j < width; ++j){
-    //             // tracer.render_pixel(i, j, Xi);
-    //             int idx = i*width+j;
-    //             painter.setPen(QColor(images[idx].x, images[idx].y, images[idx].z));
-    //             painter.drawPoint(j, i);
-    //         }
-    //     }
-    // }
-
-    // delete images;
 }
 
 int main(int argc, char *argv[]) {
-
-    
-    // Raytracer tracer;
-    // vec3* images = tracer.render(4);
-    // FILE *f = fopen("test_image.ppm", "w");         // Write image to PPM file.
-    // int w = 800, h = 600;
-    // fprintf(f, "P3\n%d %d\n%d\n", w, h, 255);
-    // for (int i = 0; i < w * h; i++)
-    //     fprintf(f, "%d %d %d ", int(images[i].x), int(images[i].y), int(images[i].z));   
-
     QApplication app (argc, argv);
     Window window;
     

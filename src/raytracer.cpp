@@ -293,7 +293,7 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     samples = _samples;    
 
     QString path = QDir::currentPath();
-    std::string name = "/scene/test.json";
+    std::string name = "/scene/sponza.json";
     std::string fullpath = path.toUtf8().constData() + name;
 
     setupScene(fullpath);
@@ -395,7 +395,7 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
  
 }
 
-void Raytracer::renderIndirectProgressive(vec3 *colorArray, int &samples) {
+void Raytracer::renderIndirectProgressive(vec3 *colorArray, bool& abort, bool& restart, int &samples) {
     vec3 color(0,0,0);
     vec3 r(0,0,0);
     // vec3 raw(0,0,0);
@@ -412,7 +412,13 @@ void Raytracer::renderIndirectProgressive(vec3 *colorArray, int &samples) {
             
             for (int sy = 0; sy < 2; ++sy) { // 2x2 subpixel rows
                 for (int sx = 0; sx < 2; ++sx) { // 2x2 subpixel cols
-                    
+                    if (abort){
+                        break;
+                    }
+
+                    if (restart){
+                        break;
+                    }
                     double r1 = 2 * drand48(), dx = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
                     double r2 = 2 * drand48(), dy = r2 < 1 ? sqrt(r2) - 1 : 1 - sqrt(2 - r2);
                     double u = (j + (sy - 0.5 + dy * 0.5) * 0.5  ) / width;
@@ -480,7 +486,6 @@ void Raytracer::renderIndirect(double &time, QImage &image) {
     time = ((end.tv_sec  - start.tv_sec) * 1000000u + end.tv_usec - start.tv_usec) / 1.e6;
     qDebug() << "Render time: " << time;
     isRendering = false;
-    
 }
 
 void Raytracer::setResolution(const int &width, const int &height){

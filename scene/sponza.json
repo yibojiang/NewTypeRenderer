@@ -1,0 +1,78 @@
+{   
+    "camera": 
+    {
+        "name": "camera",
+        "transform": {
+            "position": [
+                50,
+                50,
+                -140
+            ],
+            "target": [
+                50,
+                99,
+                50
+            ],
+            "up": [
+                0,
+                1,
+                0
+            ]
+        },
+        "fov": 60
+    },
+
+    "primitives": [
+        {
+            "name": "light",
+            "transform": {
+                "position": [
+                    50,
+                    180,
+                    -10
+                ],
+                "scale": [
+                    10,
+                    10,
+                    10
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "sphere",
+            "material": "DIFF",
+            "color": [0, 0, 0],
+            "emission": [300, 300, 300]
+        },
+        {
+            "name": "sponza",
+            "transform": {
+                "position": [
+                    50,
+                    0,
+                    200
+                ],
+                "scale": [
+                    40,
+                    40,
+                    40
+                ],
+                "rotation": [
+                    0,
+                    -90,
+                    0
+                ]
+            },
+            "type": "mesh",
+            "path": "sponza.obj",
+            "material": "DIFF",
+            "color": [1, 1, 1],
+            "emission": [0, 0, 0]
+        }
+        
+    ]
+}
