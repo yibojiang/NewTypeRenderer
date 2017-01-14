@@ -550,12 +550,19 @@ BVH::~BVH(){
 
 // Return wireframe for all the boundingbox. (for Debugging)
 void OctreeNode::intersectTestWireframe(const Ray &r, Intersection &intersection) const{
+
+    if (this->depth > 4){
+        return;
+    }
+
     double t = this->extents.intersectWireframe(r);
 
     // Hit the bounding box.
     if (t > eps && t < intersection.t){
         intersection.t = t;
     }
+
+
 
     if (!this->isLeaf){
         for (int i = 0; i < 8; ++i){

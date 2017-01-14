@@ -483,9 +483,10 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
             boundingBoxColor = vec3(0,0,0);
 
 
-            // Intersection intersectionBox = bvh.intersectBoundingBox(Ray(ro, rd));
+            // 
 
             #ifdef WIREFRAME_ON
+            // Intersection intersectionBox = bvh.intersectBoundingBox(Ray(ro, rd));
             Intersection intersectionBox = bvh.intersectBVH(Ray(ro, rd));
             if (intersectionBox.t > eps && intersectionBox.t < inf){
                 boundingBoxColor = vec3(0, 1, 0);

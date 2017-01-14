@@ -23,7 +23,7 @@
 
 
 
-// #define WIREFRAME_ON
+#define WIREFRAME_ON
 #define EXPLICIT_LIGHT_SAMPLE
 
 
