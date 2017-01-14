@@ -229,30 +229,28 @@ void Raytracer::setupScene(){
     QString path = QDir::currentPath();
     std::string name = "/scene/test.json";
     std::string fullpath = path.toUtf8().constData() + name;
-    // FILE *file = fopen( fullpath.c_str(), "r");
-
     std::ifstream t(fullpath);
     std::string json((std::istreambuf_iterator<char>(t)),
                      std::istreambuf_iterator<char>());
-    // const char* json = "{
-    //     "hello": "world",
-    //     "t": true ,
-    //     "f": false,
-    //     "n": null,
-    //     "i": 123,
-    //     "pi": 3.1416,
-    //     "a": [1, 2, 3, 4]
-    // }";
 
 
     rapidjson::Document document;
-    qDebug()<<json.c_str();
-    document.Parse(json.c_str());
+    // qDebug()<<json.c_str();
+    
+    // document.Parse(json.c_str());
+    if (document.Parse(json.c_str()).HasParseError()) {
+        qDebug() << "can't parse the scene";
+        return;
+        // fprintf(stderr, "\nError(offset %u): %s\n", 
+        // (unsigned)document.GetErrorOffset(),
+        // GetParseError_En(document.GetParseError()));
+    }
 
+    
     if (document.HasMember("camera")){
-        rapidjson::Value& camera = document["camera"];
-        // qDebug() << "exist camera";
-        qDebug() << camera["name"].GetString();
+        // qDebug() << "has camera";
+        // rapidjson::Value& camera = document["camera"];
+        // qDebug() << camera["name"].GetString();
         scene.fov =  document["camera"]["fov"].GetFloat()/M_PI * 180;
         const rapidjson::Value& position = document["camera"]["transform"]["position"];
         const rapidjson::Value& target = document["camera"]["transform"]["target"];
@@ -265,7 +263,9 @@ void Raytracer::setupScene(){
         // qDebug()<<scene.ro << scene.ta;
     }
 
+
     if (document.HasMember("primitives")){
+
         rapidjson::Value& primitives = document["primitives"];
         for (rapidjson::SizeType i = 0; i < primitives.Size(); ++i){
             Object *obj;
