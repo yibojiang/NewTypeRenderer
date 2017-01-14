@@ -15,6 +15,8 @@ public:
 
     void addObject(Object*);
 
+    void removeAllChildren();
+
     Transform* addChild(vec3&);
 
     Transform* addChild(Transform *child);

@@ -127,9 +127,26 @@ void Transform::addObject(Object* obj){
     // object->updateTransform(*this);
 }
 
+// This function also destroy this node.
+void Transform::removeAllChildren(){
+    for (unsigned int i = 0; i < children.size(); ++i){
+        children[i]->removeAllChildren();
+        // qDebug() << "delete at " << QString::number(i);
+    }
+
+    children.clear();
+    delete this;
+}
+
 void Transform::removeChild(Transform* child){
     children.erase(std::remove(children.begin(), children.end(), child), children.end());
     delete child;
 }
 
-Transform::~Transform() {}
+Transform::~Transform(){
+    // vector<double>::iterator i = children.begin();
+    // while (i != children.end()) {
+    //     removeChild(children[i]);
+    // }
+    
+}

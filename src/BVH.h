@@ -36,7 +36,7 @@ public:
 class OctreeNode{
 public:
     OctreeNode();
-    OctreeNode(OctreeNode*);
+    OctreeNode(OctreeNode *parent);
     ~OctreeNode();
     int depth;
     bool isLeaf;
@@ -54,6 +54,8 @@ public:
     void addObject1(Object *);
     void traverse();
 
+    void destroyAllNodes();
+
 
     void intersectTest(const Ray &r, Intersection &intersection) const;
     void intersectTestWireframe(const Ray &r, Intersection &intersection) const;
@@ -69,12 +71,13 @@ public:
     Scene *scene;
     BVH();
     void setup(Scene &);
+    void destroy();
     Intersection intersect(const Ray&) const;
     Intersection intersectBoundingBox(const Ray&) const;
     Intersection intersectBVH(const Ray& ray) const;
     ~BVH();
     std::vector<Extents *> extentsList;
-    OctreeNode octree;
+    OctreeNode *octree;
 
 
 };

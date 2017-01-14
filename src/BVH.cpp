@@ -161,20 +161,21 @@ void BVH::setup(Scene &scene){
         sceneExtents.extendBy(e);
     }
     
-    octree.extents = sceneExtents;
-    octree.depth = 0;
-    // octree.centroid = sceneExtents.getCentriod();
-    octree.boundMin = sceneExtents.getBoundMin();
-    octree.boundMax = sceneExtents.getBoundMax();
-    qDebug() << "min: " << octree.boundMin;
-    qDebug() << "max: " << octree.boundMax;
+    octree = new OctreeNode();
+    octree->extents = sceneExtents;
+    octree->depth = 0;
+    // octree->centroid = sceneExtents.getCentriod();
+    octree->boundMin = sceneExtents.getBoundMin();
+    octree->boundMax = sceneExtents.getBoundMax();
+    qDebug() << "min: " << octree->boundMin;
+    qDebug() << "max: " << octree->boundMax;
     qDebug() << "centroid: " << sceneExtents.getCentriod();
     // Construct bvh hierarchy.
     for (uint32_t i = 0; i < scene.objects.size(); ++i){
-        octree.addObject1(scene.objects[i]);
+        octree->addObject1(scene.objects[i]);
     }
-    octree.isLeaf = false;
-    octree.computeExetents();
+    octree->isLeaf = false;
+    octree->computeExetents();
 
     gettimeofday(&end, NULL);
     double time = ((end.tv_sec  - start.tv_sec) * 1000000u + end.tv_usec - start.tv_usec) / 1.e6;
@@ -206,6 +207,16 @@ OctreeNode::OctreeNode(){
     for (int i = 0; i < 8; ++i){
         children[i] = nullptr;
     }
+}
+
+void OctreeNode::destroyAllNodes(){
+    for (int i = 0; i < 8; ++i){
+        if (this->children[i]){
+            this->children[i]->destroyAllNodes();    
+        }
+    }
+
+    delete this;
 }
 
 OctreeNode::~OctreeNode(){
@@ -548,6 +559,10 @@ BVH::~BVH(){
     }
 }
 
+void BVH::destroy(){
+    octree->destroyAllNodes();
+}
+
 // Return wireframe for all the boundingbox. (for Debugging)
 void OctreeNode::intersectTestWireframe(const Ray &r, Intersection &intersection) const{
 
@@ -613,7 +628,7 @@ Intersection BVH::intersectBoundingBox(const Ray& ray) const{
 Intersection BVH::intersectBVH(const Ray& ray) const{
     // std::priority_queue<OctreeNode> closeNode;
     Intersection closestIntersection;
-    octree.intersectTestWireframe(ray, closestIntersection);
+    octree->intersectTestWireframe(ray, closestIntersection);
     return closestIntersection;   
 }
 
@@ -621,7 +636,7 @@ Intersection BVH::intersectBVH(const Ray& ray) const{
 Intersection BVH::intersect(const Ray& ray) const{
     // std::priority_queue<OctreeNode> closeNode;
     Intersection closestIntersection;
-    octree.intersectTest(ray, closestIntersection);
+    octree->intersectTest(ray, closestIntersection);
     return closestIntersection;   
 }
 

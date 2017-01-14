@@ -42,7 +42,6 @@ inline void ons(const vec3& v1, vec3& v2, vec3& v3) {
     v3 = v1.cross(v2);
 }
 
-
 inline vec3 cosineSampleHemisphere(double u1, double u2){
 
     const double r = sqrt(u1);
@@ -66,7 +65,6 @@ inline double clamp(double x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
 
 
 vec3 Raytracer::tracing(const Ray &ray, int depth, int E = 1){
-    // Intersection intersection = bvh.intersectBoundingBox(ray);
     // Intersection intersection = scene.intersect(ray);
     Intersection intersection = bvh.intersect(ray);
     
@@ -199,45 +197,19 @@ vec3 Raytracer::tracing(const Ray &ray, int depth, int E = 1){
     
 }
 
-void Raytracer::setupScene(){
-    
-    
+void Raytracer::unloadScene(){
+    scene.destroyScene();
+    bvh.destroy();
+}
+
+void Raytracer::setupScene(const std::string& scenePath){
     ObjLoader loader;
-    // delete loader;
-    qDebug() << "Object Loaded";
-
-    scene.fov = M_PI/3; // hotirzontal fov 60
-    // float rtY = 1.5* M_PI;
-    // float camDist = 250;
-    // scene.ro = vec3(50 + camDist * cos(rtY), 60, 50 -camDist * sin(rtY));
-    // scene.ta = vec3(50, 50, 50);
-    // scene.ca = setCamera(scene.ro, scene.ta, 0.0);
-    
-    scene.near = 2.0f/tan(scene.fov*0.5f);
-    rotateCamera(0, 0.5 * M_PI, 0);
-
-    // Object *light = (Object*)new Box(vec3(40, 0.1, 40),       vec3(9, 9, 9), vec3(), DIFF);
-    // Object *light = (Object*)new Sphere(4,       vec3(50, 50, 50), vec3(), DIFF);
-    // light->name = "light";
-    // Transform *lightxform = new Transform(light);
-    // lightxform->setTranslate(50, 99, -25);
-    // scene.root->addChild(lightxform);
-
-    Mesh *mesh = new Mesh();
-    mesh->name = "mesh";
-    
-    QString path = QDir::currentPath();
-    std::string name = "/scene/test.json";
-    std::string fullpath = path.toUtf8().constData() + name;
-    std::ifstream t(fullpath);
+    std::ifstream t(scenePath);
     std::string json((std::istreambuf_iterator<char>(t)),
                      std::istreambuf_iterator<char>());
 
 
     rapidjson::Document document;
-    // qDebug()<<json.c_str();
-    
-    // document.Parse(json.c_str());
     if (document.Parse(json.c_str()).HasParseError()) {
         qDebug() << "can't parse the scene";
         return;
@@ -246,12 +218,10 @@ void Raytracer::setupScene(){
         // GetParseError_En(document.GetParseError()));
     }
 
-    
+    scene.root = new Transform();
     if (document.HasMember("camera")){
-        // qDebug() << "has camera";
-        // rapidjson::Value& camera = document["camera"];
-        // qDebug() << camera["name"].GetString();
-        scene.fov =  document["camera"]["fov"].GetFloat()/M_PI * 180;
+        scene.fov = document["camera"]["fov"].GetFloat()*M_PI/180;
+        scene.near = 2.0f/tan(scene.fov*0.5f);
         const rapidjson::Value& position = document["camera"]["transform"]["position"];
         const rapidjson::Value& target = document["camera"]["transform"]["target"];
         const rapidjson::Value& up = document["camera"]["transform"]["up"];
@@ -259,8 +229,6 @@ void Raytracer::setupScene(){
         scene.ta = vec3(target[0].GetFloat(), target[1].GetFloat(), target[2].GetFloat());
         scene.up = vec3(up[0].GetFloat(), up[1].GetFloat(), up[2].GetFloat()); 
         scene.ca = setCamera(scene.ro, scene.ta, scene.up);
-        // qDebug() << scene.up;
-        // qDebug()<<scene.ro << scene.ta;
     }
 
 
@@ -315,110 +283,8 @@ void Raytracer::setupScene(){
         }
     }
 
-    // loader.loadObj("rifle.obj", mesh);
-    // loader->loadObj("cube.obj", mesh);
-    // loader->loadObj("sponza.obj", mesh);
-    // loader.loadModel("sponza.obj", mesh);
-    // loader.loadModel("sponza.obj", mesh);
-    // loader.loadModel("rifle.obj", mesh);
-    // 
-
-    // loader.loadObj("cube.obj", mesh);
-    // mesh->setMaterial(DIFF);
-    // Transform *meshxform = new Transform(mesh);
-    // meshxform->rotateY(-M_PI*0.9);
-    // meshxform->setTranslate(50, 50, 50);
-    // meshxform->setScale(1, 1, 1);
-    // scene.root->addChild(meshxform);
-
-    // loader.loadModel("bunny.obj", mesh);
-    // mesh->setMaterial(DIFF);
-    // Transform *meshxform = new Transform(mesh);
-    // meshxform->rotateY(-M_PI*0.9);
-    // meshxform->setTranslate(50, 50, 50);
-    // meshxform->setScale(30, 30, 30);
-    // scene.root->addChild(meshxform);
-
-    // loader.loadModel("lucy.obj", mesh);
-    // mesh->setMaterial(DIFF);
-    // mesh->setDiffuseColor(vec3(1,1,1));
-    // Transform *meshxform = new Transform(mesh);
-    // meshxform->rotateY(-M_PI);
-    // meshxform->setTranslate(50, 20, -20);
-    // meshxform->setScale(250, 250, 250);
-    // scene.root->addChild(meshxform);
-
-    // for (int i = 0; i < 3; ++i){
-    //     for (int j = 0; j < 3; ++j){
-    //         for (int k = 0; k < 3; ++k){
-    //         // Object *cube = new Box(vec3(20, 20, 20), vec3(), vec3(1, 1, 1)*.999, DIFF);
-    //         // Transform *t = new Transform();
-    //         // t->addObject((Object*)cube);
-    //         // t->setScale(1, 0.5, 1);
-    //         // // t->rotateY(M_PI/6);
-    //         // t->setTranslate(i * 30, j*30, 50);
-    //         // scene.root->addChild(t); 
-    //             Refl_t mat;
-    //             if (i == 0){
-    //                  mat = DIFF;
-    //             }
-    //             else if (i == 1){
-    //                 mat = SPEC;
-    //             }
-    //             else if (i == 2){
-    //                 mat = REFR;
-    //             }
-                
-                
-    //             Object *sphere = new Sphere(7.0, vec3(), vec3(i*0.3, j*0.3, k*0.3)*.999, mat);
-    //             sphere->name = "sphere" + std::to_string(i + j * 10 + k * 100);
-    //             Transform *t = new Transform(sphere);
-    //             t->setScale(1, 1, 1);
-    //             t->setTranslate(i * 20 + 30, j*20 + 30, k * 45 - 20);
-    //             scene.root->addChild(t);
-    //         }
-    //     }
-    // }
-
-    // Object *floor = (Object*)new Box(vec3(500, 0.1, 300),       vec3(), vec3(.15, .15, .15), DIFF);
-    // floor->name = "floor";
-    // Transform *xform = new Transform(floor);
-    // xform->setTranslate(0, 0, 0);
-    // scene.root->addChild(xform);
-
-
-    // Object *left = (Object*)new Box(vec3(0.1, 300, 300),       vec3(), vec3(.25, .25, .75), DIFF);
-    // left->name = "left";
-    // Transform *xform1 = new Transform(left);
-    // xform1->setTranslate(0, 150, 0);
-    // scene.root->addChild(xform1);
-
-
-    // Object *right = (Object*)new Box(vec3(0.1, 300, 300),       vec3(), vec3(0.75, .25, 0.25), DIFF);
-    // right->name = "right";
-    // Transform *xform2 = new Transform(right);
-    // xform2->setTranslate(100, 50, 0);
-    // scene.root->addChild(xform2);
-
-
-    // Object *ceil = (Object*)new Box(vec3(100, 0.1, 300),       vec3(), vec3(.75, .75, .75), DIFF);
-    // ceil->name = "ceil";
-    // Transform *xform3 = new Transform(ceil);
-    // xform3->setTranslate(50, 100, 0);
-    // scene.root->addChild(xform3);
-
-    // Object *front = (Object*)new Box(vec3(300, 300, 0.1),       vec3(), vec3(.15, .15, .15), DIFF);
-    // front->name = "front";
-    // Transform *xform4 = new Transform(front);
-    // xform4->setTranslate(50, 50, -150);
-    // scene.root->addChild(xform4);
-
-    // Object *back = (Object*)new Box(vec3(500, 300, 0.1),       vec3(), vec3(.15,.15,0.15), DIFF);
-    // back->name = "back";
-    // Transform *xform5 = new Transform(back);
-    // xform5->setTranslate(1, 50, 150);
-    // scene.root->addChild(xform5);
-
+    scene.updateTransform(scene.root, mat4());
+    bvh.setup(scene);
 }
 
 Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
@@ -426,17 +292,15 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     height = _height;
     samples = _samples;    
 
-    setupScene();
-    scene.updateTransform(scene.root, mat4());
-    bvh.setup(scene);
+    QString path = QDir::currentPath();
+    std::string name = "/scene/test.json";
+    std::string fullpath = path.toUtf8().constData() + name;
+
+    setupScene(fullpath);
+    
 }
 
 void Raytracer::rotateCamera(float x, float y, float z){
-    // float camDist = 200;
-    // scene.ro = vec3(50 + camDist * cos(y), 50, 50 -camDist * sin(y));
-    // scene.ta = vec3(50, 50, 50);
-    // scene.ca = setCamera(scene.ro, scene.ta, scene.up);    
-
     Quaternion rot(x, y, z);
     mat4 m = rot.toMatrix();
     
@@ -467,7 +331,6 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
         pointLig = light->getCentriod();
         break;
     }
-
 
     #pragma omp parallel for schedule(dynamic, 1)  private(directColor, normalColor, boundingBoxColor)    // OpenMP
     for (unsigned short i = 0; i < height; ++i){
@@ -518,8 +381,9 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
 
             boundingBoxColor = boundingBoxColor * 255;
             directColor = directColor * 255;
-            directColor = (directColor + boundingBoxColor); 
             directColor = clamp(directColor, vec3(0,0,0), vec3(255,255,255));
+            boundingBoxColor = (directColor + boundingBoxColor); 
+            boundingBoxColor = clamp(boundingBoxColor, vec3(0,0,0), vec3(255,255,255));
             boundingBoxImage.setPixel(j, i, qRgb(boundingBoxColor.x, boundingBoxColor.y, boundingBoxColor.z));
             normalImage.setPixel(j, i, qRgb(normalColor.x, normalColor.y, normalColor.z));
             directImage.setPixel(j, i, qRgb(directColor.x, directColor.y, directColor.z));

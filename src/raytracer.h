@@ -44,7 +44,7 @@ public:
     std::vector<Object*> objects;
     std::vector<Object*> lights;
     Scene(){
-        root = new Transform();
+        // root = new Transform();
 
     }
     void add(Object* object) {
@@ -79,17 +79,16 @@ public:
     
 
     ~Scene(){
-        // printf("destroy scene\n");
-        for (uint32_t i = 0; i < objects.size(); ++i) {
-            delete objects[i];
-        }
+        destroyScene();
     }
 
     void destroyScene(){
+        root->removeAllChildren();
         for (uint32_t i = 0; i < objects.size(); ++i) {
             delete objects[i];
         }
 
+        lights.clear();
         objects.clear();
     }
 
@@ -150,6 +149,7 @@ public:
     unsigned short height;
     void setResolution(const int &width, const int &height);
     void rotateCamera(float, float, float);
-    void setupScene();
+    void setupScene(const std::string& scenePath);
+    void unloadScene();
 };
 

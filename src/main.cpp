@@ -135,14 +135,16 @@ Window::Window(QWidget *parent) :
     setWindowTitle("Render View " + QString::number(width) + "x" + QString::number(height));
     displayMode = 0;
     samples = 4;
-
+    QAction *open = new QAction("&Open", this);
     QAction *save = new QAction("&Save", this);
 
     QMenu *file;
     file = menuBar()->addMenu("&File");
     file->addAction(save);
+    file->addAction(open);
 
     connect(save, SIGNAL(triggered()), this, SLOT(saveImage()));
+    connect(open, SIGNAL(triggered()), this, SLOT(openScene()));
 
     
 
@@ -249,7 +251,6 @@ Window::Window(QWidget *parent) :
     renderThread.setTracer(tracer);
     renderThread.window = this;
     
-
     connect(&renderThread, SIGNAL(renderedImage(double, double, const QImage&)),
             this, SLOT(updateIndirect(double, double, QImage)));
 
@@ -302,21 +303,35 @@ void Window::gammaState(int){
     update();
 }
 
+void Window::openScene(){
+    tracer->unloadScene();
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open Scene"),
+                           "~/",
+                           tr("Json (*.json)"));
+
+    if (fileName != ""){
+        qDebug() << "open file at: " << fileName;
+        tracer->setupScene(fileName.toUtf8().constData());
+        double directTime;
+        tracer->renderDirect(directTime, directImage, normalImage, boundingBoxImage);
+        update();    
+    }
+    
+}
+
 void Window::saveImage(){
 
     QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
                            "~/",
                            tr("Images (*.png)"));
     QFile file(fileName);
-    file.open( QIODevice::WriteOnly );
+    file.open(QIODevice::WriteOnly);
     QByteArray ba;
     QBuffer buffer(&ba);
     buffer.open(QIODevice::WriteOnly);
     postImage.save(&buffer, "PNG"); // writes image into ba in PNG format
     file.write(ba);
     file.close();
-    // debugLabel->setText("saved");
-    
 }
 
 void Window::switchChannel(const QString& _channel){

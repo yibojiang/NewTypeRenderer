@@ -80,6 +80,7 @@ class Window : public QMainWindow
 private slots:
     void render();
     void saveImage();
+    void openScene();
     void switchChannel(const QString&);
     void switchRGBChannel(const QString&);
     void changeSample(const QString&);
