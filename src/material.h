@@ -8,6 +8,7 @@ public:
     double diffuse;
     double reflect;
     double refract;
-    double emit;
+    double emission;
     double ior;
+    vec3 *texture;
 };

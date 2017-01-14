@@ -242,7 +242,7 @@ struct Quaternion{
       w = cos(half_angle);
     }
 
-    Quaternion(double pitch, double roll, double yaw){
+    Quaternion(double roll, double pitch, double yaw){
         double t0 = cos(yaw * 0.5f);
         double t1 = sin(yaw * 0.5f);
         double t2 = cos(roll * 0.5f);

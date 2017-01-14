@@ -1,7 +1,7 @@
 #pragma once
 #include "transform.h"
 #include "BVH.h"
-
+#include "material.h"
 
 
 struct Ray {
@@ -24,6 +24,7 @@ protected:
     vec3 color;
     Refl_t refl; // reflection type (DIFFuse, SPECular, REFRactive)
     Extents bounds;
+    Material *material;
 
 public:
     std::string name;

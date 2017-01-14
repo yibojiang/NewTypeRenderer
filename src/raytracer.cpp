@@ -1,10 +1,7 @@
 
-
 // #ifndef RAYTRACER_H
 #include "raytracer.h"
 // #endif
-
-
 
 inline mat3 setCamera( vec3 ro, vec3 ta, vec3 up )
 {
@@ -219,7 +216,6 @@ void Raytracer::setupScene(){
     scene.near = 2.0f/tan(scene.fov*0.5f);
     rotateCamera(0, 0.5 * M_PI, 0);
 
-    
     // Object *light = (Object*)new Box(vec3(40, 0.1, 40),       vec3(9, 9, 9), vec3(), DIFF);
     // Object *light = (Object*)new Sphere(4,       vec3(50, 50, 50), vec3(), DIFF);
     // light->name = "light";
@@ -289,9 +285,11 @@ void Raytracer::setupScene(){
                 loader.loadModel(modelName, mesh);
                 obj = (Object*)mesh;
             }
+            else{
+                qDebug() << "error";
+                obj = new Object();
+            }
 
-
-            rapidjson::Value& t = primitives[i]["transform"];
             rapidjson::Value& pos = primitives[i]["transform"]["position"];
             rapidjson::Value& scl = primitives[i]["transform"]["scale"];
             rapidjson::Value& rot = primitives[i]["transform"]["rotation"];
@@ -302,7 +300,7 @@ void Raytracer::setupScene(){
             Transform *xform = new Transform(obj);
             xform->setTranslate(pos[0].GetFloat(), pos[1].GetFloat(), pos[2].GetFloat());
             xform->setScale(scl[0].GetFloat(), scl[1].GetFloat(), scl[2].GetFloat());
-            Quaternion orientation = Quaternion(rot[1].GetFloat() * M_PI/180, rot[0].GetFloat() * M_PI / 180, rot[2].GetFloat() * M_PI / 180);
+            Quaternion orientation = Quaternion(rot[0].GetFloat() * M_PI / 180, rot[1].GetFloat() * M_PI/180, rot[2].GetFloat() * M_PI / 180);
             // qDebug() << rot[0].GetFloat()/ 180 * M_PI << ;
             xform->setRotation(orientation);
             
@@ -426,7 +424,7 @@ void Raytracer::setupScene(){
 Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     width = _width;
     height = _height;
-    samples = _samples;
+    samples = _samples;    
 
     setupScene();
     scene.updateTransform(scene.root, mat4());
@@ -434,12 +432,20 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
 }
 
 void Raytracer::rotateCamera(float x, float y, float z){
-    float camDist = 200;
-    scene.ro = vec3(50 + camDist * cos(y), 50, 50 -camDist * sin(y));
-    scene.ta = vec3(50, 50, 50);
-    // scene.ca = setCamera(scene.ro, scene.ta, 0.0);
-    scene.ca = setCamera(scene.ro, scene.ta, scene.up);
+    // float camDist = 200;
+    // scene.ro = vec3(50 + camDist * cos(y), 50, 50 -camDist * sin(y));
+    // scene.ta = vec3(50, 50, 50);
+    // scene.ca = setCamera(scene.ro, scene.ta, scene.up);    
+
+    Quaternion rot(x, y, z);
+    mat4 m = rot.toMatrix();
     
+    vec4 ro = m * vec4(scene.ro, 1);
+    scene.ro = vec3(ro.x, ro.y, ro.z);
+
+    vec4 ta = m * vec4(scene.ta, 1);
+    scene.ta = vec3(ta.x, ta.y, ta.z);    
+    scene.ca = setCamera(scene.ro, scene.ta, scene.up);    
 }
 
 
