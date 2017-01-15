@@ -21,6 +21,7 @@
 #include <QThread>
 #include <QMutex>
 #include <QWaitCondition>
+#include "lodepng/lodepng.h"
 
 class Window;
 class RenderThread : public QThread {

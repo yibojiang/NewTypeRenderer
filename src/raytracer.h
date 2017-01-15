@@ -106,7 +106,7 @@ public:
                 add(transform->object);    
             }
 
-            if (transform->object->getEmission().length() > eps ){
+            if (transform->object->getMaterial()->getEmission().length() > eps ){
                 lights.push_back(transform->object);
                 qDebug() << "add light:" << transform->object->name.c_str();
             }

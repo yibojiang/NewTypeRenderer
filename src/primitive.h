@@ -34,6 +34,7 @@ public:
     virtual vec3 getNormal(const vec3 &) const{ return vec3(1);}
     virtual double intersect(const Ray &){ return 0;}
 
+
     virtual double getProjectAngleToSphere(){
         return M_PI;
     }
@@ -55,10 +56,9 @@ public:
         
     }
 
-    virtual void setMaterial(Refl_t refl){
-        this->refl = refl;
-        
-    }
+    // virtual void setMaterial(Refl_t refl){
+    //     this->refl = refl;
+    // }
 
     virtual void setDiffuseColor(vec3 diff){
         this->color = diff;
@@ -70,15 +70,23 @@ public:
 
     
 
-    Refl_t getMaterial() const{
-        return refl;
+    // Refl_t getMaterial() const{
+    //     return refl;
+    // }
+
+    virtual void setMaterial(Material* material){
+        this->material = material;
+    }
+
+    Material* getMaterial(){
+        return this->material;
     }
 
     virtual vec3 getCentriod() const{ return vec3(); }
 
-    virtual vec3 getEmission() const{
-        return emission;
-    }
+    // virtual vec3 getEmission() const{
+    //     return emission;
+    // }
 
     virtual Refl_t getReflectionType() const{
         return refl;

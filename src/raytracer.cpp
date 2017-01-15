@@ -67,45 +67,69 @@ inline double clamp(double x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
 vec3 Raytracer::tracing(const Ray &ray, int depth, int E = 1){
     // Intersection intersection = scene.intersect(ray);
     Intersection intersection = bvh.intersect(ray);
-    
     if (!intersection.object) return vec3(0);
-
-
-    const Object &obj = *intersection.object;
+    Object *obj = intersection.object;
     vec3 hit = ray.origin + ray.dir * intersection.t;
 
-    vec3 N = obj.getNormal(hit);
-    vec3 nl = N.dot(ray.dir) < 0 ? N: N * -1;
-    vec3 f = obj.getDiffuse();
-    // return f;
-    // Russian roulette: starting at depth 5, each recursive step will stop with a probability of 0.1
-
-    double p = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // max refl
-    if (++depth > 10){
-        return obj.getEmission() * E;    
+    vec3 N = obj->getNormal(hit);
+    vec3 nl = N;
+    bool into = true;
+    if (N.dot(ray.dir) < 0){
+        nl = N;
+        into = true;
     }
+    else{
+        nl = -N;
+        into = false;
+    }
+    // vec3 nl = N.dot(ray.dir) < 0 ? N: N * -1;
+
+
+    vec3 f = obj->getMaterial()->getDiffuseColor();
+
+    // Russian roulette: starting at depth 5, each recursive step will stop with a probability of p.
+    // double p = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // max refl
     
-    if (++depth > 5 || !p) {
+    double p = 0.1;
+    
+    if (++depth > 5 || p<eps) {
         if (drand48() < p){
             f = f * (1 / p); 
         } 
         else{
-            return obj.getEmission() * E;    
+            return obj->getMaterial()->getEmission() * E;    
         } 
     }
-    // if (++depth > 5){
-    //     // double rrStopProbability = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // max refl
-    //     const double rrStopProbability = 0.1;
-    //     if (drand48() < rrStopProbability){
-    //         f = f * (1 / rrStopProbability); 
-    //     } 
-    //     else{
-    //         return obj.getEmission() * E; //R.R.  
-    //     }
-    // }
-    
 
-    if (obj.getReflectionType() == DIFF) {
+    double randomVal = drand48();
+    if (randomVal < obj->getMaterial()->refract){
+        vec3 refl = ray.dir - N * 2 * N.dot(ray.dir);
+        float roughness = obj->getMaterial()->roughness;
+        vec3 rnddir = roughness > 0 ? vec3(drand48()-0.5, drand48()-0.5, drand48()-0.5).normalize()*roughness : vec3(0);
+        refl = refl + rnddir * roughness;
+
+
+        Ray reflRay(hit, refl); // Ideal dielectric REFRACTION
+        bool into = N.dot(nl) > 0;              // Ray from outside going in?
+        double nc = 1, nt = obj->getMaterial()->ior, nnt = into ? nc / nt : nt / nc, ddn = ray.dir.dot(nl), cos2t;
+        if ((cos2t = 1 - nnt * nnt * (1 - ddn * ddn)) < 0) // Total internal reflection
+            return obj->getMaterial()->getEmission() + f * tracing(reflRay, depth);
+        vec3 tdir = (ray.dir * nnt - N * ((into ? 1 : -1) * (ddn * nnt + sqrt(cos2t)))).normalize();
+        double a = nt - nc, b = nt + nc, R0 = a * a / (b * b), c = 1 - (into ? -ddn : tdir.dot(N));
+        double Re = R0 + (1 - R0) * c * c * c * c * c, Tr = 1 - Re, P = .25 + .5 * Re, RP = Re / P, TP = Tr / (1 - P);
+        return obj->getMaterial()->getEmission() + f * (depth > 2 ? (drand48() < P ? // Russian roulette
+                            tracing(reflRay, depth) * RP : tracing(Ray(hit, tdir), depth) * TP) :
+                            tracing(reflRay, depth) * Re + tracing(Ray(hit, tdir), depth) * Tr);
+    }
+    else if (randomVal < obj->getMaterial()->refract + obj->getMaterial()->specular ){
+        float roughness = obj->getMaterial()->roughness;
+        vec3 refl = ray.dir - N * 2 * N.dot(ray.dir);
+        vec3 rnddir = roughness > 0 ? vec3(drand48()-0.5, drand48()-0.5, drand48()-0.5).normalize()*roughness : vec3(0);
+        refl = refl + rnddir;
+
+        return obj->getMaterial()->getEmission() + f * tracing(Ray(hit, refl), depth);
+    }
+    else{
         double r1 = 2 * M_PI * drand48(); // random angle
         double r2 = drand48(); // random distance from sphere center
         double r2s = sqrt(r2);
@@ -114,7 +138,7 @@ vec3 Raytracer::tracing(const Ray &ray, int depth, int E = 1){
         vec3 v = w.cross(u);  
         vec3 d = (u * cos(r1) * r2s + v * sin(r1) * r2s + w * sqrt(1 - r2)).normalize();
 
-        // Explicit light sample.
+        // Explicit light sample. Only support for sphere light
         #ifdef EXPLICIT_LIGHT_SAMPLE
         vec3 e;
         for (unsigned int i = 0; i < scene.lights.size(); i++) {
@@ -138,62 +162,17 @@ vec3 Raytracer::tracing(const Ray &ray, int depth, int E = 1){
             
             if (shadow.object && shadow.object == light){
                 double omega = 2 * M_PI * (1 - cos_a_max);
-                e = e + f * M_1_PI * (light->getEmission() * l.dot(nl) * omega); // 1/pi for brdf
+                e = e + f * M_1_PI * (light->getMaterial()->getEmission() * l.dot(nl) * omega); // 1/pi for brdf
             }
         }
-        return obj.getEmission() * E + e + f * (tracing(Ray(hit, d), depth, 0));
+        return obj->getMaterial()->getEmission() * E + e + f * (tracing(Ray(hit, d), depth, 0));
         #else
 
-        return obj.getEmission() + f * (tracing(Ray(hit, d), depth));
+        return obj->getMaterial()->getEmission() + f * (tracing(Ray(hit, d), depth));
 
-        #endif
-        
+        #endif        
     }
-    if (obj.getReflectionType() == SPEC){            // Ideal SPECULAR reflection
-        // r=d−2(d⋅n)n
-        vec3 refl = ray.dir - N * 2 * N.dot(ray.dir);
-        return obj.getEmission() + f * tracing(Ray(hit, refl), depth);
-    }
-    
-    // if (obj.getReflectionType() == REFR){
 
-    // }
-      Ray reflRay(hit, ray.dir - N * 2 * N.dot(ray.dir)); // Ideal dielectric REFRACTION
-      bool into = N.dot(nl) > 0;              // Ray from outside going in?
-      double nc = 1, nt = 1.5, nnt = into ? nc / nt : nt / nc, ddn = ray.dir.dot(nl), cos2t;
-      if ((cos2t = 1 - nnt * nnt * (1 - ddn * ddn)) < 0) // Total internal reflection
-        return obj.getEmission() + f * tracing(reflRay, depth);
-      vec3 tdir = (ray.dir * nnt - N * ((into ? 1 : -1) * (ddn * nnt + sqrt(cos2t)))).normalize();
-      double a = nt - nc, b = nt + nc, R0 = a * a / (b * b), c = 1 - (into ? -ddn : tdir.dot(N));
-      double Re = R0 + (1 - R0) * c * c * c * c * c, Tr = 1 - Re, P = .25 + .5 * Re, RP = Re / P, TP = Tr / (1 - P);
-      return obj.getEmission() + f * (depth > 2 ? (drand48() < P ? // Russian roulette
-                            tracing(reflRay, depth) * RP : tracing(Ray(hit, tdir), depth) * TP) :
-                            tracing(reflRay, depth) * Re + tracing(Ray(hit, tdir), depth) * Tr);
-    // {
-    //     double n = 1.5;
-    //     double R0 = (1.0-n)/(1.0+n);
-    //     R0 = R0*R0;
-    //     if(N.dot(ray.dir)>0) { // we're inside the medium
-    //         N = N*-1;
-    //         n = 1/n;
-    //     }
-    //     n=1/n;
-    //     double cost1 = (N.dot(ray.dir))*-1; // cosine of theta_1
-    //     double cost2 = 1.0 - n*n*(1.0-cost1*cost1); // cosine of theta_2
-    //     double Rprob = R0 + (1.0-R0) * pow(1.0 - cost1, 5.0); // Schlick-approximation
-    //     vec3 d;
-    //     if (cost2 > 0 && drand48() > Rprob) { // refraction direction
-    //         d = ((ray.dir*n)+(N*(n*cost1-sqrt(cost2)))).normalize();
-    //     }
-    //     else { // reflection direction
-    //         d = ray.dir.reflect(N);
-    //     }
-
-    //     return obj.getEmission() +  f * tracing(Ray(hit, d), depth, Xi);
-    // }
-    
-    // return vec3(1);
-    return vec3();
     
 }
 
@@ -235,6 +214,8 @@ void Raytracer::setupScene(const std::string& scenePath){
     if (document.HasMember("primitives")){
 
         rapidjson::Value& primitives = document["primitives"];
+        rapidjson::Value& materials = document["materials"];
+
         for (rapidjson::SizeType i = 0; i < primitives.Size(); ++i){
             Object *obj;
             std::string ptype = primitives[i]["type"].GetString();
@@ -261,9 +242,53 @@ void Raytracer::setupScene(const std::string& scenePath){
             rapidjson::Value& pos = primitives[i]["transform"]["position"];
             rapidjson::Value& scl = primitives[i]["transform"]["scale"];
             rapidjson::Value& rot = primitives[i]["transform"]["rotation"];
-            rapidjson::Value& color = primitives[i]["color"];
-            rapidjson::Value& emission = primitives[i]["emission"];
-            rapidjson::Value& material = primitives[i]["material"];
+            
+            std::string materialName = primitives[i]["material"].GetString();
+
+            qDebug() << materialName.c_str();
+            Material *material = new Material();
+            if (materials.HasMember(materialName.c_str())){
+                // qDebug() << materialName.c_str() << "found";
+                rapidjson::Value& mat = materials[materialName.c_str()];
+                material->diffuse = mat["diffuse"].GetFloat();
+
+                if (mat.HasMember("specular")){
+                    material->specular = mat["specular"].GetFloat();
+                }
+                
+                if (mat.HasMember("roughness")){
+                   material->roughness = mat["roughness"].GetFloat();
+                }
+                
+                if (mat.HasMember("emission")){
+                    material->emission = mat["emission"].GetFloat();
+                }
+                
+                if (mat.HasMember("ior")){
+                    material->ior = mat["ior"].GetFloat();
+                }
+
+                if (mat.HasMember("refract")){
+                    material->refract = mat["refract"].GetFloat();
+                }
+
+                if (mat.HasMember("diffuseColor")){
+                    material->diffuseColor = vec3(mat["diffuseColor"][0].GetFloat(), mat["diffuseColor"][1].GetFloat(), mat["diffuseColor"][2].GetFloat());    
+                }
+
+                if (mat.HasMember("reflectColor")){
+                    material->reflectColor = vec3(mat["reflectColor"][0].GetFloat(), mat["reflectColor"][1].GetFloat(), mat["reflectColor"][2].GetFloat());    
+                }
+
+                if (mat.HasMember("emissionColor")){
+                    material->setEmission(vec3(mat["emissionColor"][0].GetFloat(), mat["emissionColor"][1].GetFloat(), mat["emissionColor"][2].GetFloat()));    
+                }
+            }
+            else{
+                qDebug() << "can't find material " << materialName.c_str();
+            }
+            obj->setMaterial(material);
+
             
             Transform *xform = new Transform(obj);
             xform->setTranslate(pos[0].GetFloat(), pos[1].GetFloat(), pos[2].GetFloat());
@@ -272,10 +297,13 @@ void Raytracer::setupScene(const std::string& scenePath){
             // qDebug() << rot[0].GetFloat()/ 180 * M_PI << ;
             xform->setRotation(orientation);
             
+            
+
             obj->name = primitives[i]["name"].GetString();
-            obj->setMaterial(material.GetString());
-            obj->setDiffuseColor(vec3(color[0].GetFloat(), color[1].GetFloat(), color[2].GetFloat()));
-            obj->setEmissionColor(vec3(emission[0].GetFloat(), emission[1].GetFloat(), emission[2].GetFloat()));
+            // obj->setMaterial(material.GetString());
+            
+            // obj->setDiffuseColor(vec3(color[0].GetFloat(), color[1].GetFloat(), color[2].GetFloat()));
+            // obj->setEmissionColor(vec3(emission[0].GetFloat(), emission[1].GetFloat(), emission[2].GetFloat()));
 
             scene.root->addChild(xform);
             qDebug() << "add " << obj->name.c_str() << " to the scene";
@@ -293,7 +321,7 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     samples = _samples;    
 
     QString path = QDir::currentPath();
-    std::string name = "/scene/sponza.json";
+    std::string name = "/scene/roughness.json";
     std::string fullpath = path.toUtf8().constData() + name;
 
     setupScene(fullpath);
@@ -359,14 +387,14 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
             
             Intersection intersection = bvh.intersect(Ray(ro, rd));
             if (intersection.object) {
-                const Object &obj = *intersection.object;
+                Object *obj = intersection.object;
                 vec3 hit = ro + rd * intersection.t;
-                vec3 N = obj.getNormal(hit);
+                vec3 N = obj->getNormal(hit);
                 normalColor = vec3((N.x + 1)*0.5, (N.y + 1)*0.5, (N.z+1) * 0.25 + 0.5) * 255;
-                // normalColor = obj.c * 255;
+                // normalColor = obj->c * 255;
 
                 vec3 ld = (pointLig - hit).normalize();
-                directColor = obj.getDiffuse() * fmax(ld.dot(N), 0);
+                directColor = obj->getMaterial()->getDiffuseColor() * fmax(ld.dot(N), 0);
 
 
                 Intersection shadow = bvh.intersect(Ray(hit, ld));
@@ -398,13 +426,11 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
 void Raytracer::renderIndirectProgressive(vec3 *colorArray, bool& abort, bool& restart, int &samples) {
     vec3 color(0,0,0);
     vec3 r(0,0,0);
-    // vec3 raw(0,0,0);
-    // int control = 0;
+    
     #pragma omp parallel for schedule(dynamic, 1) private(color, r)       // OpenMP
     for (unsigned short i = 0; i < height; ++i){
         this -> progress = 100.*i / (height - 1);
-        // fprintf(stderr, "\rRendering (%d spp) %5.2f%%", samps * gridSize * gridSize, 100.*i / (height - 1));
-        qDebug() << "Rendering " << "spp:" << (samples + 1) * 4 << " " << 100.*i / (height - 1) << '%';
+        // qDebug() << "Rendering " << "spp:" << (samples + 1) * 4 << " " << 100.*i / (height - 1) << '%';
 
         for (unsigned short j = 0; j < width; ++j){
             color = colorArray[i*width+j];

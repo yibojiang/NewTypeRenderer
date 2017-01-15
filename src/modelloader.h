@@ -16,7 +16,6 @@ public:
         std::string fullpath = path.toUtf8().constData() + _name;
         std::vector<tinyobj::shape_t> rawShape;
         std::vector<tinyobj::material_t> rawMaterial;
-
         qDebug() << "open" << fullpath.c_str();
 
         tinyobj::LoadObj(rawShape, rawMaterial, fullpath.c_str());

@@ -63,7 +63,7 @@ void RenderThread::run()
         tracer->isRendering = true;
         for (int  s = 0; s < samples; ++s) {
             qDebug() << "samples: " << s;
-            qDebug() << "before color: " << colorArray[0];
+            // qDebug() << "before color: " << colorArray[0];
             tracer->curSamples = s + 1;
             tracer->renderIndirectProgressive(colorArray, abort, restart, s);
             
@@ -132,7 +132,7 @@ Window::Window(QWidget *parent) :
 
     setWindowTitle("Render View " + QString::number(width) + "x" + QString::number(height));
     displayMode = 0;
-    samples = 4;
+    samples = 16;
     QAction *open = new QAction("&Open", this);
     QAction *save = new QAction("&Save", this);
 
@@ -460,9 +460,19 @@ void Window::paintEvent(QPaintEvent *){
 }
 
 int main(int argc, char *argv[]) {
+
+     // Load file and decode image.
+    // std::vector<unsigned char> image;
+    // QString path = QDir::currentPath();
+    // std::string filename = path.toUtf8().constData() + "/textures/test.png";
+    // unsigned width, height;    
+    // unsigned error = lodepng::decode(image, width, height, filename.c_str());
+
     QApplication app (argc, argv);
     Window window;
-    
     window.show();
+
+    
+    
     return app.exec();
 }
