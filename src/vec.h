@@ -17,6 +17,11 @@ struct vec2 {
     vec2& normalize() { return *this = *this/length(); }
     vec2 normalized() { return vec2(*this/length()); }
     vec2 reflect(vec2 &normal) const { return normal * (dot(normal) * 2) - *this; }
+    // vec2& operator=(const vec2 &b) { this.x = b.x; this.y = b.y; return *this;}
+    friend QDebug operator<< (QDebug stream, const vec2 &p) {
+        stream << p.x << ',' << p.y;
+        return stream;
+    }
 };
 
 struct vec3 {

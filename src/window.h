@@ -21,7 +21,7 @@
 #include <QThread>
 #include <QMutex>
 #include <QWaitCondition>
-#include "lodepng/lodepng.h"
+
 
 class Window;
 class RenderThread : public QThread {
@@ -98,27 +98,5 @@ private:
     int displayMode; // 0 - render, 1 - normal
 
 };
-
-
-
-// class RenderWidget : public QWidget
-// {
-//  Q_OBJECT
-//  public:
-    
-//     explicit RenderWidget(QWidget *parent = 0);
-//     void paintEvent(QPaintEvent *event);
-//     int width;
-//     int height;
-//     QImage image;
-//     QImage normalImage;
-// private slots:
-//     void handleRender();
-//     void saveImage();
-// private:
-//     QPushButton *renderButton;
-//     int displayMode; // 0 - render, 1 - normal
-
-// };
  
 #endif // WINDOW_H

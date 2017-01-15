@@ -42,6 +42,10 @@ inline void ons(const vec3& v1, vec3& v2, vec3& v3) {
     v3 = v1.cross(v2);
 }
 
+inline double fract(double f){
+    return f = f-(long)f;
+}
+
 inline vec3 cosineSampleHemisphere(double u1, double u2){
 
     const double r = sqrt(u1);
@@ -64,7 +68,7 @@ inline vec3 gammaCorrect(vec3 &v) {
 inline double clamp(double x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
 
 
-vec3 Raytracer::tracing(const Ray &ray, int depth, int E = 1){
+vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
     // Intersection intersection = scene.intersect(ray);
     Intersection intersection = bvh.intersect(ray);
     if (!intersection.object) return vec3(0);
@@ -72,20 +76,10 @@ vec3 Raytracer::tracing(const Ray &ray, int depth, int E = 1){
     vec3 hit = ray.origin + ray.dir * intersection.t;
 
     vec3 N = obj->getNormal(hit);
-    vec3 nl = N;
-    bool into = true;
-    if (N.dot(ray.dir) < 0){
-        nl = N;
-        into = true;
-    }
-    else{
-        nl = -N;
-        into = false;
-    }
-    // vec3 nl = N.dot(ray.dir) < 0 ? N: N * -1;
+    vec3 nl = N.dot(ray.dir) < 0 ? N: N * -1;
 
 
-    vec3 f = obj->getMaterial()->getDiffuseColor();
+    vec3 f = obj->getMaterial()->getDiffuseColor(ray.uv);
 
     // Russian roulette: starting at depth 5, each recursive step will stop with a probability of p.
     // double p = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // max refl
@@ -115,19 +109,21 @@ vec3 Raytracer::tracing(const Ray &ray, int depth, int E = 1){
         if ((cos2t = 1 - nnt * nnt * (1 - ddn * ddn)) < 0) // Total internal reflection
             return obj->getMaterial()->getEmission() + f * tracing(reflRay, depth);
         vec3 tdir = (ray.dir * nnt - N * ((into ? 1 : -1) * (ddn * nnt + sqrt(cos2t)))).normalize();
+
+        Ray refrRay(hit, tdir);
         double a = nt - nc, b = nt + nc, R0 = a * a / (b * b), c = 1 - (into ? -ddn : tdir.dot(N));
         double Re = R0 + (1 - R0) * c * c * c * c * c, Tr = 1 - Re, P = .25 + .5 * Re, RP = Re / P, TP = Tr / (1 - P);
         return obj->getMaterial()->getEmission() + f * (depth > 2 ? (drand48() < P ? // Russian roulette
-                            tracing(reflRay, depth) * RP : tracing(Ray(hit, tdir), depth) * TP) :
-                            tracing(reflRay, depth) * Re + tracing(Ray(hit, tdir), depth) * Tr);
+                            tracing(reflRay, depth) * RP : tracing(refrRay, depth) * TP) :
+                            tracing(reflRay, depth) * Re + tracing(refrRay, depth) * Tr);
     }
     else if (randomVal < obj->getMaterial()->refract + obj->getMaterial()->specular ){
         float roughness = obj->getMaterial()->roughness;
         vec3 refl = ray.dir - N * 2 * N.dot(ray.dir);
         vec3 rnddir = roughness > 0 ? vec3(drand48()-0.5, drand48()-0.5, drand48()-0.5).normalize()*roughness : vec3(0);
         refl = refl + rnddir;
-
-        return obj->getMaterial()->getEmission() + f * tracing(Ray(hit, refl), depth);
+        Ray reflRay(hit, refl);
+        return obj->getMaterial()->getEmission() + f * tracing(reflRay, depth);
     }
     else{
         double r1 = 2 * M_PI * drand48(); // random angle
@@ -138,6 +134,7 @@ vec3 Raytracer::tracing(const Ray &ray, int depth, int E = 1){
         vec3 v = w.cross(u);  
         vec3 d = (u * cos(r1) * r2s + v * sin(r1) * r2s + w * sqrt(1 - r2)).normalize();
 
+        Ray reflRay(hit, d);
         // Explicit light sample. Only support for sphere light
         #ifdef EXPLICIT_LIGHT_SAMPLE
         vec3 e;
@@ -157,18 +154,18 @@ vec3 Raytracer::tracing(const Ray &ray, int depth, int E = 1){
             vec3 l = su * cos(phi) * sin_a + sv * sin(phi) * sin_a + sw * cos_a;
             l.normalize();
 
-
-            Intersection shadow = bvh.intersect(Ray(hit, l));
+            Ray shadowRay(hit, l);
+            Intersection shadow = bvh.intersect(shadowRay);
             
             if (shadow.object && shadow.object == light){
                 double omega = 2 * M_PI * (1 - cos_a_max);
                 e = e + f * M_1_PI * (light->getMaterial()->getEmission() * l.dot(nl) * omega); // 1/pi for brdf
             }
         }
-        return obj->getMaterial()->getEmission() * E + e + f * (tracing(Ray(hit, d), depth, 0));
+        return obj->getMaterial()->getEmission() * E + e + f * (tracing(reflRay, depth, 0));
         #else
 
-        return obj->getMaterial()->getEmission() + f * (tracing(Ray(hit, d), depth));
+        return obj->getMaterial()->getEmission() + f * (tracing(reflRay, depth));
 
         #endif        
     }
@@ -283,6 +280,11 @@ void Raytracer::setupScene(const std::string& scenePath){
                 if (mat.HasMember("emissionColor")){
                     material->setEmission(vec3(mat["emissionColor"][0].GetFloat(), mat["emissionColor"][1].GetFloat(), mat["emissionColor"][2].GetFloat()));    
                 }
+
+                if (mat.HasMember("diffuseTexture")){
+                    material->setDiffuseTexture(mat["diffuseTexture"].GetString());    
+                }
+                
             }
             else{
                 qDebug() << "can't find material " << materialName.c_str();
@@ -351,6 +353,7 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
     vec3 directColor;
     vec3 boundingBoxColor;
     vec3 ambColor(0.15, 0.15, 0.15);
+
     // vec3 lig = vec3(-1, -3, -1.5).normalize();
     vec3 pointLig(50 , 78, 60);
 
@@ -373,34 +376,36 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
             directColor = vec3(0,0,0);
             boundingBoxColor = vec3(0,0,0);
 
-
+            Ray ray(ro, rd);
             // 
 
             #ifdef WIREFRAME_ON
             // Intersection intersectionBox = bvh.intersectBoundingBox(Ray(ro, rd));
-            Intersection intersectionBox = bvh.intersectBVH(Ray(ro, rd));
+            Intersection intersectionBox = bvh.intersectBVH(ray);
             if (intersectionBox.t > eps && intersectionBox.t < inf){
                 boundingBoxColor = vec3(0, 1, 0);
             }
             #endif
 
             
-            Intersection intersection = bvh.intersect(Ray(ro, rd));
+            Intersection intersection = bvh.intersect(ray);
             if (intersection.object) {
                 Object *obj = intersection.object;
+                vec3 f = obj->getMaterial()->getDiffuseColor(ray.uv);
                 vec3 hit = ro + rd * intersection.t;
                 vec3 N = obj->getNormal(hit);
+                // N = ray.dir.dot(N) < 0 ? N : -N;
                 normalColor = vec3((N.x + 1)*0.5, (N.y + 1)*0.5, (N.z+1) * 0.25 + 0.5) * 255;
                 // normalColor = obj->c * 255;
 
                 vec3 ld = (pointLig - hit).normalize();
-                directColor = obj->getMaterial()->getDiffuseColor() * fmax(ld.dot(N), 0);
+                directColor = f * fmax(ld.dot(N), 0);
 
-
-                Intersection shadow = bvh.intersect(Ray(hit, ld));
+                Ray shadowRay(hit, ld);
+                Intersection shadow = bvh.intersect(shadowRay);
                 double distToLight = (pointLig - hit).length();
                 if (shadow.object && shadow.t <= distToLight){
-                    directColor = directColor * clamp(3.8 * shadow.t/(distToLight), 0.0, 1.0); 
+                    // directColor = directColor * clamp(3.8 * shadow.t/(distToLight), 0.0, 1.0); 
                     // directColor = vec3();
                 }
                 directColor = directColor + ambColor;
@@ -453,7 +458,8 @@ void Raytracer::renderIndirectProgressive(vec3 *colorArray, bool& abort, bool& r
                     v = (v * 2.0 - 1.0);
                     u = u * width/height;
                     vec3 rd = scene.ca * (vec3(u, v, scene.near)).normalize();
-                    r = r + tracing(Ray(scene.ro, rd), 0) * 0.25;
+                    Ray primiaryRay(scene.ro, rd);
+                    r = r + tracing(primiaryRay, 0) * 0.25;
                 }
             }
 
@@ -494,7 +500,8 @@ void Raytracer::renderIndirect(double &time, QImage &image) {
                         v = (v * 2.0 - 1.0);
                         u = u * width/height;
                         vec3 rd = scene.ca * (vec3(u, v, scene.near)).normalize();
-                        r = r + tracing(Ray(scene.ro, rd), 0) * (1.0 / samps);
+                        Ray primiaryRay(scene.ro, rd);
+                        r = r + tracing(primiaryRay, 0) * (1.0 / samps);
 
                     }
                     color = color + vec3(clamp(r.x), clamp(r.y), clamp(r.z)) * .25;

@@ -57,7 +57,7 @@ public:
     void destroyAllNodes();
 
 
-    void intersectTest(const Ray &r, Intersection &intersection) const;
+    void intersectTest(Ray &r, Intersection &intersection) const;
     void intersectTestWireframe(const Ray &r, Intersection &intersection) const;
     static int maxDepth;
 
@@ -72,7 +72,7 @@ public:
     BVH();
     void setup(Scene &);
     void destroy();
-    Intersection intersect(const Ray&) const;
+    Intersection intersect(Ray&) const;
     Intersection intersectBoundingBox(const Ray&) const;
     Intersection intersectBVH(const Ray& ray) const;
     ~BVH();

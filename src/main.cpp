@@ -461,13 +461,7 @@ void Window::paintEvent(QPaintEvent *){
 
 int main(int argc, char *argv[]) {
 
-     // Load file and decode image.
-    // std::vector<unsigned char> image;
-    // QString path = QDir::currentPath();
-    // std::string filename = path.toUtf8().constData() + "/textures/test.png";
-    // unsigned width, height;    
-    // unsigned error = lodepng::decode(image, width, height, filename.c_str());
-
+ 
     QApplication app (argc, argv);
     Window window;
     window.show();

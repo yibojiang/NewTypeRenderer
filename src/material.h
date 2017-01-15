@@ -14,6 +14,7 @@ public:
         this->emission = emission;
         this->ior = ior;
         this->energy = this->diffuse + this->specular + this->refract;
+        this->useDiffuseTexture = false;
     }
     ~Material(){}
 
@@ -25,9 +26,12 @@ public:
     float ior;
     float energy;
 
+
     vec3 diffuseColor;
     vec3 reflectColor;
     vec3 emissionColor;
+    bool useDiffuseTexture;
+
     Texture diffuseTexture;
     Texture bumpTexture;
 
@@ -35,7 +39,17 @@ public:
         this->emissionColor = emissionColor * this->emission;
     }
 
-    vec3 getDiffuseColor(){
+    void setDiffuseTexture(const std::string& name){
+        useDiffuseTexture = true;
+        qDebug() << name.c_str();
+        diffuseTexture.loadImage(name);
+    }
+
+    vec3 getDiffuseColor(const vec2& uv){
+        if (useDiffuseTexture){
+            return diffuseTexture.getColor3(uv);
+        }
+      
         return diffuseColor;
     }
 

@@ -58,11 +58,12 @@ public:
             triangle->setMaterial(mesh->getMaterial());
             triangle->setDiffuseColor(mesh->getDiffuse());
             triangle->name = mesh->name + '_' + std::to_string(i);
+            triangle->setUVs(mesh->faces[i]->uv1, mesh->faces[i]->uv2, mesh->faces[i]->uv3);
             add((Object*)triangle);
         }
     }
 
-    Intersection intersect(const Ray& ray) const {
+    Intersection intersect(Ray& ray) const {
         Intersection closestIntersection;
         // intersect all objects, one after the other
         // for (std::vector<Object*>::iterator it = objects.begin(); it != objects.end(); ++it){
@@ -138,7 +139,7 @@ public:
 
     Raytracer(unsigned width, unsigned height,int _samples);
     ~Raytracer();
-    vec3 tracing(const Ray &ray, int depth, int E);
+    vec3 tracing(Ray &ray, int depth, int E);
     
     
     void renderIndirectProgressive(vec3 *colorArray, bool& abort, bool& restart, int &samples);

@@ -589,7 +589,7 @@ void OctreeNode::intersectTestWireframe(const Ray &r, Intersection &intersection
 }
 
 
-void OctreeNode::intersectTest(const Ray &r, Intersection &intersection) const{
+void OctreeNode::intersectTest(Ray &r, Intersection &intersection) const{
     double test = this->extents.intersect(r);
 
     // Hit the bounding box.
@@ -633,7 +633,7 @@ Intersection BVH::intersectBVH(const Ray& ray) const{
 }
 
 
-Intersection BVH::intersect(const Ray& ray) const{
+Intersection BVH::intersect(Ray& ray) const{
     // std::priority_queue<OctreeNode> closeNode;
     Intersection closestIntersection;
     octree->intersectTest(ray, closestIntersection);

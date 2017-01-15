@@ -7,8 +7,10 @@
 struct Ray {
     vec3 origin;
     vec3 dir;
+    vec2 uv;
     Ray(vec3 ro) { origin = ro; dir = vec3(1,0,0); }
     Ray(vec3 ro, vec3 rd){ origin = ro; dir = rd; }
+
 };
 
 
@@ -32,7 +34,7 @@ public:
     Object(){}
     virtual ~Object(){}
     virtual vec3 getNormal(const vec3 &) const{ return vec3(1);}
-    virtual double intersect(const Ray &){ return 0;}
+    virtual double intersect(Ray &){ return 0;}
 
 
     virtual double getProjectAngleToSphere(){
@@ -120,7 +122,7 @@ public:
     }
 
     Plane(vec3 _nor, double _off) { off = _off; normal = _nor; }
-    double intersect(const Ray &r) {
+    double intersect(Ray &r) {
         return (-r.origin.dot(normal) - off) / (normal).dot(r.dir);
     }
 
@@ -162,7 +164,7 @@ public:
     }
 
     Sphere(double _rad, vec3 _pos) { rad = _rad; center = _pos; }
-    double intersect(const Ray &r) { // returns distance, 0 if nohit
+    double intersect(Ray &r) { // returns distance, 0 if nohit
         vec3 op = center - r.origin; // Solve t^2*d.d + 2*t*(o-p).d + (o-p).(o-p)-R^2 = 0
         double t, eps = 1e-4, b = op.dot(r.dir), det = b * b - op.dot(op) + rad * rad;
         if (det < 0) return 0; else det = sqrt(det);
@@ -287,7 +289,7 @@ public:
     // } 
 
 
-    double intersect(const Ray &r) { // returns distance, 0 if nohit
+    double intersect(Ray &r) { // returns distance, 0 if nohit
         double t1 = (-dnear[0] - r.origin.dot(normals[0])) / r.dir.dot(normals[0]);
         double t2 = (-dfar[0] - r.origin.dot(normals[0])) / r.dir.dot(normals[0]);
         double t3 = (-dnear[1] - r.origin.dot(normals[1])) / r.dir.dot(normals[1]);
@@ -403,10 +405,10 @@ public:
         n3 = _n3.normalize();
     }
 
-    void setUVs(vec2 _uv1, vec2 _uv2, vec2 _uv3){
-        uv1 = _uv1;
-        uv2 = _uv2;
-        uv3 = _uv3;
+    void setUVs(vec2 uv1, vec2 uv2, vec2 uv3){
+        this->uv1 = uv1;
+        this->uv2 = uv2;
+        this->uv3 = uv3;
     }
 
     vec3 getNormal(const vec3 &) const{    
@@ -414,7 +416,7 @@ public:
         // return n1;
     }
 
-    double intersect(const Ray &r) { // returns distance, 0 if nohit
+    double intersect(Ray &r) { // returns distance, 0 if nohit
         
         // vec3 nl = r.dir.dot(normal) > 0 ? normal : normal * -1;
         // double dist = -r.origin.dot(nl) + center.dot(nl);
@@ -429,12 +431,9 @@ public:
             return 0; 
         }
 
-        // if (fabs(dn) < eps) {     // ray is  parallel to triangle plane
-        //     // if (a == 0)                 // ray lies in triangle plane
-        //     //     return 2;
-        //     // else return 0;              // ray disjoint from plane
-        //     return 0;
-        // }
+        if (fabs(dn) < eps) {     // ray is  parallel to triangle plane
+            return 0;
+        }
 
         vec3 center = (p1 + p2 + p3) / 3;
         double dist = -r.origin.dot(normal) + center.dot(normal);
@@ -465,6 +464,14 @@ public:
         if (t < 0.0 || (s + t) > 1.0)  // I is outside T
             return 0;
 
+         
+        // r.uv = (uv1 * s +  uv2 * (1 - s));
+        r.uv = uv1 * (1 - s -t) + uv2 * s + uv3 * t;
+        // r.uv = vec2(drand48(), drand48());
+
+        // r.uv.x = fmin(1, r.uv.x);
+        // r.uv.y = fmin(1, r.uv.y);
+        // r.uv = uv1 * s +  uv2 * (1 - s);
         return tt;
     }
 
@@ -492,22 +499,23 @@ public:
     vec3 n1, n2, n3;
     vec2 uv1, uv2, uv3;
 
-    void setupUVs(const vec2 _uv1,const vec2 _uv2,const vec2 _uv3){
-        uv1 = _uv1;
-        uv2 = _uv2;
-        uv3 = _uv3;
+    void setupUVs(const vec2 uv1,const vec2 uv2,const vec2 uv3){
+        this->uv1 = uv1;
+        this->uv2 = uv2;
+        this->uv3 = uv3;
+        
     }
 
-    void setupVertices(const vec3 _v1,const vec3 _v2,const vec3 _v3){
-        v1 = _v1;
-        v2 = _v2;
-        v3 = _v3;
+    void setupVertices(const vec3 v1,const vec3 v2,const vec3 v3){
+        this->v1 = v1;
+        this->v2 = v2;
+        this->v3 = v3;
     }
 
-    void setupNormals(const vec3 _n1,const vec3 _n2,const vec3 _n3){
-        n1 = _n1;
-        n2 = _n2;
-        n3 = _n3;
+    void setupNormals(const vec3 n1,const vec3 n2,const vec3 n3){
+        this->n1 = n1;
+        this->n2 = n2;
+        this->n3 = n3;
     }
 
 
