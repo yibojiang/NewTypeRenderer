@@ -38,6 +38,7 @@ void RenderThread::run()
         int width = tracer->width;
         int height = tracer->height;
         QImage image(width, height, QImage::Format_RGB32);
+        QImage postImage(width, height, QImage::Format_RGB32);
         mutex.unlock();
 
         double indirectTime = 0;
@@ -77,11 +78,16 @@ void RenderThread::run()
 
             for (int i = 0; i < height; ++i){
                 for (int j = 0; j < width; ++j){
-                    vec3 c = colorArray[i*width+j] * 255;
-                    image.setPixel(j, i, qRgb(c.x, c.y, c.z));
+                    vec3 raw = colorArray[i*width+j];
+                    image.setPixel(j, i, qRgb(raw.x*255, raw.y*255, raw.z*255));
+                    double r = pow(raw.x, 1.0/2.2);
+                    double g = pow(raw.y, 1.0/2.2);
+                    double b = pow(raw.z, 1.0/2.2);
+                    postImage.setPixel(j, i, qRgb(r*255, g*255, b*255));
+                    
 
                 }
-                emit renderedImage(indirectTime, s, image); 
+                emit renderedImage(indirectTime, s, image, postImage); 
             }   
             
         }
@@ -249,8 +255,8 @@ Window::Window(QWidget *parent) :
     renderThread.setTracer(tracer);
     renderThread.window = this;
     
-    connect(&renderThread, SIGNAL(renderedImage(double, double, const QImage&)),
-            this, SLOT(updateIndirect(double, double, QImage)));
+    connect(&renderThread, SIGNAL(renderedImage(double, double, const QImage&, const QImage&)),
+            this, SLOT(updateIndirect(double, double, QImage, QImage)));
 
     connect(&renderThread, SIGNAL(renderedImagePostProcess(double, double, const QImage&)),
             this, SLOT(updatePostProcess(double, double, QImage)));
@@ -259,18 +265,20 @@ Window::Window(QWidget *parent) :
     update();
 }
 
-void Window::updatePostProcess(double time, double samples, const QImage &image){
+void Window::updatePostProcess(double time, double, const QImage &image){
 
     status->showMessage("time: " + QString::number(time));
     indirectImage = image;
     postImage = postProcess(indirectImage);
     displayMode = 0;
+    this->renderTime = time;
     update();
 }
 
-void Window::updateIndirect(double time, double samples, const QImage &image){
-    indirectImage = image;
-    postImage = image;
+void Window::updateIndirect(double time, double, const QImage &image, const QImage &postImage){
+    this->indirectImage = image;
+    this->postImage = postImage;
+    this->renderTime = time;
     displayMode = 0;
     update();
 }
@@ -319,8 +327,9 @@ void Window::openScene(){
 
 void Window::saveImage(){
 
+    std::string saveName = "image_" + std::to_string(tracer->curSamples) + "_" + std::to_string(int(this->renderTime)) + 's' ;
     QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
-                           "~/",
+                           saveName.c_str(),
                            tr("Images (*.png)"));
     QFile file(fileName);
     file.open(QIODevice::WriteOnly);
@@ -389,6 +398,8 @@ void Window::render(){
     timer->start(16);
 
 }
+
+
 
 QImage Window::postProcess(const QImage &image){
     // qDebug()<<"postProcess";

@@ -49,6 +49,7 @@ public:
         if (!loaded)
             return (vec3(1,0,1));
 
+        // return vec3(uv.x, uv.y, 0);
         int x = (fmod(fabs(uv.x), 1.0)) * (width-1);
         int y = (1.-fmod(fabs(uv.y), 1.0)) * (height-1);
         double r, g, b;

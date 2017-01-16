@@ -153,22 +153,47 @@ public:
     vec3 center;
 
     
+    mat4 m;
 
-
-    Sphere(double _rad, vec3 _e, vec3 _c, Refl_t _refl){
+    Sphere(double _rad){
         rad = _rad;
-        emission = _e;
-        color = _c;
-        refl = _refl;
         isMesh = false;
+        center = vec3(0,0,0);
     }
 
-    Sphere(double _rad, vec3 _pos) { rad = _rad; center = _pos; }
+    Sphere(double rad, vec3 pos) { this->rad = rad; this->center = pos; }
     double intersect(Ray &r) { // returns distance, 0 if nohit
         vec3 op = center - r.origin; // Solve t^2*d.d + 2*t*(o-p).d + (o-p).(o-p)-R^2 = 0
         double t, eps = 1e-4, b = op.dot(r.dir), det = b * b - op.dot(op) + rad * rad;
-        if (det < 0) return 0; else det = sqrt(det);
-        return (t = b - det) > eps ? t : ((t = b + det) > eps ? t : 0);
+        if (det < 0){
+            return 0;  
+        }  
+        else{
+            det = sqrt(det);  
+        } 
+
+        t = (t = b - det) > eps ? t : ((t = b + det) > eps ? t : 0);
+
+        // double t0 = b + det;
+        // double t1 = b - det;
+        // if (t0 > t1) std::swap(t0, t1); 
+
+        // if (t0 < 0) { 
+        //     t0 = t1; // if t0 is negative, let's use t1 instead 
+        //     if (t0 < 0) return 0; // both t0 and t1 are negative 
+        // } 
+ 
+        // t = t0;
+        
+        vec3 hit = r.origin + r.dir * t;
+        vec3 sp = (this->m * (hit - center)).normalized();
+
+        // float u = (atan( sp.x, sp.z)) / ( 2.0 * M_PI ) + 0.5;
+        // float v = asin( sp.y ) / M_PI + 0.5;
+        r.uv = vec2((atan2(sp.x, sp.z)) / ( 2.0 * M_PI ) + 0.5, 
+                    asin(sp.y) / M_PI + 0.5) ;
+        // return (t = b - det) > eps ? t : ((t = b + det) > eps ? t : 0);
+        return t;
     }
 
     vec3 getNormal(const vec3 &_pos) const{
@@ -176,6 +201,7 @@ public:
     }
 
     void updateTransformMatrix(const mat4& m){
+        this->m = m;
         vec4 pos = vec4(center, 1);
         pos = m * pos;
         center = vec3(pos.x, pos.y, pos.z);

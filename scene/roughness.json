@@ -1,21 +1,18 @@
 {   
     "materials": {
-        "metal":{
-            "diffuse": 1,
+        "glass":{
+            "diffuse": 0,
             "specular": 0,
-            "refract": 0,
-            "roughness": 0,
+            "refract": 1.0,
             "emission": 0,
             "ior": 1.5,
             "diffuseColor": [1,1,1],
             "reflectColor": [1,1,1],
-            "emissionColor": [0,0,0],
-            "diffuseTexture": "/textures/yibojiang.png"
+            "emissionColor": [0,0,0]
         },
         "red":{
             "diffuse": 1,
             "specular": 0,
-            "roughness": 0,
             "emission": 0,
             "ior": 0,
             "diffuseColor": [0.75,0.25,0.25],
@@ -36,16 +33,25 @@
         },
     
         "floor":{
-            "diffuse": 0.3,
-            "specular": 0.7,
-            "roughness": 0.3,
+            "diffuse": 1,
+            "specular": 0,
+            "roughness": 0.0,
             "emission": 0,
             "ior": 0,
             "diffuseColor": [0.75,0.75,0.75],
             "reflectColor": [0,0,0],
             "emissionColor": [0,0,0]    
         },
-
+        "back":{
+            "diffuse": 1,
+            "specular": 0,
+            "roughness": 0.0,
+            "emission": 0,
+            "ior": 0,
+            "diffuseColor": [0.25,0.75,0.25],
+            "reflectColor": [0,0,0],
+            "emissionColor": [0,0,0]    
+        },
         "light":{
             "diffuse": 0,
             "specular": 0,
@@ -67,7 +73,7 @@
             "position": [
                 50,
                 50,
-                -140
+                300
             ],
             "target": [
                 50,
@@ -138,9 +144,9 @@
                     0
                 ],
                 "scale": [
-                    0.1,
+                    1,
                     300,
-                    500
+                    800
                 ],
                 "rotation": [
                     0,
@@ -161,9 +167,9 @@
                     0
                 ],
                 "scale": [
-                    0.1,
+                    1,
                     300,
-                    500
+                    800
                 ],
                 "rotation": [
                     0,
@@ -181,7 +187,7 @@
                 "position": [
                     50,
                     50,
-                    -150
+                    -100
                 ],
                 "scale": [
                     300,
@@ -204,7 +210,7 @@
                 "position": [
                     0,
                     100,
-                    100
+                    400
                 ],
                 "scale": [
                     300,
@@ -219,7 +225,7 @@
             },
 
             "type": "box",
-            "material": "floor"
+            "material": "back"
         },
         {
             "name": "light",
@@ -248,25 +254,47 @@
             "name": "metal",
             "transform": {
                 "position": [
-                    50,
-                    50,
+                    30,
+                    30,
                     50
                 ],
                 "scale": [
-                    8,
-                    8,
-                    8
+                    25,
+                    25,
+                    25
                 ],
                 "rotation": [
-                    180,
-                    0,
-                    90
+                    40,
+                    80,
+                    0
                 ]
             },
 
-            "type": "mesh",
-            "path": "plane.obj",
-            "material": "metal"
+            "type": "sphere",
+            "material": "glass"
+        },
+        {
+            "name": "ball",
+            "transform": {
+                "position": [
+                    80,
+                    30,
+                    -10
+                ],
+                "scale": [
+                    10,
+                    10,
+                    10
+                ],
+                "rotation": [
+                    40,
+                    80,
+                    0
+                ]
+            },
+
+            "type": "sphere",
+            "material": "red"
         }
         
     ]

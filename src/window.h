@@ -36,7 +36,7 @@ public:
     void render();
 
 signals:
-    void renderedImage(double time, double samples, const QImage &image);
+    void renderedImage(double time, double samples, const QImage &image, const QImage &postImage);
     void renderedImagePostProcess(double, double, const QImage &image);
 
 
@@ -58,7 +58,7 @@ class Window : public QMainWindow
 {
  Q_OBJECT
  public:
-    
+    double renderTime;
     explicit Window(QWidget *parent = 0);
     void paintEvent(QPaintEvent *event);
     int width;
@@ -89,7 +89,7 @@ private slots:
     void changeResolutionHeight(const QString&);
     void gammaState(int state);
     QImage postProcess(const QImage&);
-    void updateIndirect(double, double, const QImage&);
+    void updateIndirect(double, double, const QImage&, const QImage&);
     void updatePostProcess(double, double, const QImage&);
     void camRotateY(int);
     void updateProgress();

@@ -96,11 +96,11 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
     }
 
     double randomVal = drand48();
-    if (randomVal < obj->getMaterial()->refract){
+    if (randomVal <= obj->getMaterial()->refract){
         vec3 refl = ray.dir - N * 2 * N.dot(ray.dir);
-        float roughness = obj->getMaterial()->roughness;
-        vec3 rnddir = roughness > 0 ? vec3(drand48()-0.5, drand48()-0.5, drand48()-0.5).normalize()*roughness : vec3(0);
-        refl = refl + rnddir * roughness;
+        // float roughness = obj->getMaterial()->roughness;
+        // vec3 rnddir = roughness > 0 ? vec3(drand48()-0.5, drand48()-0.5, drand48()-0.5).normalize()*roughness : vec3(0);
+        // refl = refl + rnddir * roughness;
 
 
         Ray reflRay(hit, refl); // Ideal dielectric REFRACTION
@@ -117,24 +117,33 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
                             tracing(reflRay, depth) * RP : tracing(refrRay, depth) * TP) :
                             tracing(reflRay, depth) * Re + tracing(refrRay, depth) * Tr);
     }
-    else if (randomVal < obj->getMaterial()->refract + obj->getMaterial()->specular ){
-        float roughness = obj->getMaterial()->roughness;
+    else if (randomVal <= obj->getMaterial()->refract + obj->getMaterial()->specular ){
+
         vec3 refl = ray.dir - N * 2 * N.dot(ray.dir);
-        vec3 rnddir = roughness > 0 ? vec3(drand48()-0.5, drand48()-0.5, drand48()-0.5).normalize()*roughness : vec3(0);
-        refl = refl + rnddir;
+        // float roughness = obj->getMaterial()->roughness;
+        // vec3 rnddir = roughness > 0 ? vec3(drand48()-0.5, drand48()-0.5, drand48()-0.5).normalize()*roughness : vec3(0);
+        // refl = refl + rnddir;
+
         Ray reflRay(hit, refl);
         return obj->getMaterial()->getEmission() + f * tracing(reflRay, depth);
     }
     else{
-        double r1 = 2 * M_PI * drand48(); // random angle
-        double r2 = drand48(); // random distance from sphere center
+        double r1 = 2 * M_PI * drand48(); // random ø angle
+        double r2 = drand48(); // random distance from sphere center cos θ
         double r2s = sqrt(r2);
         vec3 w = N;
         vec3 u = ((fabs(w.x) > 0.1 ? vec3(0, 1, 0) : vec3(1, 0, 0)).cross(w)).normalize();
         vec3 v = w.cross(u);  
+        // cos weighted estimator
         vec3 d = (u * cos(r1) * r2s + v * sin(r1) * r2s + w * sqrt(1 - r2)).normalize();
 
+
         Ray reflRay(hit, d);
+
+        // float roughness = obj->getMaterial()->diffuseRoughness;
+        // vec3 rnddir = roughness > 0 ? vec3(drand48()-0.5, drand48()-0.5, drand48()-0.5).normalize()*roughness : vec3(0);
+        // d = d + rnddir;
+
         // Explicit light sample. Only support for sphere light
         #ifdef EXPLICIT_LIGHT_SAMPLE
         vec3 e;
@@ -222,7 +231,7 @@ void Raytracer::setupScene(const std::string& scenePath){
                 
             }
             else if (ptype == "sphere"){
-                obj = (Object*)new Sphere(1.0, vec3(), vec3(1, 1, 1), DIFF);
+                obj = (Object*)new Sphere(1.0);
             }
             else if (ptype == "mesh"){
                 Mesh *mesh = new Mesh();
@@ -255,6 +264,10 @@ void Raytracer::setupScene(const std::string& scenePath){
                 
                 if (mat.HasMember("roughness")){
                    material->roughness = mat["roughness"].GetFloat();
+                }
+
+                if (mat.HasMember("diffuseRoughness")){
+                   material->diffuseRoughness = mat["diffuseRoughness"].GetFloat();
                 }
                 
                 if (mat.HasMember("emission")){
@@ -400,12 +413,12 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
 
                 vec3 ld = (pointLig - hit).normalize();
                 directColor = f * fmax(ld.dot(N), 0);
-
+                // directColor = f;
                 Ray shadowRay(hit, ld);
                 Intersection shadow = bvh.intersect(shadowRay);
                 double distToLight = (pointLig - hit).length();
                 if (shadow.object && shadow.t <= distToLight){
-                    // directColor = directColor * clamp(3.8 * shadow.t/(distToLight), 0.0, 1.0); 
+                    directColor = directColor * clamp(3.8 * shadow.t/(distToLight), 0.0, 1.0); 
                     // directColor = vec3();
                 }
                 directColor = directColor + ambColor;
@@ -441,6 +454,7 @@ void Raytracer::renderIndirectProgressive(vec3 *colorArray, bool& abort, bool& r
             color = colorArray[i*width+j];
             r = vec3();
             
+            // super sample
             for (int sy = 0; sy < 2; ++sy) { // 2x2 subpixel rows
                 for (int sx = 0; sx < 2; ++sx) { // 2x2 subpixel cols
                     if (abort){
@@ -502,7 +516,6 @@ void Raytracer::renderIndirect(double &time, QImage &image) {
                         vec3 rd = scene.ca * (vec3(u, v, scene.near)).normalize();
                         Ray primiaryRay(scene.ro, rd);
                         r = r + tracing(primiaryRay, 0) * (1.0 / samps);
-
                     }
                     color = color + vec3(clamp(r.x), clamp(r.y), clamp(r.z)) * .25;
                     

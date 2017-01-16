@@ -21,6 +21,8 @@ public:
     float diffuse;
     float specular;
     float refract;
+
+    float diffuseRoughness;
     float roughness;
     float emission;
     float ior;
