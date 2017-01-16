@@ -19,8 +19,6 @@
             "reflectColor": [0,0,0],
             "emissionColor": [0,0,0]
         },
-            
-        
         "blue":{
             "diffuse": 1,
             "specular": 0,
@@ -42,6 +40,16 @@
             "reflectColor": [0,0,0],
             "emissionColor": [0,0,0]    
         },
+        "floor":{
+            "diffuse": 0.2,
+            "specular": 0.8,
+            "roughness": 0.0,
+            "emission": 0,
+            "ior": 0,
+            "diffuseColor": [0.25,0.25,0.25],
+            "reflectColor": [0,0,0],
+            "emissionColor": [0,0,0]    
+        },
         "back":{
             "diffuse": 1,
             "specular": 0,
@@ -56,12 +64,15 @@
             "diffuse": 0,
             "specular": 0,
             "roughness": 0,
-            "emission": 1,
+            "emission": 300,
             "ior": 0,
             "diffuseColor": [0,0,0],
             "reflectColor": [0,0,0],
-            "emissionColor": [400,400,400]
+            "emissionColor": [1,1,1]
 
+        },
+        "envlight":{
+            "lightTexture": "/textures/earth.png"
         }
     
 
@@ -71,13 +82,13 @@
         "name": "camera",
         "transform": {
             "position": [
-                50,
-                50,
-                300
+                0,
+                40,
+                250
             ],
             "target": [
-                50,
-                99,
+                0,
+                55,
                 50
             ],
             "up": [
@@ -99,9 +110,32 @@
                     0
                 ],
                 "scale": [
-                    500,
+                    400,
                     0.1,
-                    300
+                    400
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "box",
+            "material": "floor"
+        },
+        {
+            "name": "back",
+            "transform": {
+                "position": [
+                    0,
+                    250,
+                    -150
+                ],
+                "scale": [
+                    600,
+                    600,
+                    0.1
                 ],
                 "rotation": [
                     0,
@@ -117,14 +151,14 @@
             "name": "light",
             "transform": {
                 "position": [
-                    50,
-                    180,
-                    -10
+                    0,
+                    120,
+                    200
                 ],
                 "scale": [
-                    10,
-                    10,
-                    10
+                    6,
+                    6,
+                    6
                 ],
                 "rotation": [
                     0,
@@ -137,26 +171,26 @@
             "material": "light"
         },
         {
-            "name": "sponza",
+            "name": "lucy",
             "transform": {
                 "position": [
-                    50,
                     0,
-                    200
+                    0,
+                    50
                 ],
                 "scale": [
-                    40,
-                    40,
-                    40
+                    500,
+                    500,
+                    500
                 ],
                 "rotation": [
                     0,
-                    -90,
+                    0,
                     0
                 ]
             },
             "type": "mesh",
-            "path": "sponza.obj",
+            "path": "lucy.obj",
             "material": "white"
         }
         

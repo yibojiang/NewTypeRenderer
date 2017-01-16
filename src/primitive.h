@@ -21,10 +21,6 @@ enum Refl_t { DIFF, SPEC, REFR };  // material types, used in radiance()
 
 class Object {
 protected:
-
-    vec3 emission;
-    vec3 color;
-    Refl_t refl; // reflection type (DIFFuse, SPECular, REFRactive)
     Extents bounds;
     Material *material;
 
@@ -41,40 +37,6 @@ public:
         return M_PI;
     }
 
-    virtual vec3 getDiffuse() const{
-        return color;
-    }
-
-    virtual void setMaterial(std::string refl){
-        if (refl == "DIFF"){
-            this->refl = DIFF;    
-        }
-        else if (refl == "REFR"){
-            this->refl = REFR; 
-        }
-        else if (refl == "SPEC"){
-            this->refl = SPEC; 
-        }
-        
-    }
-
-    // virtual void setMaterial(Refl_t refl){
-    //     this->refl = refl;
-    // }
-
-    virtual void setDiffuseColor(vec3 diff){
-        this->color = diff;
-    }
-
-    virtual void setEmissionColor(vec3 emission){
-        this->emission = emission;
-    }
-
-    
-
-    // Refl_t getMaterial() const{
-    //     return refl;
-    // }
 
     virtual void setMaterial(Material* material){
         this->material = material;
@@ -86,13 +48,6 @@ public:
 
     virtual vec3 getCentriod() const{ return vec3(); }
 
-    // virtual vec3 getEmission() const{
-    //     return emission;
-    // }
-
-    virtual Refl_t getReflectionType() const{
-        return refl;
-    }
 
     virtual void updateTransformMatrix(const mat4&){}
 
@@ -112,16 +67,12 @@ private:
 public:
     
     double off;
-    Plane(vec3 _nor, double _off, vec3 _e, vec3 _c, Refl_t _refl){
+    Plane(vec3 _nor, double _off){
         normal = _nor.normalize();
         off = _off;
-        emission = _e;
-        color = _c;
-        refl = _refl;
         isMesh = false;
     }
 
-    Plane(vec3 _nor, double _off) { off = _off; normal = _nor; }
     double intersect(Ray &r) {
         return (-r.origin.dot(normal) - off) / (normal).dot(r.dir);
     }
@@ -239,14 +190,8 @@ public:
     vec3 size;
     vec3 normals[3];
 
-    Box(const vec3 &_size, vec3 _e, vec3 _c, Refl_t _refl) { 
+    Box(const vec3 &_size){ 
         size = _size;
-        
-
-        emission = _e;
-        color = _c;
-        refl = _refl;
-
         normals[0] = vec3(1, 0, 0);
         normals[1] = vec3(0, 1, 0);
         normals[2] = vec3(0, 0, 1);
@@ -411,10 +356,7 @@ public:
     vec3 p1, p2, p3;
 
 
-    Triangle(vec3 _p1, vec3 _p2, vec3 _p3, vec3 _e=vec3(0,0,0), vec3 _c=vec3(1,1,1), Refl_t _refl=DIFF) : p1(_p1), p2(_p2), p3(_p3) {
-        emission = _e;
-        color = _c;
-        refl = _refl;
+    Triangle(vec3 _p1, vec3 _p2, vec3 _p3) : p1(_p1), p2(_p2), p3(_p3) {
         u = p2 - p1;
         v = p3 - p1;
         normal = u.cross(v).normalize();              // cross product

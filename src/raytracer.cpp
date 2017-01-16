@@ -86,6 +86,10 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
     
     double p = 0.1;
     
+    // if (depth > 10){
+    //     return obj->getMaterial()->getEmission() * E;    
+    // }
+
     if (++depth > 5 || p<eps) {
         if (drand48() < p){
             f = f * (1 / p); 
@@ -227,7 +231,7 @@ void Raytracer::setupScene(const std::string& scenePath){
             std::string ptype = primitives[i]["type"].GetString();
 
             if (ptype == "box"){
-                obj = (Object*)new Box(vec3(1, 1, 1),       vec3(), vec3(.15, .15, .15), DIFF);
+                obj = (Object*)new Box(vec3(1, 1, 1));
                 
             }
             else if (ptype == "sphere"){
@@ -256,8 +260,10 @@ void Raytracer::setupScene(const std::string& scenePath){
             if (materials.HasMember(materialName.c_str())){
                 // qDebug() << materialName.c_str() << "found";
                 rapidjson::Value& mat = materials[materialName.c_str()];
-                material->diffuse = mat["diffuse"].GetFloat();
-
+                if (mat.HasMember("diffuse")){
+                   material->diffuse = mat["diffuse"].GetFloat();
+                
+                }
                 if (mat.HasMember("specular")){
                     material->specular = mat["specular"].GetFloat();
                 }
@@ -316,7 +322,6 @@ void Raytracer::setupScene(const std::string& scenePath){
 
             obj->name = primitives[i]["name"].GetString();
             // obj->setMaterial(material.GetString());
-            
             // obj->setDiffuseColor(vec3(color[0].GetFloat(), color[1].GetFloat(), color[2].GetFloat()));
             // obj->setEmissionColor(vec3(emission[0].GetFloat(), emission[1].GetFloat(), emission[2].GetFloat()));
 
@@ -336,7 +341,7 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     samples = _samples;    
 
     QString path = QDir::currentPath();
-    std::string name = "/scene/roughness.json";
+    std::string name = "/scene/lucy.json";
     std::string fullpath = path.toUtf8().constData() + name;
 
     setupScene(fullpath);

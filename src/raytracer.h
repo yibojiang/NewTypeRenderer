@@ -56,7 +56,6 @@ public:
         for (uint32_t i = 0; i < mesh->faces.size(); ++i) {
             Triangle *triangle = new Triangle(mesh->faces[i]->v1, mesh->faces[i]->v2, mesh->faces[i]->v3);
             triangle->setMaterial(mesh->getMaterial());
-            triangle->setDiffuseColor(mesh->getDiffuse());
             triangle->name = mesh->name + '_' + std::to_string(i);
             triangle->setUVs(mesh->faces[i]->uv1, mesh->faces[i]->uv2, mesh->faces[i]->uv3);
             add((Object*)triangle);
