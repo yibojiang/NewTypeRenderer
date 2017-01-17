@@ -71,7 +71,27 @@ inline double clamp(double x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
 vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
     // Intersection intersection = scene.intersect(ray);
     Intersection intersection = bvh.intersect(ray);
-    if (!intersection.object) return vec3(0);
+    if (!intersection.object){
+
+        if (scene.hasHdri){
+            // hdri  
+            HDRImage hdri = scene.hdri;
+            // float u = (atan( sp.x, sp.z)) / ( 2.0 * M_PI ) + 0.5;
+            // float v = asin( sp.y ) / M_PI + 0.5;
+            double u = atan2(ray.dir.x, ray.dir.z) / ( 2.0 * M_PI ) + 0.5;
+            double v = asin(ray.dir.y) / M_PI + 0.5;
+            int hdrx = u* (hdri.width-1);
+            int hdry = v* (hdri.height-1);
+            double r = hdri.colors[hdry*hdri.width*3 + hdrx*3];
+            double g = hdri.colors[hdry*hdri.width*3 + hdrx*3 + 1];
+            double b = hdri.colors[hdry*hdri.width*3 + hdrx*3 + 2];
+            return vec3(r,g,b) * scene.envLightIntense;    
+        }
+        else{
+            return vec3();
+        }
+        
+    }
     Object *obj = intersection.object;
     vec3 hit = ray.origin + ray.dir * intersection.t;
 
@@ -80,6 +100,7 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
 
 
     vec3 f = obj->getMaterial()->getDiffuseColor(ray.uv);
+    vec3 reflectColor = obj->getMaterial()->getReflectColor(ray.uv);
 
     // Russian roulette: starting at depth 5, each recursive step will stop with a probability of p.
     // double p = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // max refl
@@ -129,7 +150,7 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
         // refl = refl + rnddir;
 
         Ray reflRay(hit, refl);
-        return obj->getMaterial()->getEmission() + f * tracing(reflRay, depth);
+        return obj->getMaterial()->getEmission() + reflectColor * tracing(reflRay, depth);
     }
     else{
         double r1 = 2 * M_PI * drand48(); // random ø angle
@@ -192,6 +213,7 @@ void Raytracer::unloadScene(){
 }
 
 void Raytracer::setupScene(const std::string& scenePath){
+    this->scenePath = scenePath;
     ObjLoader loader;
     std::ifstream t(scenePath);
     std::string json((std::istreambuf_iterator<char>(t)),
@@ -220,7 +242,12 @@ void Raytracer::setupScene(const std::string& scenePath){
         scene.ca = setCamera(scene.ro, scene.ta, scene.up);
     }
 
-
+    if (document.HasMember("envlight")){
+        rapidjson::Value& envLight = document["envlight"];
+        // scene.envLight =         
+        scene.LoadHdri(envLight["hdri"].GetString());
+        scene.envLightIntense = envLight["intense"].GetFloat();
+    }
     if (document.HasMember("primitives")){
 
         rapidjson::Value& primitives = document["primitives"];
@@ -341,9 +368,8 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     samples = _samples;    
 
     QString path = QDir::currentPath();
-    std::string name = "/scene/lucy.json";
+    std::string name = "/scene/hdri.json";
     std::string fullpath = path.toUtf8().constData() + name;
-
     setupScene(fullpath);
     
 }

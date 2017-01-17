@@ -20,7 +20,7 @@
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
-
+#include "HDRLoader.h"
 
 
 #define WIREFRAME_ON
@@ -43,10 +43,21 @@ public:
     Transform *root;
     std::vector<Object*> objects;
     std::vector<Object*> lights;
+    HDRImage hdri;
+    double envLightIntense;
+    bool hasHdri;
     Scene(){
         // root = new Transform();
-
+        envLightIntense = 1.0;
     }
+
+    void LoadHdri(std::string name){
+        QString path = QDir::currentPath();
+        // std::string name = "/textures/env.hdr";
+        std::string fullpath = path.toUtf8().constData() + name;
+        hasHdri = HDRLoader::load(fullpath.c_str(), hdri);
+    }
+
     void add(Object* object) {
         objects.push_back(object);
     }
@@ -135,6 +146,7 @@ public:
     int samples;
     double progress;
     bool isRendering;
+    std::string scenePath;
 
     Raytracer(unsigned width, unsigned height,int _samples);
     ~Raytracer();

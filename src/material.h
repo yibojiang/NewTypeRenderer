@@ -55,6 +55,10 @@ public:
         return diffuseColor;
     }
 
+    vec3 getReflectColor(const vec2&){
+        return reflectColor;
+    }
+
     vec3 getEmission(){
         return  emissionColor;
     }

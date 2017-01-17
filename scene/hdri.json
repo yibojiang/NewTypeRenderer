@@ -1,0 +1,213 @@
+{   
+    "envlight":{
+        "intense": 4,
+        "hdri": "/textures/env.hdr"
+    },
+    "materials": {
+        "metal":{
+            "diffuse": 0,
+            "specular": 1,
+            "refract": 0,
+            "diffuseRoughness": 0,
+            "roughness": 0,
+            "emission": 0,
+            "ior": 1.5,
+            "diffuseColor": [0.75,0.25,0.15],
+            "reflectColor": [1,1,1],
+            "emissionColor": [0,0,0]
+            
+        },
+        "red":{
+            "diffuse": 0,
+            "specular": 0,
+            "refract": 1,
+            "roughness": 0,
+            "emission": 0,
+            "ior": 1.5,
+            "diffuseColor": [1,1,1],
+            "reflectColor": [0,0,0],
+            "emissionColor": [0,0,0]
+        },
+            
+        
+        "blue":{
+            "diffuse": 1,
+            "specular": 0,
+            "roughness": 0,
+            "emission": 0,
+            "ior": 0,
+            "diffuseColor": [0.25,0.25,0.75],
+            "reflectColor": [1,1,1],
+            "emissionColor": [0,0,0],
+            "diffuseTexture": "/textures/earth.png"
+        },
+    
+        "floor":{
+            "diffuse": 1,
+            "specular": 0,
+            "roughness": 0.3,
+            "emission": 0,
+            "ior": 0,
+            "diffuseColor": [0.2,0.2,0.2],
+            "reflectColor": [0.05,0.05,0.05],
+            "emissionColor": [0,0,0],
+            "diffuseTexture": "/textures/dirt.png"
+        },
+
+        "light":{
+            "diffuse": 0,
+            "specular": 0,
+            "roughness": 0,
+            "emission": 300,
+            "ior": 0,
+            "diffuseColor": [0,0,0],
+            "reflectColor": [0,0,0],
+            "emissionColor": [1,1,1]
+
+        }
+    },
+    "camera": 
+    {
+        "name": "camera",
+        "transform": {
+            "position": [
+                50,
+                130,
+                300
+            ],
+            "target": [
+                50,
+                40,
+                50
+            ],
+            "up": [
+                0,
+                1,
+                0
+            ]
+        },
+        "fov": 60
+    },
+    "primitives": [
+        {
+            "name": "light",
+            "transform": {
+                "position": [
+                    65,
+                    150,
+                    100
+                ],
+                "scale": [
+                    10,
+                    10,
+                    10
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "sphere",
+            "material": "light"
+        },
+        {
+            "name": "metal",
+            "transform": {
+                "position": [
+                    50,
+                    30,
+                    50
+                ],
+                "scale": [
+                    30,
+                    30,
+                    30
+                ],
+                "rotation": [
+                    40,
+                    80,
+                    0
+                ]
+            },
+
+            "type": "sphere",
+            "path": "plane.obj",
+            "material": "metal"
+        },
+        {
+            "name": "red",
+            "transform": {
+                "position": [
+                    -20,
+                    30,
+                    50
+                ],
+                "scale": [
+                    30,
+                    30,
+                    30
+                ],
+                "rotation": [
+                    40,
+                    80,
+                    0
+                ]
+            },
+
+            "type": "sphere",
+            "material": "red"
+        },
+        {
+            "name": "blue",
+            "transform": {
+                "position": [
+                    120,
+                    30,
+                    50
+                ],
+                "scale": [
+                    30,
+                    30,
+                    30
+                ],
+                "rotation": [
+                    40,
+                    80,
+                    0
+                ]
+            },
+
+            "type": "sphere",
+            "material": "blue"
+        },
+        {
+            "name": "floor",
+            "transform": {
+                "position": [
+                    50,
+                    0,
+                    100
+                ],
+                "scale": [
+                    180,
+                    1,
+                    100
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "mesh",
+            "material": "floor",
+            "path":"plane.obj",
+            "color": [1, 1, 1],
+            "emission": [0, 0, 0]
+        }
+        
+    ]
+}
