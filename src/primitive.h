@@ -52,7 +52,7 @@ public:
     virtual void updateTransformMatrix(const mat4&){}
 
     virtual void computebounds(){}
-
+    
     Extents getBounds(){
         return bounds;
     }

@@ -47,7 +47,7 @@ public:
     vec3 boundMin;
     vec3 boundMax;
 
-    Object *object;
+    // Object *object;
     Extents extents;
     
     void addObject(Object *);

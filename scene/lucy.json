@@ -129,12 +129,12 @@
             "transform": {
                 "position": [
                     0,
-                    250,
+                    0,
                     -150
                 ],
                 "scale": [
-                    600,
-                    600,
+                    400,
+                    400,
                     0.1
                 ],
                 "rotation": [
@@ -146,6 +146,52 @@
 
             "type": "box",
             "material": "floor"
+        },
+        {
+            "name": "left",
+            "transform": {
+                "position": [
+                    -100,
+                    0,
+                    0
+                ],
+                "scale": [
+                    0.1,
+                    400,
+                    400
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "box",
+            "material": "red"
+        },
+        {
+            "name": "right",
+            "transform": {
+                "position": [
+                    100,
+                    0,
+                    0
+                ],
+                "scale": [
+                    0.1,
+                    400,
+                    400
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "box",
+            "material": "blue"
         },
         {
             "name": "light",
@@ -171,7 +217,7 @@
             "material": "light"
         },
         {
-            "name": "lucy",
+            "name": "cube",
             "transform": {
                 "position": [
                     0,
@@ -179,9 +225,9 @@
                     50
                 ],
                 "scale": [
-                    500,
-                    500,
-                    500
+                    400,
+                    400,
+                    400
                 ],
                 "rotation": [
                     0,
