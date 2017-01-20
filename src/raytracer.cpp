@@ -85,7 +85,13 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
             double r = hdri.colors[hdry*hdri.width*3 + hdrx*3];
             double g = hdri.colors[hdry*hdri.width*3 + hdrx*3 + 1];
             double b = hdri.colors[hdry*hdri.width*3 + hdrx*3 + 2];
-            return vec3(r,g,b) * scene.envLightIntense;    
+            r = pow(r, 0.44);
+            g = pow(g, 0.44);    
+            b = pow(b, 0.44);
+            r = scene.envLightIntense * pow(r, scene.envLightExp);
+            g = scene.envLightIntense * pow(g, scene.envLightExp);
+            b = scene.envLightIntense * pow(b, scene.envLightExp);
+            return vec3(r,g,b);
         }
         else{
             return vec3();
@@ -103,21 +109,26 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
     vec3 reflectColor = obj->getMaterial()->getReflectColor(ray.uv);
 
     // Russian roulette: starting at depth 5, each recursive step will stop with a probability of p.
-    // double p = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // max refl
+    double p = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // max refl
+    // double p = 0.1;
     
-    double p = 0.1;
-    
-    // if (depth > 10){
-    //     return obj->getMaterial()->getEmission() * E;    
+    // if (++depth > 5 || p<eps) {
+    //     if (drand48() < p){
+    //         f = f * (1 / p); 
+    //     } 
+    //     else{
+    //         return obj->getMaterial()->getEmission() * E;    
+    //     } 
     // }
 
-    if (++depth > 5 || p<eps) {
-        if (drand48() < p){
-            f = f * (1 / p); 
-        } 
-        else{
-            return obj->getMaterial()->getEmission() * E;    
-        } 
+    // Russian roulette termination.
+    if (++depth>5){
+        if (drand48()<p*0.9) { // Multiply by 0.9 to avoid infinite loop with colours of 1.0
+            f=f*(0.9/p);
+        }
+        else {
+            return obj->getMaterial()->getEmission() * E;
+        }
     }
 
     double randomVal = drand48();
@@ -142,7 +153,7 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
                             tracing(reflRay, depth) * RP : tracing(refrRay, depth) * TP) :
                             tracing(reflRay, depth) * Re + tracing(refrRay, depth) * Tr);
     }
-    else if (randomVal <= obj->getMaterial()->refract + obj->getMaterial()->specular ){
+    else if (randomVal <= obj->getMaterial()->refract + obj->getMaterial()->reflection ){
 
         vec3 refl = ray.dir - N * 2 * N.dot(ray.dir);
         // float roughness = obj->getMaterial()->roughness;
@@ -164,10 +175,6 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
 
 
         Ray reflRay(hit, d);
-
-        // float roughness = obj->getMaterial()->diffuseRoughness;
-        // vec3 rnddir = roughness > 0 ? vec3(drand48()-0.5, drand48()-0.5, drand48()-0.5).normalize()*roughness : vec3(0);
-        // d = d + rnddir;
 
         // Explicit light sample. Only support for sphere light
         #ifdef EXPLICIT_LIGHT_SAMPLE
@@ -231,8 +238,9 @@ void Raytracer::setupScene(const std::string& scenePath){
 
     scene.root = new Transform();
     if (document.HasMember("camera")){
-        scene.fov = document["camera"]["fov"].GetFloat()*M_PI/180;
-        scene.near = 2.0f/tan(scene.fov*0.5f);
+        rapidjson::Value& camera = document["camera"];
+        scene.fov = camera["fov"].GetFloat()*M_PI/180;
+        scene.near = 1.0f/tan(scene.fov*0.5f);
         const rapidjson::Value& position = document["camera"]["transform"]["position"];
         const rapidjson::Value& target = document["camera"]["transform"]["target"];
         const rapidjson::Value& up = document["camera"]["transform"]["up"];
@@ -240,13 +248,34 @@ void Raytracer::setupScene(const std::string& scenePath){
         scene.ta = vec3(target[0].GetFloat(), target[1].GetFloat(), target[2].GetFloat());
         scene.up = vec3(up[0].GetFloat(), up[1].GetFloat(), up[2].GetFloat()); 
         scene.ca = setCamera(scene.ro, scene.ta, scene.up);
+
+        if (camera.HasMember("focusOn")){
+            scene.focusOn = camera["focusOn"].GetBool();
+        }
+        else{
+            scene.focusOn = false;
+        }
+        if (camera.HasMember("focalLength")){
+            scene.focalLength = camera["focalLength"].GetFloat();
+            // qDebug() << "focal length" << scene.focalLength;
+        }
+
+        if (camera.HasMember("aperture")){
+            scene.aperture = camera["aperture"].GetFloat();
+        }
+        else{
+            scene.aperture = 1;
+        }
+
+
+        
     }
 
     if (document.HasMember("envlight")){
         rapidjson::Value& envLight = document["envlight"];
-        // scene.envLight =         
         scene.LoadHdri(envLight["hdri"].GetString());
         scene.envLightIntense = envLight["intense"].GetFloat();
+        scene.envLightExp = envLight["exp"].GetFloat();
     }
     if (document.HasMember("primitives")){
 
@@ -291,8 +320,8 @@ void Raytracer::setupScene(const std::string& scenePath){
                    material->diffuse = mat["diffuse"].GetFloat();
                 
                 }
-                if (mat.HasMember("specular")){
-                    material->specular = mat["specular"].GetFloat();
+                if (mat.HasMember("reflection")){
+                    material->reflection = mat["reflection"].GetFloat();
                 }
                 
                 if (mat.HasMember("roughness")){
@@ -368,7 +397,7 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     samples = _samples;    
 
     QString path = QDir::currentPath();
-    std::string name = "/scene/hdri.json";
+    std::string name = "/scene/dof.json";
     std::string fullpath = path.toUtf8().constData() + name;
     setupScene(fullpath);
     
@@ -414,7 +443,8 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
             double v = (height - i) * 1.0 / height;
             u = (u * 2.0 - 1.0);
             v = (v * 2.0 - 1.0);
-            u = u * width/height;
+            // u = u * width/height;
+            v = v * height/width;
             vec3 rd = ca * (vec3(u, v, near)).normalize();
             normalColor = vec3(0,0,0);
             directColor = vec3(0,0,0);
@@ -475,7 +505,32 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
 void Raytracer::renderIndirectProgressive(vec3 *colorArray, bool& abort, bool& restart, int &samples) {
     vec3 color(0,0,0);
     vec3 r(0,0,0);
+
+    scene.focalLength = (scene.ta - scene.ro).length();
     
+    // ratio of original/new aperture (>1: smaller view angle, <1: larger view angle)
+    double aperture = 0.5135 / scene.aperture;
+    
+    // vec3 dir_norm = vec3(0, -0.042612, -1).normalize();
+    vec3 dir_norm = (scene.ta-scene.ro).normalize();
+    double L = scene.near;
+    double L_new = aperture * L;
+    double L_diff = L - L_new;
+    vec3 cam_shift = dir_norm * (L_diff);
+    if (L_diff < 0){
+        cam_shift = cam_shift * 1.5;
+    }
+
+
+    
+    L = L_new;
+    Ray camera = Ray(scene.ro + cam_shift, dir_norm);
+  // Cross product gets the vector perpendicular to cx and the "gaze" direction
+    vec3 cx = vec3((width*1.0) / height, 0, 0);
+    vec3 rd = (scene.ta - scene.ro).normalize();
+    vec3 cy = (cx.cross(rd)).normalize();
+
+
     #pragma omp parallel for schedule(dynamic, 1) private(color, r)       // OpenMP
     for (unsigned short i = 0; i < height; ++i){
         this -> progress = 100.*i / (height - 1);
@@ -484,8 +539,8 @@ void Raytracer::renderIndirectProgressive(vec3 *colorArray, bool& abort, bool& r
         for (unsigned short j = 0; j < width; ++j){
             color = colorArray[i*width+j];
             r = vec3();
-            
-            // super sample
+
+            // super samples
             for (int sy = 0; sy < 2; ++sy) { // 2x2 subpixel rows
                 for (int sx = 0; sx < 2; ++sx) { // 2x2 subpixel cols
                     if (abort){
@@ -495,15 +550,61 @@ void Raytracer::renderIndirectProgressive(vec3 *colorArray, bool& abort, bool& r
                     if (restart){
                         break;
                     }
+
+                    // tent filter
                     double r1 = 2 * drand48(), dx = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
                     double r2 = 2 * drand48(), dy = r2 < 1 ? sqrt(r2) - 1 : 1 - sqrt(2 - r2);
                     double u = (j + (sy - 0.5 + dy * 0.5) * 0.5  ) / width;
                     double v = (height - (i + (sx - 0.5 + dx * 0.5) * 0.5 ) ) / height;
                     u = (u * 2.0 - 1.0);
                     v = (v * 2.0 - 1.0);
-                    u = u * width/height;
-                    vec3 rd = scene.ca * (vec3(u, v, scene.near)).normalize();
+                    // u = u * width/height;
+                    v = v * height/width;
+
+                    vec3 rd = scene.ca * vec3(u, v, scene.near);
+                    // vec3 rd = dir.normalized();
+                    if (i == 0 && j == 0){
+                        // qDebug() << "dir "<< dir;
+                        qDebug() << "rd "<< rd;
+                        qDebug()<<"camera shift: " << cam_shift;
+                        qDebug()<<"L: " << L;
+                        qDebug()<<"cx: " << cx;
+                        qDebug()<<"cy: " << cy;
+                        // qDebug() << "near" << scene.near * L;
+                    }
+                    // vec3 rd = scene.ca * (vec3(u, v, scene.near)).normalize();
+                    
                     Ray primiaryRay(scene.ro, rd);
+
+                    // If we're actually using depth of field, we need to modify the camera ray to account for that
+                    if (scene.focusOn) {
+                        vec3 fp = (camera.origin + rd * L) + rd.normalized() * scene.focalLength;
+                        // Get a pixel point and new ray rdection to calculate where the rays should intersect
+                        // vec3 del_x = (cx * dx * L / float(width));
+                        // vec3 del_y = (cy * dy * L / float(height));
+                        vec3 del_x = cx * dx * L;
+                        vec3 del_y = cy * dy * L;
+                        vec3 point = camera.origin + rd * L;
+                        point = point + del_x + del_y;
+                        rd = (fp - point).normalize();
+                        primiaryRay = Ray(point, rd);
+                    }
+                    else{
+                        primiaryRay = Ray(scene.ro, rd.normalized());
+                    }
+
+                    // if (scene.focusOn) {
+                    //     vec3 fp = (camera.origin) + rd * scene.focalLength;
+                    //     // Get a pixel point and new ray direction to calculate where the rays should intersect
+                    //     vec3 del_x = cx * dx;
+                    //     vec3 del_y = cy * dy;
+                    //     vec3 point = camera.origin;
+                    //     point = point + del_x + del_y;
+                    //     rd = (fp - point).normalize();
+                    //     primiaryRay = Ray(camera.origin, rd);
+                    // }
+
+                    
                     r = r + tracing(primiaryRay, 0) * 0.25;
                 }
             }
@@ -522,6 +623,7 @@ void Raytracer::renderIndirect(double &time, QImage &image) {
     gettimeofday(&start, NULL);
 
     
+
     int samps = samples / 4;
     isRendering = true;
     vec3 r(0,0,0);
@@ -545,6 +647,7 @@ void Raytracer::renderIndirect(double &time, QImage &image) {
                         v = (v * 2.0 - 1.0);
                         u = u * width/height;
                         vec3 rd = scene.ca * (vec3(u, v, scene.near)).normalize();
+
                         Ray primiaryRay(scene.ro, rd);
                         r = r + tracing(primiaryRay, 0) * (1.0 / samps);
                     }

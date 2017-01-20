@@ -103,11 +103,11 @@ struct mat3{
         cols[2][2] = ww.z;
     }
 
-    vec3 operator*(vec3 &b){
+    friend vec3 operator*(mat3 a, const vec3& b){
         vec3 c;
-        c.x = b.x * cols[0][0] + b.y * cols[0][1] + b.z * cols[0][2];
-        c.y = b.x * cols[1][0] + b.y * cols[1][1] + b.z * cols[1][2];
-        c.z = b.x * cols[2][0] + b.y * cols[2][1] + b.z * cols[2][2];
+        c.x = b.x * a.cols[0][0] + b.y * a.cols[0][1] + b.z * a.cols[0][2];
+        c.y = b.x * a.cols[1][0] + b.y * a.cols[1][1] + b.z * a.cols[1][2];
+        c.z = b.x * a.cols[2][0] + b.y * a.cols[2][1] + b.z * a.cols[2][2];
 
         return c;
     }

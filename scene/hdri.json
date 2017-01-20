@@ -1,38 +1,39 @@
 {   
     "envlight":{
-        "intense": 4,
+        "intense": 1,
+        "exp": 1,
         "hdri": "/textures/env.hdr"
     },
     "materials": {
         "metal":{
             "diffuse": 0,
-            "specular": 1,
+            "reflection": 1,
             "refract": 0,
             "diffuseRoughness": 0,
             "roughness": 0,
             "emission": 0,
             "ior": 1.5,
             "diffuseColor": [0.75,0.25,0.15],
-            "reflectColor": [1,1,1],
+            "reflectColor": [0.75,0.75,0.45],
             "emissionColor": [0,0,0]
             
         },
-        "red":{
+        "glass":{
             "diffuse": 0,
-            "specular": 0,
+            "reflection": 0,
             "refract": 1,
             "roughness": 0,
             "emission": 0,
             "ior": 1.5,
-            "diffuseColor": [1,1,1],
-            "reflectColor": [0,0,0],
+            "diffuseColor": [0.95,0.95,0.95],
+            "reflectColor": [0.75,0.25,0.25],
             "emissionColor": [0,0,0]
         },
             
         
         "blue":{
             "diffuse": 1,
-            "specular": 0,
+            "reflection": 0,
             "roughness": 0,
             "emission": 0,
             "ior": 0,
@@ -43,22 +44,22 @@
         },
     
         "floor":{
-            "diffuse": 1,
-            "specular": 0,
+            "diffuse": 0.5,
+            "reflection": 0.5,
             "roughness": 0.3,
             "emission": 0,
             "ior": 0,
             "diffuseColor": [0.2,0.2,0.2],
             "reflectColor": [0.05,0.05,0.05],
             "emissionColor": [0,0,0],
-            "diffuseTexture": "/textures/dirt.png"
+            "diffuseTexture": "/textures/wood2.png"
         },
 
         "light":{
             "diffuse": 0,
-            "specular": 0,
+            "reflection": 0,
             "roughness": 0,
-            "emission": 300,
+            "emission": 0,
             "ior": 0,
             "diffuseColor": [0,0,0],
             "reflectColor": [0,0,0],
@@ -98,9 +99,9 @@
                     100
                 ],
                 "scale": [
-                    10,
-                    10,
-                    10
+                    0,
+                    0,
+                    0
                 ],
                 "rotation": [
                     0,
@@ -117,37 +118,37 @@
             "transform": {
                 "position": [
                     50,
-                    30,
-                    50
+                    0,
+                    90
                 ],
                 "scale": [
-                    30,
-                    30,
-                    30
+                    550,
+                    550,
+                    550
                 ],
                 "rotation": [
-                    40,
-                    80,
+                    0,
+                    20,
                     0
                 ]
             },
 
-            "type": "sphere",
-            "path": "plane.obj",
+            "type": "mesh",
+            "path": "lucy.obj",
             "material": "metal"
         },
         {
-            "name": "red",
+            "name": "glass",
             "transform": {
                 "position": [
-                    -20,
-                    30,
-                    50
+                    -5,
+                    20,
+                    60
                 ],
                 "scale": [
-                    30,
-                    30,
-                    30
+                    20,
+                    20,
+                    20
                 ],
                 "rotation": [
                     40,
@@ -157,15 +158,15 @@
             },
 
             "type": "sphere",
-            "material": "red"
+            "material": "glass"
         },
         {
             "name": "blue",
             "transform": {
                 "position": [
-                    120,
+                    110,
                     30,
-                    50
+                    40
                 ],
                 "scale": [
                     30,

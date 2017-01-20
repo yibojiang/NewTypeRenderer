@@ -27,6 +27,7 @@
 #define EXPLICIT_LIGHT_SAMPLE
 
 
+
 class Intersection {
     public:
     Intersection() { t = inf; object = nullptr; }
@@ -45,10 +46,13 @@ public:
     std::vector<Object*> lights;
     HDRImage hdri;
     double envLightIntense;
+    double envLightExp;
     bool hasHdri;
     Scene(){
         // root = new Transform();
         envLightIntense = 1.0;
+        envLightExp = 1.0;
+        hasHdri = false;
     }
 
     void LoadHdri(std::string name){
@@ -134,6 +138,10 @@ public:
     vec3 up;
     float fov;
     float near;
+    float focalLength;
+    float focusOn;   
+    float aperture;
+    float focalDistance;
 };
 
 

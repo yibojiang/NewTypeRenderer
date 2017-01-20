@@ -4,22 +4,21 @@
 class Material
 {
 public:
-    Material(const float& diffuse=1, const float& specular=0, const float& refract=0, float roughness=0,
+    Material(const float& diffuse=1, const float& reflection=0, const float& refract=0, float roughness=0,
         float emission=0, float ior=1){
-
         this->diffuse = diffuse;
-        this->specular = specular;
+        this->reflection = reflection;
         this->refract = refract;
         this->roughness = roughness;
         this->emission = emission;
         this->ior = ior;
-        this->energy = this->diffuse + this->specular + this->refract;
+        this->energy = this->diffuse + this->reflection + this->refract;
         this->useDiffuseTexture = false;
     }
     ~Material(){}
 
     float diffuse;
-    float specular;
+    float reflection;
     float refract;
 
     float diffuseRoughness;

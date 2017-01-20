@@ -2,7 +2,7 @@
     "materials": {
         "glass":{
             "diffuse": 0,
-            "specular": 0,
+            "reflection": 0,
             "refract": 1.0,
             "emission": 0,
             "ior": 1.5,
@@ -12,7 +12,7 @@
         },
         "red":{
             "diffuse": 1,
-            "specular": 0,
+            "reflection": 0,
             "emission": 0,
             "ior": 0,
             "diffuseColor": [0.75,0.25,0.25],
@@ -23,7 +23,7 @@
         
         "blue":{
             "diffuse": 1,
-            "specular": 0,
+            "reflection": 0,
             "roughness": 0,
             "emission": 0,
             "ior": 0,
@@ -34,7 +34,7 @@
     
         "floor":{
             "diffuse": 1,
-            "specular": 0,
+            "reflection": 0,
             "roughness": 0.0,
             "emission": 0,
             "ior": 0,
@@ -44,7 +44,7 @@
         },
         "back":{
             "diffuse": 1,
-            "specular": 0,
+            "reflection": 0,
             "roughness": 0.0,
             "emission": 0,
             "ior": 0,
@@ -54,7 +54,7 @@
         },
         "light":{
             "diffuse": 0,
-            "specular": 0,
+            "reflection": 0,
             "roughness": 0,
             "emission": 1,
             "ior": 0,

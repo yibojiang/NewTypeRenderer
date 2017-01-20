@@ -2,7 +2,7 @@
     "materials": {
         "white":{
             "diffuse": 1,
-            "specular": 0,
+            "relection": 0,
             "refract": 0,
             "emission": 0,
             "ior": 1.5,
@@ -12,7 +12,7 @@
         },
         "red":{
             "diffuse": 1,
-            "specular": 0,
+            "relection": 0,
             "emission": 0,
             "ior": 0,
             "diffuseColor": [0.75,0.25,0.25],
@@ -21,7 +21,7 @@
         },
         "blue":{
             "diffuse": 1,
-            "specular": 0,
+            "relection": 0,
             "roughness": 0,
             "emission": 0,
             "ior": 0,
@@ -32,7 +32,7 @@
     
         "green":{
             "diffuse": 1,
-            "specular": 0,
+            "relection": 0,
             "roughness": 0.0,
             "emission": 0,
             "ior": 0,
@@ -42,7 +42,7 @@
         },
         "floor":{
             "diffuse": 0.2,
-            "specular": 0.8,
+            "relection": 0.8,
             "roughness": 0.0,
             "emission": 0,
             "ior": 0,
@@ -52,7 +52,7 @@
         },
         "back":{
             "diffuse": 1,
-            "specular": 0,
+            "relection": 0,
             "roughness": 0.0,
             "emission": 0,
             "ior": 0,
@@ -62,7 +62,7 @@
         },
         "light":{
             "diffuse": 0,
-            "specular": 0,
+            "relection": 0,
             "roughness": 0,
             "emission": 300,
             "ior": 0,
