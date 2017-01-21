@@ -8,6 +8,7 @@ struct Ray {
     vec3 origin;
     vec3 dir;
     vec2 uv;
+    // vec3 normal;
     Ray(vec3 ro) { origin = ro; dir = vec3(1,0,0); }
     Ray(vec3 ro, vec3 rd){ origin = ro; dir = rd; }
 
@@ -354,6 +355,7 @@ private:
 public:
     vec3 normal, u, v;
     vec3 p1, p2, p3;
+    double s,t;
 
 
     Triangle(vec3 _p1, vec3 _p2, vec3 _p3) : p1(_p1), p2(_p2), p3(_p3) {
@@ -382,6 +384,7 @@ public:
     vec3 getNormal(const vec3 &) const{    
         return normal;
         // return n1;
+        // return n1 * (1 - s -t) + n2 * s + n3 * t;
     }
 
     double intersect(Ray &r) { // returns distance, 0 if nohit
@@ -423,7 +426,7 @@ public:
         D = uv * uv - uu * vv;
 
         // get and test parametric coords
-        double s, t;
+        // double s, t;
         s = (uv * wv - vv * wu) / D;
         if (s < 0.0 || s > 1.0)         // I is outside T
             return 0;
@@ -435,6 +438,7 @@ public:
          
         // r.uv = (uv1 * s +  uv2 * (1 - s));
         r.uv = uv1 * (1 - s -t) + uv2 * s + uv3 * t;
+        // r.normal = n1 * (1 - s -t) + n2 * s + n3 * t;
         // r.uv = vec2(drand48(), drand48());
 
         // r.uv.x = fmin(1, r.uv.x);
