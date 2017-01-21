@@ -1,7 +1,6 @@
 # pathtracer
 a Monte Carlo Pathtracer with qt4 GUI in C++.
 
-<img width="800" alt="lucy" src="https://cloud.githubusercontent.com/assets/1669501/21878165/67b63f9c-d85e-11e6-9c23-7b128853fca5.png">
 <img width="800" alt="lucy" src="https://cloud.githubusercontent.com/assets/1669501/22176468/49e8081a-dfd9-11e6-8b30-367d5d227fad.png">
 
 ## Features
