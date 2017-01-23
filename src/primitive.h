@@ -355,7 +355,7 @@ private:
 public:
     vec3 normal, u, v;
     vec3 p1, p2, p3;
-    double s,t;
+    
 
 
     Triangle(vec3 _p1, vec3 _p2, vec3 _p3) : p1(_p1), p2(_p2), p3(_p3) {
@@ -387,21 +387,21 @@ public:
         // return n1 * (1 - s -t) + n2 * s + n3 * t;
     }
 
-    double intersect(Ray &r) { // returns distance, 0 if nohit
-        
+    double intersect(Ray &r) { // returns distance, 0 if nohit        
         // vec3 nl = r.dir.dot(normal) > 0 ? normal : normal * -1;
         // double dist = -r.origin.dot(nl) + center.dot(nl);
         // double tt = dist / r.dir.dot(nl);
-        
+
         if (r.dir.dot(normal) == 0){
             return 0;
         }
 
-        double dn = r.dir.dot(normal);
+        
         if (normal == vec3(0,0,0)){             // triangle is degenerate
             return 0; 
         }
 
+        double dn = r.dir.dot(normal);
         if (fabs(dn) < eps) {     // ray is  parallel to triangle plane
             return 0;
         }
@@ -410,6 +410,7 @@ public:
         double dist = -r.origin.dot(normal) + center.dot(normal);
         double tt = dist / dn;
         vec3 hit = r.origin + r.dir * tt;
+
 
         u = p2 - p1;
         v = p3 - p1;
@@ -426,16 +427,17 @@ public:
         D = uv * uv - uu * vv;
 
         // get and test parametric coords
-        // double s, t;
+        double s, t;
         s = (uv * wv - vv * wu) / D;
-        if (s < 0.0 || s > 1.0)         // I is outside T
+        if (s < 0.0 || s > 1.0){         // I is outside T
             return 0;
+        }
 
         t = (uv * wu - uu * wv) / D;
-        if (t < 0.0 || (s + t) > 1.0)  // I is outside T
+        if (t < 0.0 || (s + t) > 1.0){  // I is outside T
             return 0;
+        }
 
-         
         // r.uv = (uv1 * s +  uv2 * (1 - s));
         r.uv = uv1 * (1 - s -t) + uv2 * s + uv3 * t;
         // r.normal = n1 * (1 - s -t) + n2 * s + n3 * t;
@@ -455,6 +457,10 @@ public:
             double d3 =  -p3.dot(slabN);
             bounds.dnear[i] = fmin(d1, fmin(d2, d3));
             bounds.dfar[i] = fmax(d1, fmax(d2, d3));
+            
+            bounds.dfar[i] += eps;
+            bounds.dnear[i] -= eps;
+        
         }
     }
 

@@ -1,5 +1,9 @@
 {   
-
+    "envlight":{
+        "intense": 0.0,
+        "exp": 1,
+        "hdri": "/textures/Newport_Loft_Ref.hdr"
+    },
     "materials": {
         "metal":{
             "diffuse": 0,
@@ -10,7 +14,7 @@
             "emission": 0,
             "ior": 1.5,
             "diffuseColor": [0.99,0.99,0.99],
-            "reflectColor": [0.55,0.55,0.55],
+            "reflectColor": [0.99,0.99,0.99],
             "emissionColor": [0,0,0]
             
         },
@@ -83,7 +87,7 @@
             "diffuse": 0,
             "reflection": 0,
             "roughness": 0,
-            "emission": 100,
+            "emission": 50,
             "ior": 0,
             "diffuseColor": [0,0,0],
             "reflectColor": [0,0,0],
@@ -121,8 +125,8 @@
             "name": "light",
             "transform": {
                 "position": [
-                    100,
-                    300,
+                    200,
+                    150,
                     100
                 ],
                 "scale": [
@@ -139,30 +143,6 @@
 
             "type": "sphere",
             "material": "light"
-        },
-        {
-            "name": "ring",
-            "transform": {
-                "position": [
-                    50,
-                    0,
-                    100
-                ],
-                "scale": [
-                    30,
-                    30,
-                    30
-                ],
-                "rotation": [
-                    0,
-                    0,
-                    0
-                ]
-            },
-
-            "type": "mesh",
-            "path": "ring2.obj",
-            "material": "glass"
         },
         {
             "name": "floor",
@@ -185,8 +165,32 @@
             },
 
             "type": "mesh",
-            "material": "metal",
+            "material": "wood",
             "path":"plane.obj"
+        },
+        {
+            "name": "ring",
+            "transform": {
+                "position": [
+                    50,
+                    30,
+                    100
+                ],
+                "scale": [
+                    30,
+                    30,
+                    30
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "sphere",
+            "path": "ring2.obj",
+            "material": "glass"
         }
         
     ]

@@ -69,7 +69,7 @@ double Extents::intersect(const Ray &r) const{ // returns distance, 0 if nohit
         return 0;
     }
 
-    if (tmin < 0){
+    if (tmin <= 0){
         return tmax;
     }
     
@@ -522,6 +522,7 @@ Intersection BVH::intersectBVH(const Ray& ray) const{
 
 Intersection BVH::intersect(Ray& ray) const{
     // std::priority_queue<OctreeNode> closeNode;
+    // qDebug() << "BVH::intersect";
     Intersection closestIntersection;
     octree->intersectTest(ray, closestIntersection);
     return closestIntersection;   

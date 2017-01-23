@@ -135,6 +135,7 @@ public:
     mat3 ca;
     vec3 ro;
     vec3 ta;
+    float cameraScale;
     vec3 up;
     float fov;
     float near;
@@ -169,6 +170,8 @@ public:
     unsigned short height;
     void setResolution(const int &width, const int &height);
     void rotateCamera(float, float, float);
+    void moveCamera(float, float);
+    void scaleCamera(float);
     void setupScene(const std::string& scenePath);
     void unloadScene();
 };

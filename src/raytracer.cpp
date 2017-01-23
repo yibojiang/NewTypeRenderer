@@ -71,8 +71,9 @@ inline double clamp(double x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
 vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
     // Intersection intersection = scene.intersect(ray);
     Intersection intersection = bvh.intersect(ray);
+    
+    vec3 ambColor(0,0,0);
     if (!intersection.object){
-
         if (scene.hasHdri){
             // hdri  
             HDRImage hdri = scene.hdri;
@@ -91,30 +92,34 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
             r = scene.envLightIntense * pow(r, scene.envLightExp);
             g = scene.envLightIntense * pow(g, scene.envLightExp);
             b = scene.envLightIntense * pow(b, scene.envLightExp);
-            return vec3(r,g,b);
+            // return vec3(r,g,b);
+            ambColor = vec3(r,g,b);
         }
-        else{
-            return vec3();
-        }
-        
+
+        return ambColor;
     }
     Object *obj = intersection.object;
+    // qDebug() << obj->name.c_str();
     vec3 hit = ray.origin + ray.dir * intersection.t;
 
     vec3 N = obj->getNormal(hit);
     vec3 nl = N.dot(ray.dir) < 0 ? N: N * -1;
-
-
     vec3 f = obj->getMaterial()->getDiffuseColor(ray.uv);
+
     vec3 reflectColor = obj->getMaterial()->getReflectColor(ray.uv);
 
     // Russian roulette: starting at depth 5, each recursive step will stop with a probability of p.
     double p = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // max refl
 
+
+    // if (++depth>3){
+    //     return obj->getMaterial()->getEmission() * E; 
+    // }
     // Russian roulette termination.
+
     if (++depth>5){
-        if (drand48()<p*0.9) { // Multiply by 0.9 to avoid infinite loop with colours of 1.0
-            f=f*(0.9/p);
+        if (drand48()<p) { // Multiply by 0.9 to avoid infinite loop with colours of 1.0
+            f=f*(1.0/p);
         }
         else {
             return obj->getMaterial()->getEmission() * E;
@@ -124,16 +129,12 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
     double randomVal = drand48();
     if (randomVal <= obj->getMaterial()->refract){
         vec3 refl = ray.dir - N * 2 * N.dot(ray.dir);
-        // float roughness = obj->getMaterial()->roughness;
-        // vec3 rnddir = roughness > 0 ? vec3(drand48()-0.5, drand48()-0.5, drand48()-0.5).normalize()*roughness : vec3(0);
-        // refl = refl + rnddir * roughness;
-
-
         Ray reflRay(hit, refl); // Ideal dielectric REFRACTION
         bool into = N.dot(nl) > 0;              // Ray from outside going in?
         double nc = 1, nt = obj->getMaterial()->ior, nnt = into ? nc / nt : nt / nc, ddn = ray.dir.dot(nl), cos2t;
-        if ((cos2t = 1 - nnt * nnt * (1 - ddn * ddn)) < 0) // Total internal reflection
+        if ((cos2t = 1 - nnt * nnt * (1 - ddn * ddn)) < 0){ // Total internal reflection
             return obj->getMaterial()->getEmission() + f * tracing(reflRay, depth);
+        }
         vec3 tdir = (ray.dir * nnt - N * ((into ? 1 : -1) * (ddn * nnt + sqrt(cos2t)))).normalize();
 
         Ray refrRay(hit, tdir);
@@ -146,10 +147,7 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
     else if (randomVal <= obj->getMaterial()->refract + obj->getMaterial()->reflection ){
 
         vec3 refl = ray.dir - N * 2 * N.dot(ray.dir);
-        // float roughness = obj->getMaterial()->roughness;
-        // vec3 rnddir = roughness > 0 ? vec3(drand48()-0.5, drand48()-0.5, drand48()-0.5).normalize()*roughness : vec3(0);
-        // refl = refl + rnddir;
-
+        
         Ray reflRay(hit, refl);
         return obj->getMaterial()->getEmission() + reflectColor * tracing(reflRay, depth);
     }
@@ -157,15 +155,13 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
         double r1 = 2 * M_PI * drand48(); // random ø angle
         double r2 = drand48(); // random distance from sphere center cos θ
         double r2s = sqrt(r2);
-        vec3 w = N;
+        vec3 w = nl;
         vec3 u = ((fabs(w.x) > 0.1 ? vec3(0, 1, 0) : vec3(1, 0, 0)).cross(w)).normalize();
         vec3 v = w.cross(u);  
         // cos weighted estimator
         vec3 d = (u * cos(r1) * r2s + v * sin(r1) * r2s + w * sqrt(1 - r2)).normalize();
 
-
         Ray reflRay(hit, d);
-
         // Sphere Area light sample
         // Explicit light sample. Only support for sphere light
         #ifdef EXPLICIT_LIGHT_SAMPLE
@@ -188,12 +184,15 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
 
             Ray shadowRay(hit, l);
             Intersection shadow = bvh.intersect(shadowRay);
+            // Intersection shadow = scene.intersect(shadowRay);
+            
             
             if (shadow.object && shadow.object == light){
                 double omega = 2 * M_PI * (1 - cos_a_max);
                 e = e + f * M_1_PI * (light->getMaterial()->getEmission() * l.dot(nl) * omega); // 1/pi for brdf
             }
         }
+        // return f;
         return obj->getMaterial()->getEmission() * E + e + f * (tracing(reflRay, depth, 0));
         #else
 
@@ -388,10 +387,30 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     samples = _samples;    
 
     QString path = QDir::currentPath();
-    std::string name = "/scene/caustic.json";
+    std::string name = "/scene/plane.json";
     std::string fullpath = path.toUtf8().constData() + name;
     setupScene(fullpath);
     
+}
+
+void Raytracer::scaleCamera(float scl){
+    scl = fmax(-0.99, scl);
+    scl = -scl;
+    // scene.cameraScale = scene.cameraScale + scl;
+    vec3 dir =  scene.ro - scene.ta;
+    // float scale = dir.length() + scl;
+    // scale = scale + scl;
+    // mat4 m = mat4(scale, 0, 0,   1,
+    //               0, scale, 0,   1,
+    //               0, 0,   scale, 1,
+    //               0, 0,   0,   1);
+    
+    // vec4 ro = m * vec4(scene.ro, 1);
+
+    scene.ro = scene.ta + dir * (1 + scl);
+    // scene.ro = vec3(ro.x, ro.y, ro.z);
+    // scene.ta = vec3(ta.x, ta.y, ta.z);
+    scene.ca = setCamera(scene.ro, scene.ta, scene.up);    
 }
 
 void Raytracer::rotateCamera(float x, float y, float z){
@@ -402,8 +421,26 @@ void Raytracer::rotateCamera(float x, float y, float z){
     scene.ro = vec3(ro.x, ro.y, ro.z);
 
     vec4 ta = m * vec4(scene.ta, 1);
-    scene.ta = vec3(ta.x, ta.y, ta.z);    
-    scene.ca = setCamera(scene.ro, scene.ta, scene.up);    
+    scene.ta = vec3(ta.x, ta.y, ta.z);
+    scene.ca = setCamera(scene.ro, scene.ta, scene.up); 
+}
+
+void Raytracer::moveCamera(float x, float y){
+    // mat4 m = mat4();
+    vec3 move(-x, y, 0);
+    vec3 cw = (scene.ta - scene.ro).normalize();
+    vec3 up = vec3(0,1,0);
+    vec3 cp = up.normalized();
+    vec3 cu = cw.cross(cp).normalized();
+    vec3 cv = cu.cross(cw).normalized();
+    mat3 m = mat3(cu, cv, cw);
+
+    move = m * move;
+    scene.ta = scene.ta + move;
+    scene.ro = scene.ro + move;
+    scene.ca = setCamera(scene.ro, scene.ta, scene.up); 
+    
+
 }
 
 
@@ -499,6 +536,7 @@ void Raytracer::renderIndirectProgressive(vec3 *colorArray, bool& abort, bool& r
 
     scene.focalLength = (scene.ta - scene.ro).length();
     
+    // qDebug() << "Rendering";
     // ratio of original/new aperture (>1: smaller view angle, <1: larger view angle)
     double aperture = 0.5135 / scene.aperture;
     
@@ -512,8 +550,6 @@ void Raytracer::renderIndirectProgressive(vec3 *colorArray, bool& abort, bool& r
         cam_shift = cam_shift * 1.5;
     }
 
-
-    
     L = L_new;
     Ray camera = Ray(scene.ro + cam_shift, dir_norm);
   // Cross product gets the vector perpendicular to cx and the "gaze" direction
@@ -554,15 +590,15 @@ void Raytracer::renderIndirectProgressive(vec3 *colorArray, bool& abort, bool& r
 
                     vec3 rd = scene.ca * vec3(u, v, scene.near);
                     // vec3 rd = dir.normalized();
-                    if (i == 0 && j == 0){
-                        // qDebug() << "dir "<< dir;
-                        qDebug() << "rd "<< rd;
-                        qDebug()<<"camera shift: " << cam_shift;
-                        qDebug()<<"L: " << L;
-                        qDebug()<<"cx: " << cx;
-                        qDebug()<<"cy: " << cy;
-                        // qDebug() << "near" << scene.near * L;
-                    }
+                    // if (i == 0 && j == 0){
+                    //     // qDebug() << "dir "<< dir;
+                    //     qDebug() << "rd "<< rd;
+                    //     qDebug()<<"camera shift: " << cam_shift;
+                    //     qDebug()<<"L: " << L;
+                    //     qDebug()<<"cx: " << cx;
+                    //     qDebug()<<"cy: " << cy;
+                    //     // qDebug() << "near" << scene.near * L;
+                    // }
                     // vec3 rd = scene.ca * (vec3(u, v, scene.near)).normalize();
                     
                     Ray primiaryRay(scene.ro, rd);
@@ -583,18 +619,6 @@ void Raytracer::renderIndirectProgressive(vec3 *colorArray, bool& abort, bool& r
                     else{
                         primiaryRay = Ray(scene.ro, rd.normalized());
                     }
-
-                    // if (scene.focusOn) {
-                    //     vec3 fp = (camera.origin) + rd * scene.focalLength;
-                    //     // Get a pixel point and new ray direction to calculate where the rays should intersect
-                    //     vec3 del_x = cx * dx;
-                    //     vec3 del_y = cy * dy;
-                    //     vec3 point = camera.origin;
-                    //     point = point + del_x + del_y;
-                    //     rd = (fp - point).normalize();
-                    //     primiaryRay = Ray(camera.origin, rd);
-                    // }
-
                     
                     r = r + tracing(primiaryRay, 0) * 0.25;
                 }

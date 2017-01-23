@@ -33,6 +33,8 @@ public:
     ~RenderThread();
     void setTracer(Raytracer *);
     void render();
+    void restartRender();
+    void abortRender();
 
 signals:
     void renderedImage(double time, double samples, const QImage &image, const QImage &postImage);

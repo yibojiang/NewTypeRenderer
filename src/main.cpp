@@ -23,6 +23,14 @@ void RenderThread::setTracer(Raytracer *tracer){
     
 }
 
+void RenderThread::restartRender(){
+    restart = true;
+}
+
+void RenderThread::abortRender(){
+    abort = true;
+}
+
 RenderThread::~RenderThread(){
     mutex.lock();
     abort = true;
@@ -31,8 +39,13 @@ RenderThread::~RenderThread(){
     wait();
 }
 
+
+
 void RenderThread::run()
 {
+    qDebug() << "run";
+    restart = false;
+    abort = false;
     while(!abort) {
         mutex.lock();
         int width = tracer->width;
@@ -135,6 +148,8 @@ Window::Window(QWidget *parent) :
  QMainWindow(parent) {
     width = 800, height = 600;
     resize(width, height);
+
+    setContextMenuPolicy(Qt::NoContextMenu);
 
     setWindowTitle("Render View " + QString::number(width) + "x" + QString::number(height));
     displayMode = 0;
@@ -465,17 +480,19 @@ void Window::paintEvent(QPaintEvent *){
     }
     else if (displayMode == 3){
         painter.drawImage(target, boundingBoxImage, source);   
-        qDebug() << "mode: boundingBoxImage";
+        // qDebug() << "mode: boundingBoxImage";
     }
     
 }
 
 void Window::mousePressEvent(QMouseEvent *event)
 {
+    this->pressPos = event->pos();
     if (event->button() == Qt::LeftButton) {
         // lastPoint = event->pos();
         // scribbling = true;
-        this->pressPos = event->pos();
+        
+
         // qDebug() << "mouse press event";
     }
 }
@@ -487,15 +504,38 @@ void Window::mouseMoveEvent(QMouseEvent *event)
         // qDebug() << QApplication::queryKeyboardModifiers();
         // qDebug() << "mouse move event" << event->pos();
         QPoint dr = event->pos() - this->pressPos;
-        // qDebug() << dr;
-        // tracer->rotateCamera(0, rotateY * 0.02f * M_PI, 0);
-
         tracer->rotateCamera(-dr.y() * 0.01, -dr.x() * 0.01, 0.0);
         double directTime;
         tracer->renderDirect(directTime, directImage, normalImage, boundingBoxImage);
         update();
 
         this->pressPos = event->pos();
+        renderThread.restartRender();
+        
+    }
+
+    if ((event->buttons() & Qt::RightButton) && QApplication::queryKeyboardModifiers() == Qt::AltModifier){
+        QPoint dr = event->pos() - this->pressPos;
+        tracer->scaleCamera(dr.x()*0.01);
+        // qDebug() << "scale" << dr.x() * 0.01;
+        double directTime;
+        tracer->renderDirect(directTime, directImage, normalImage, boundingBoxImage);
+        update();
+        this->pressPos = event->pos();
+        renderThread.restartRender();
+    }
+
+    if(event->buttons() & Qt::MiddleButton && QApplication::queryKeyboardModifiers() == Qt::AltModifier)
+    {
+        QPoint dr = event->pos() - this->pressPos;
+        tracer->moveCamera(dr.x(),dr.y());
+        // qDebug() << "move" << dr.x() * 0.1;
+        double directTime;
+        tracer->renderDirect(directTime, directImage, normalImage, boundingBoxImage);
+        update();
+        this->pressPos = event->pos();
+        renderThread.restartRender();
+        
     }
 }
 
