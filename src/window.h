@@ -1,12 +1,10 @@
-#ifndef WINDOW_H
-#define WINDOW_H
+#pragma once
 
 #include <QWidget>
 #include <QPainter>
 #include <QPushButton>
 #include <QImage>
 #include "raytracer.h"
-
 #include <QMenu>
 #include <QMenuBar>
 #include <QMainWindow>
@@ -21,6 +19,7 @@
 #include <QThread>
 #include <QMutex>
 #include <QWaitCondition>
+#include <QMouseEvent>
 
 
 class Window;
@@ -96,7 +95,11 @@ private slots:
 
 private:
     int displayMode; // 0 - render, 1 - normal
+    QPoint pressPos;
 
+protected:
+    void mousePressEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event);
 };
  
-#endif // WINDOW_H

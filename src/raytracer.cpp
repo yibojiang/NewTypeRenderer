@@ -110,16 +110,6 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
 
     // Russian roulette: starting at depth 5, each recursive step will stop with a probability of p.
     double p = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // max refl
-    // double p = 0.1;
-    
-    // if (++depth > 5 || p<eps) {
-    //     if (drand48() < p){
-    //         f = f * (1 / p); 
-    //     } 
-    //     else{
-    //         return obj->getMaterial()->getEmission() * E;    
-    //     } 
-    // }
 
     // Russian roulette termination.
     if (++depth>5){
@@ -176,6 +166,7 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
 
         Ray reflRay(hit, d);
 
+        // Sphere Area light sample
         // Explicit light sample. Only support for sphere light
         #ifdef EXPLICIT_LIGHT_SAMPLE
         vec3 e;
@@ -397,7 +388,7 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     samples = _samples;    
 
     QString path = QDir::currentPath();
-    std::string name = "/scene/dof.json";
+    std::string name = "/scene/caustic.json";
     std::string fullpath = path.toUtf8().constData() + name;
     setupScene(fullpath);
     

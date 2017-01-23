@@ -1,9 +1,4 @@
 {   
-    "envlight":{
-        "intense": 1,
-        "exp": 1,
-        "hdri": "/textures/Newport_Loft_Ref.hdr"
-    },
     "materials": {
         "metal":{
             "diffuse": 0,
@@ -13,8 +8,8 @@
             "roughness": 0,
             "emission": 0,
             "ior": 1.5,
-            "diffuseColor": [0.75,0.25,0.15],
-            "reflectColor": [0.75,0.75,0.45],
+            "diffuseColor": [0.99,0.99,0.99],
+            "reflectColor": [0.99,0.99,0.99],
             "emissionColor": [0,0,0]
             
         },
@@ -60,8 +55,7 @@
             "emissionColor": [0,0,0],
             "diffuseTexture": "/textures/earth.png"
         },
-    
-        "floor":{
+        "marble":{
             "diffuse": 0.3,
             "reflection": 0.7,
             "roughness": 0,
@@ -72,11 +66,23 @@
             "emissionColor": [0,0,0],
             "diffuseTexture": "/textures/marble.png"
         },
+        "wood":{
+            "diffuse": 0.7,
+            "reflection": 0.3,
+            "roughness": 0,
+            "emission": 0,
+            "ior": 0,
+            "diffuseColor": [1,1,1],
+            "reflectColor": [0.05,0.05,0.05],
+            "emissionColor": [0,0,0],
+            "diffuseTexture": "/textures/wood.png"
+        },
+
         "light":{
             "diffuse": 0,
             "reflection": 0,
             "roughness": 0,
-            "emission": 300,
+            "emission": 500,
             "ior": 0,
             "diffuseColor": [0,0,0],
             "reflectColor": [0,0,0],
@@ -89,14 +95,14 @@
         "name": "camera",
         "transform": {
             "position": [
-                20,
-                60,
+                0,
+                100,
                 320
             ],
             "target": [
-                40,
-                40,
-                120
+                0,
+                0,
+                0
             ],
             "up": [
                 0,
@@ -114,14 +120,14 @@
             "name": "light",
             "transform": {
                 "position": [
-                    65,
-                    150,
-                    100
+                    0,
+                    100,
+                    0
                 ],
                 "scale": [
-                    0,
-                    0,
-                    0
+                    10,
+                    10,
+                    10
                 ],
                 "rotation": [
                     0,
@@ -134,89 +140,17 @@
             "material": "light"
         },
         {
-            "name": "dragon",
+            "name": "ring",
             "transform": {
                 "position": [
-                    50,
                     0,
-                    100
-                ],
-                "scale": [
-                    7,
-                    7,
-                    7
-                ],
-                "rotation": [
                     0,
-                    50,
                     0
-                ]
-            },
-
-            "type": "mesh",
-            "path": "dragon.obj",
-            "material": "metal"
-        },
-        {
-            "name": "glass",
-            "transform": {
-                "position": [
-                    -25,
-                    0,
-                    -10
                 ],
                 "scale": [
-                    0.05,
-                    0.05,
-                    0.05
-                ],
-                "rotation": [
-                    0,
-                    10,
-                    0
-                ]
-            },
-
-            "type": "mesh",
-            "path": "venus.obj",
-            "material": "china"
-        },
-        {
-            "name": "glass",
-            "transform": {
-                "position": [
-                    120,
-                    0,
-                    5
-                ],
-                "scale": [
-                    7,
-                    7,
-                    7
-                ],
-                "rotation": [
-                    0,
-                    100,
-                    0
-                ]
-            },
-
-            "type": "mesh",
-            "path": "dragon.obj",
-            "material": "blue"
-        },
-        {
-            "name": "floor",
-            "transform": {
-                "position": [
-                    50,
-                    0,
-                    100
-                ],
-                "scale": [
-                    380,
                     1,
-                    380
+                    1,
+                    1
                 ],
                 "rotation": [
                     0,
@@ -226,10 +160,10 @@
             },
 
             "type": "mesh",
-            "material": "floor",
-            "path":"plane.obj",
-            "color": [1, 1, 1]
+            "path": "caustic.obj",
+            "material": "metal"
         }
+ 
         
     ]
 }

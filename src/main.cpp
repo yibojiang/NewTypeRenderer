@@ -470,6 +470,44 @@ void Window::paintEvent(QPaintEvent *){
     
 }
 
+void Window::mousePressEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton) {
+        // lastPoint = event->pos();
+        // scribbling = true;
+        this->pressPos = event->pos();
+        // qDebug() << "mouse press event";
+    }
+}
+
+void Window::mouseMoveEvent(QMouseEvent *event)
+{
+    if ((event->buttons() & Qt::LeftButton) && QApplication::queryKeyboardModifiers() == Qt::AltModifier){
+        // drawLineTo(event->pos());
+        // qDebug() << QApplication::queryKeyboardModifiers();
+        // qDebug() << "mouse move event" << event->pos();
+        QPoint dr = event->pos() - this->pressPos;
+        // qDebug() << dr;
+        // tracer->rotateCamera(0, rotateY * 0.02f * M_PI, 0);
+
+        tracer->rotateCamera(-dr.y() * 0.01, -dr.x() * 0.01, 0.0);
+        double directTime;
+        tracer->renderDirect(directTime, directImage, normalImage, boundingBoxImage);
+        update();
+
+        this->pressPos = event->pos();
+    }
+}
+
+void Window::mouseReleaseEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton) {
+        // drawLineTo(event->pos());
+        // scribbling = false;
+        // qDebug() << "mouse release event";
+    }
+}
+
 int main(int argc, char *argv[]) {
 
  
