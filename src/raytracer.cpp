@@ -74,29 +74,32 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
     
     vec3 ambColor(0,0,0);
     if (!intersection.object){
-        if (scene.hasHdri){
-            // hdri  
-            HDRImage hdri = scene.hdri;
-            // float u = (atan( sp.x, sp.z)) / ( 2.0 * M_PI ) + 0.5;
-            // float v = asin( sp.y ) / M_PI + 0.5;
-            double u = atan2(ray.dir.x, ray.dir.z) / ( 2.0 * M_PI ) + 0.5;
-            double v = asin(ray.dir.y) / M_PI + 0.5;
-            int hdrx = u* (hdri.width-1);
-            int hdry = v* (hdri.height-1);
-            double r = hdri.colors[hdry*hdri.width*3 + hdrx*3];
-            double g = hdri.colors[hdry*hdri.width*3 + hdrx*3 + 1];
-            double b = hdri.colors[hdry*hdri.width*3 + hdrx*3 + 2];
-            r = pow(r, 0.44);
-            g = pow(g, 0.44);    
-            b = pow(b, 0.44);
-            r = scene.envLightIntense * pow(r, scene.envLightExp);
-            g = scene.envLightIntense * pow(g, scene.envLightExp);
-            b = scene.envLightIntense * pow(b, scene.envLightExp);
-            // return vec3(r,g,b);
-            ambColor = vec3(r,g,b);
-        }
+        // if (scene.hasHdri){
+        //     // hdri  
+        //     HDRImage hdri = scene.hdri;
+        //     // float u = (atan( sp.x, sp.z)) / ( 2.0 * M_PI ) + 0.5;
+        //     // float v = asin( sp.y ) / M_PI + 0.5;
+        //     double u = atan2(ray.dir.x, ray.dir.z) / ( 2.0 * M_PI ) + 0.5;
+        //     double v = asin(-ray.dir.y) / M_PI + 0.5;
+        //     int hdrx = u* (hdri.width-1);
+        //     int hdry = v* (hdri.height-1);
+        //     double r = hdri.colors[hdry*hdri.width*3 + hdrx*3];
+        //     double g = hdri.colors[hdry*hdri.width*3 + hdrx*3 + 1];
+        //     double b = hdri.colors[hdry*hdri.width*3 + hdrx*3 + 2];
+        //     r = pow(r, 0.44);
+        //     g = pow(g, 0.44);    
+        //     b = pow(b, 0.44);
+        //     r = scene.envLightIntense * pow(r, scene.envLightExp);
+        //     g = scene.envLightIntense * pow(g, scene.envLightExp);
+        //     b = scene.envLightIntense * pow(b, scene.envLightExp);
+        //     // return vec3(r,g,b);
+        //     ambColor = vec3(r,g,b);
+        // }
 
+        // return ambColor;
+        ambColor = getEnvColor(ray.dir);
         return ambColor;
+        
     }
     Object *obj = intersection.object;
     // qDebug() << obj->name.c_str();
@@ -273,27 +276,7 @@ void Raytracer::setupScene(const std::string& scenePath){
         rapidjson::Value& materials = document["materials"];
 
         for (rapidjson::SizeType i = 0; i < primitives.Size(); ++i){
-            Object *obj;
-            std::string ptype = primitives[i]["type"].GetString();
-
-            if (ptype == "box"){
-                obj = (Object*)new Box(vec3(1, 1, 1));
-                
-            }
-            else if (ptype == "sphere"){
-                obj = (Object*)new Sphere(1.0);
-            }
-            else if (ptype == "mesh"){
-                Mesh *mesh = new Mesh();
-                mesh->name = "mesh";
-                std::string modelName = primitives[i]["path"].GetString();
-                loader.loadModel(modelName, mesh);
-                obj = (Object*)mesh;
-            }
-            else{
-                qDebug() << "error";
-                obj = new Object();
-            }
+            
 
             rapidjson::Value& pos = primitives[i]["transform"]["position"];
             rapidjson::Value& scl = primitives[i]["transform"]["scale"];
@@ -308,7 +291,6 @@ void Raytracer::setupScene(const std::string& scenePath){
                 rapidjson::Value& mat = materials[materialName.c_str()];
                 if (mat.HasMember("diffuse")){
                    material->diffuse = mat["diffuse"].GetFloat();
-                
                 }
                 if (mat.HasMember("reflection")){
                     material->reflection = mat["reflection"].GetFloat();
@@ -354,6 +336,29 @@ void Raytracer::setupScene(const std::string& scenePath){
             else{
                 qDebug() << "can't find material " << materialName.c_str();
             }
+
+            Object *obj;
+            std::string ptype = primitives[i]["type"].GetString();
+
+            if (ptype == "box"){
+                obj = (Object*)new Box(vec3(1, 1, 1));
+                
+            }
+            else if (ptype == "sphere"){
+                obj = (Object*)new Sphere(1.0);
+            }
+            else if (ptype == "mesh"){
+                Mesh *mesh = new Mesh();
+                mesh->name = "mesh";
+                std::string modelName = primitives[i]["path"].GetString();
+                loader.loadModel(modelName, mesh, material);
+                obj = (Object*)mesh;
+            }
+            else{
+                qDebug() << "error";
+                obj = new Object();
+            }
+
             obj->setMaterial(material);
 
             
@@ -387,7 +392,7 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     samples = _samples;    
 
     QString path = QDir::currentPath();
-    std::string name = "/scene/plane.json";
+    std::string name = "/scene/dof.json";
     std::string fullpath = path.toUtf8().constData() + name;
     setupScene(fullpath);
     
@@ -443,6 +448,29 @@ void Raytracer::moveCamera(float x, float y){
 
 }
 
+vec3 Raytracer::getEnvColor(const vec3 &dir) const{
+    vec3 ambColor(0,0,0);
+    if (scene.hasHdri){
+        // hdri  
+        HDRImage hdri = scene.hdri;
+        double u = atan2(dir.x, dir.z) / ( 2.0 * M_PI ) + 0.5;
+        double v = asin(-dir.y) / M_PI + 0.5;
+        int hdrx = u* (hdri.width-1);
+        int hdry = v* (hdri.height-1);
+        double r = hdri.colors[hdry*hdri.width*3 + hdrx*3];
+        double g = hdri.colors[hdry*hdri.width*3 + hdrx*3 + 1];
+        double b = hdri.colors[hdry*hdri.width*3 + hdrx*3 + 2];
+        r = pow(r, 0.44);
+        g = pow(g, 0.44);    
+        b = pow(b, 0.44);
+        r = scene.envLightIntense * pow(r, scene.envLightExp);
+        g = scene.envLightIntense * pow(g, scene.envLightExp);
+        b = scene.envLightIntense * pow(b, scene.envLightExp);
+        // return vec3(r,g,b);
+        ambColor = vec3(r,g,b);
+    }
+    return ambColor;
+}
 
 void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalImage, QImage &boundingBoxImage) {
     struct timeval start, end;
@@ -455,6 +483,8 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
     vec3 boundingBoxColor;
     vec3 ambColor(0.15, 0.15, 0.15);
 
+
+    // vec3 ambColor(0,0,0);
     // vec3 lig = vec3(-1, -3, -1.5).normalize();
     vec3 pointLig(50 , 78, 60);
 
@@ -464,7 +494,7 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
         break;
     }
 
-    #pragma omp parallel for schedule(dynamic, 1)  private(directColor, normalColor, boundingBoxColor)    // OpenMP
+    #pragma omp parallel for schedule(dynamic, 1)  private(directColor, normalColor, boundingBoxColor, ambColor)    // OpenMP
     for (unsigned short i = 0; i < height; ++i){
         for (unsigned short j = 0; j < width; ++j){
             double u = j * 1.0 / width;
@@ -491,9 +521,10 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
 
             
             Intersection intersection = bvh.intersect(ray);
+            ambColor = getEnvColor(ray.dir);
             if (intersection.object) {
                 Object *obj = intersection.object;
-                vec3 f = obj->getMaterial()->getDiffuseColor(ray.uv);
+                // vec3 f = obj->getMaterial()->getDiffuseColor(ray.uv);
                 vec3 hit = ro + rd * intersection.t;
                 vec3 N = obj->getNormal(hit);
                 // N = ray.dir.dot(N) < 0 ? N : -N;
@@ -501,8 +532,12 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
                 // normalColor = obj->c * 255;
 
                 vec3 ld = (pointLig - hit).normalize();
-                directColor = f * fmax(ld.dot(N), 0);
-                // directColor = f;
+
+                vec3 diffuseColor =  obj->getMaterial()->getDiffuseColor(ray.uv) * fmax(ld.dot(N), 0) * obj->getMaterial()->diffuse;
+                
+                vec3 reflect = ray.dir.reflect(N);
+                vec3 specularColor = obj->getMaterial()->getReflectColor(ray.uv) * this->getEnvColor(reflect) * pow(fmax(reflect.dot(ld), 0), 10) * obj->getMaterial()->reflection;
+                
                 Ray shadowRay(hit, ld);
                 Intersection shadow = bvh.intersect(shadowRay);
                 double distToLight = (pointLig - hit).length();
@@ -510,9 +545,12 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
                     directColor = directColor * clamp(3.8 * shadow.t/(distToLight), 0.0, 1.0); 
                     // directColor = vec3();
                 }
-                directColor = directColor + ambColor;
-                
+                directColor = diffuseColor + specularColor;
             }
+            else{
+                directColor = ambColor;
+            }
+            // directColor = directColor + ambColor;
 
             boundingBoxColor = boundingBoxColor * 255;
             directColor = directColor * 255;

@@ -461,8 +461,6 @@ void OctreeNode::intersectTestWireframe(const Ray &r, Intersection &intersection
         intersection.t = t;
     }
 
-
-
     if (!this->isLeaf){
         for (int i = 0; i < 8; ++i){
             if (this->children[i]){

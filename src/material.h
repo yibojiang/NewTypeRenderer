@@ -32,9 +32,15 @@ public:
     vec3 reflectColor;
     vec3 emissionColor;
     bool useDiffuseTexture;
+    bool useBumpTexture;
 
     Texture diffuseTexture;
     Texture bumpTexture;
+
+    void setBumpTexture(const std::string& name){
+        useBumpTexture = true;
+        bumpTexture.loadImage(name);
+    }
 
     void setEmission(vec3 emissionColor){
         this->emissionColor = emissionColor * this->emission;
@@ -48,7 +54,7 @@ public:
 
     vec3 getDiffuseColor(const vec2& uv){
         if (useDiffuseTexture){
-            return diffuseTexture.getColor3(uv);
+            return this->diffuseColor * diffuseTexture.getColor3(uv);
         }
       
         return diffuseColor;

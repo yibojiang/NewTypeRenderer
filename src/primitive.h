@@ -349,18 +349,23 @@ public:
 class Triangle : public Object{
 private:
     
-    vec3 n1, n2, n3;
-    vec2 uv1, uv2, uv3;
+    
+    
 
 public:
+    vec2 uv1, uv2, uv3;
+    vec3 n1, n2, n3;
     vec3 normal, u, v;
     vec3 p1, p2, p3;
     
 
-
-    Triangle(vec3 _p1, vec3 _p2, vec3 _p3) : p1(_p1), p2(_p2), p3(_p3) {
-        u = p2 - p1;
-        v = p3 - p1;
+    // Triangle(){}
+    Triangle(vec3 p1, vec3 p2, vec3 p3){
+        this->p1 = p1;
+        this->p2 = p2;
+        this->p3 = p3;
+        u = this->p2 - this->p1;
+        v = this->p3 - this->p1;
         normal = u.cross(v).normalize();              // cross product
         isMesh = false;
     }
@@ -368,14 +373,24 @@ public:
 
     }
 
-    void setNormals(vec3 _n1, vec3 _n2, vec3 _n3) {
+    void setupVertices(const vec3 p1,const vec3 p2,const vec3 p3){
+        this->p1 = p1;
+        this->p2 = p2;
+        this->p3 = p3;
+        u = this->p2 - this->p1;
+        v = this->p3 - this->p1;
+        normal = u.cross(v).normalize();              // cross product
+        isMesh = false;
+    }
+
+    void setupNormals(vec3 _n1, vec3 _n2, vec3 _n3) {
         // normal = _normal.normalize();
         n1 = _n1.normalize();
         n2 = _n2.normalize();
         n3 = _n3.normalize();
     }
 
-    void setUVs(vec2 uv1, vec2 uv2, vec2 uv3){
+    void setupUVs(vec2 uv1, vec2 uv2, vec2 uv3){
         this->uv1 = uv1;
         this->uv2 = uv2;
         this->uv3 = uv3;
@@ -467,45 +482,68 @@ public:
     vec3 getCentriod() const{
         return (p1 + p2 + p3) / 3.0;
     }
-};
-
-class Face
-{
-
-public:
-    vec3 v1, v2, v3;
-    vec3 n1, n2, n3;
-    vec2 uv1, uv2, uv3;
-
-    void setupUVs(const vec2 uv1,const vec2 uv2,const vec2 uv3){
-        this->uv1 = uv1;
-        this->uv2 = uv2;
-        this->uv3 = uv3;
-        
-    }
-
-    void setupVertices(const vec3 v1,const vec3 v2,const vec3 v3){
-        this->v1 = v1;
-        this->v2 = v2;
-        this->v3 = v3;
-    }
-
-    void setupNormals(const vec3 n1,const vec3 n2,const vec3 n3){
-        this->n1 = n1;
-        this->n2 = n2;
-        this->n3 = n3;
-    }
 
 
-    Face() {};
-    ~Face() {};
+    void updateTransformMatrix(const mat4& m){
+        // qDebug()<<"update mesh matrix";
     
+        vec4 p1(this->p1, 1.0);
+        vec4 p2(this->p2, 1.0);
+        vec4 p3(this->p3, 1.0);
+        // qDebug() << v1 << v2 << v3;
+        p1 = m * p1;
+        p2 = m * p2;
+        p3 = m * p3;
+        // qDebug() << "after: " << p1 << p2 << p3;
+        this->p1 = vec3(p1.x, p1.y, p1.z);
+        this->p2 = vec3(p2.x, p2.y, p2.z);
+        this->p3 = vec3(p3.x, p3.y, p3.z);
+
+        this->n1 = m * this->n1;
+        this->n2 = m * this->n2;
+        this->n3 = m * this->n3;
+    
+    }
 };
+
+// class Face
+// {
+
+// public:
+//     vec3 v1, v2, v3;
+//     vec3 n1, n2, n3;
+//     vec2 uv1, uv2, uv3;
+
+//     void setupUVs(const vec2 uv1,const vec2 uv2,const vec2 uv3){
+//         this->uv1 = uv1;
+//         this->uv2 = uv2;
+//         this->uv3 = uv3;
+        
+//     }
+
+//     void setupVertices(const vec3 v1,const vec3 v2,const vec3 v3){
+//         this->v1 = v1;
+//         this->v2 = v2;
+//         this->v3 = v3;
+//     }
+
+//     void setupNormals(const vec3 n1,const vec3 n2,const vec3 n3){
+//         this->n1 = n1;
+//         this->n2 = n2;
+//         this->n3 = n3;
+//     }
+
+
+//     Face() {};
+//     ~Face() {};
+    
+// };
 
 class Mesh: public Object{
 
 public:
-    std::vector<Face*> faces;
+    // std::vector<Face*> faces;
+    std::vector<Triangle*> faces;
     
     Mesh() {
         isMesh = true;
@@ -520,17 +558,23 @@ public:
     void updateTransformMatrix(const mat4& m){
         // qDebug()<<"update mesh matrix";
         for (uint32_t i = 0; i < faces.size(); ++i){
-            vec4 v1(faces[i]->v1, 1.0);
-            vec4 v2(faces[i]->v2, 1.0);
-            vec4 v3(faces[i]->v3, 1.0);
+            vec4 p1(faces[i]->p1, 1.0);
+            vec4 p2(faces[i]->p2, 1.0);
+            vec4 p3(faces[i]->p3, 1.0);
             // qDebug() << v1 << v2 << v3;
-            v1 = m * v1;
-            v2 = m * v2;
-            v3 = m * v3;
-            // qDebug() << "after: " << v1 << v2 << v3;
-            faces[i]->v1 = vec3(v1.x, v1.y, v1.z);
-            faces[i]->v2 = vec3(v2.x, v2.y, v2.z);
-            faces[i]->v3 = vec3(v3.x, v3.y, v3.z);
+            p1 = m * p1;
+            p2 = m * p2;
+            p3 = m * p3;
+
+            
+            // qDebug() << "after: " << p1 << p2 << p3;
+            faces[i]->p1 = vec3(p1.x, p1.y, p1.z);
+            faces[i]->p2 = vec3(p2.x, p2.y, p2.z);
+            faces[i]->p3 = vec3(p3.x, p3.y, p3.z);
+
+            faces[i]->u = faces[i]->p2 - faces[i]->p1;
+            faces[i]->v = faces[i]->p3 - faces[i]->p1;
+            faces[i]->normal = faces[i]->u.cross(faces[i]->v).normalize();
 
             faces[i]->n1 = m * faces[i]->n1;
             faces[i]->n2 = m * faces[i]->n2;
@@ -538,7 +582,7 @@ public:
         }
     }
 
-    void addFace(Face* face){
+    void addFace(Triangle* face){
         faces.push_back(face);
     }
 

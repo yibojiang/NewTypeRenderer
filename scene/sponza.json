@@ -1,4 +1,9 @@
 {   
+    "envlight":{
+        "intense": 1,
+        "exp": 1,
+        "hdri": "/textures/Mono_Lake_B_Ref.hdr"
+    },
     "materials": {
         "white":{
             "diffuse": 1,
@@ -6,7 +11,7 @@
             "refract": 0,
             "emission": 0,
             "ior": 1.5,
-            "diffuseColor": [1,1,1],
+            "diffuseColor": [0.1,0.1,0.1],
             "reflectColor": [1,1,1],
             "emissionColor": [0,0,0]
         },
@@ -19,8 +24,6 @@
             "reflectColor": [0,0,0],
             "emissionColor": [0,0,0]
         },
-            
-        
         "blue":{
             "diffuse": 1,
             "specular": 0,
@@ -56,11 +59,11 @@
             "diffuse": 0,
             "specular": 0,
             "roughness": 0,
-            "emission": 1,
+            "emission": 0,
             "ior": 0,
             "diffuseColor": [0,0,0],
             "reflectColor": [0,0,0],
-            "emissionColor": [400,400,400]
+            "emissionColor": [1,1,1]
 
         }
     
@@ -71,13 +74,13 @@
         "name": "camera",
         "transform": {
             "position": [
+                0,
                 50,
-                50,
-                300
+                500
             ],
             "target": [
-                50,
-                99,
+                0,
+                500,
                 50
             ],
             "up": [
@@ -91,40 +94,17 @@
 
     "primitives": [
         {
-            "name": "floor",
-            "transform": {
-                "position": [
-                    0,
-                    0,
-                    0
-                ],
-                "scale": [
-                    500,
-                    0.1,
-                    300
-                ],
-                "rotation": [
-                    0,
-                    0,
-                    0
-                ]
-            },
-
-            "type": "box",
-            "material": "floor"
-        },
-        {
             "name": "light",
             "transform": {
                 "position": [
-                    50,
-                    180,
+                    0,
+                    450,
                     -10
                 ],
                 "scale": [
-                    10,
-                    10,
-                    10
+                    0,
+                    0,
+                    0
                 ],
                 "rotation": [
                     0,
@@ -140,7 +120,7 @@
             "name": "sponza",
             "transform": {
                 "position": [
-                    50,
+                    0,
                     0,
                     200
                 ],

@@ -41,9 +41,7 @@ RenderThread::~RenderThread(){
 
 
 
-void RenderThread::run()
-{
-    qDebug() << "run";
+void RenderThread::run(){
     restart = false;
     abort = false;
     while(!abort) {

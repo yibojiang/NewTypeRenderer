@@ -32,6 +32,7 @@ struct vec3 {
     vec3 operator-(const vec3 &b) const { return vec3(x - b.x, y - b.y, z - b.z); }
     vec3 operator*(const vec3 &b) const { return vec3(x * b.x, y * b.y, z * b.z ); }
     vec3 operator*(const double b) const { return vec3(x * b, y * b, z * b ); }
+    
     vec3 operator/(const double b) const { return vec3(x / b, y / b, z / b ); }
     bool operator==(const vec3 &b) const { return (x == b.x && y == b.y && z == b.z); }
     vec3 operator-() const { return vec3(-x, -y, -z); }

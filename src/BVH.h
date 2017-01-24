@@ -16,7 +16,6 @@ public:
     Extents();
     ~Extents();
     vec3 getCentriod() const;
-    // Extents group(Extents &);
     vec3 getBoundMin() const;
     vec3 getBoundMax() const;
     void extendBy(Extents &);

@@ -23,11 +23,11 @@
             "reflection": 0,
             "refract": 1,
             "roughness": 0,
-            "emission": 0,
+            "emission": 0.0,
             "ior": 1.5,
             "diffuseColor": [0.95,0.95,0.95],
             "reflectColor": [0.75,0.25,0.25],
-            "emissionColor": [0,0,0]
+            "emissionColor": [1,1,1]
         },
         "red":{
             "diffuse": 1,
@@ -87,7 +87,7 @@
             "diffuse": 0,
             "reflection": 0,
             "roughness": 0,
-            "emission": 50,
+            "emission": 80,
             "ior": 0,
             "diffuseColor": [0,0,0],
             "reflectColor": [0,0,0],
@@ -130,9 +130,9 @@
                     100
                 ],
                 "scale": [
-                    30,
-                    30,
-                    30
+                    20,
+                    20,
+                    20
                 ],
                 "rotation": [
                     0,
@@ -173,24 +173,24 @@
             "transform": {
                 "position": [
                     50,
-                    30,
+                    0,
                     100
                 ],
                 "scale": [
-                    30,
-                    30,
-                    30
+                    10,
+                    10,
+                    10
                 ],
                 "rotation": [
                     0,
-                    0,
+                    60,
                     0
                 ]
             },
 
-            "type": "sphere",
-            "path": "ring2.obj",
-            "material": "glass"
+            "type": "mesh",
+            "path": "dragon.obj",
+            "material": "metal"
         }
         
     ]

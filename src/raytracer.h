@@ -69,11 +69,22 @@ public:
     void addMesh(Mesh* mesh) {
 
         for (uint32_t i = 0; i < mesh->faces.size(); ++i) {
-            Triangle *triangle = new Triangle(mesh->faces[i]->v1, mesh->faces[i]->v2, mesh->faces[i]->v3);
-            triangle->setMaterial(mesh->getMaterial());
+            Triangle *triangle = mesh->faces[i];
+            // triangle->setupVertices(mesh->faces[i]->p1, mesh->faces[i]->p2, mesh->faces[i]->p3);
+            // Triangle *triangle = new Triangle(mesh->faces[i]->v1, mesh->faces[i]->v2, mesh->faces[i]->v3);
+            // Triangle *triangle = new Triangle(mesh->faces[i]->p1, mesh->faces[i]->p2, mesh->faces[i]->p3);
+            // if (mesh->getMaterial()){
+            //     triangle->setMaterial(mesh->getMaterial());    
+            // }
+
+            if (!triangle->getMaterial()){
+                triangle->setMaterial(mesh->getMaterial());       
+            }
+            
             triangle->name = mesh->name + '_' + std::to_string(i);
-            triangle->setUVs(mesh->faces[i]->uv1, mesh->faces[i]->uv2, mesh->faces[i]->uv3);
+            // triangle->setupUVs(mesh->faces[i]->uv1, mesh->faces[i]->uv2, mesh->faces[i]->uv3);
             add((Object*)triangle);
+            
         }
     }
 
@@ -174,5 +185,6 @@ public:
     void scaleCamera(float);
     void setupScene(const std::string& scenePath);
     void unloadScene();
+    vec3 getEnvColor(const vec3 &dir) const;
 };
 
