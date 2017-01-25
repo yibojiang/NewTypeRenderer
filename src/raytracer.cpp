@@ -74,95 +74,75 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
     
     vec3 ambColor(0,0,0);
     if (!intersection.object){
-        // if (scene.hasHdri){
-        //     // hdri  
-        //     HDRImage hdri = scene.hdri;
-        //     // float u = (atan( sp.x, sp.z)) / ( 2.0 * M_PI ) + 0.5;
-        //     // float v = asin( sp.y ) / M_PI + 0.5;
-        //     double u = atan2(ray.dir.x, ray.dir.z) / ( 2.0 * M_PI ) + 0.5;
-        //     double v = asin(-ray.dir.y) / M_PI + 0.5;
-        //     int hdrx = u* (hdri.width-1);
-        //     int hdry = v* (hdri.height-1);
-        //     double r = hdri.colors[hdry*hdri.width*3 + hdrx*3];
-        //     double g = hdri.colors[hdry*hdri.width*3 + hdrx*3 + 1];
-        //     double b = hdri.colors[hdry*hdri.width*3 + hdrx*3 + 2];
-        //     r = pow(r, 0.44);
-        //     g = pow(g, 0.44);    
-        //     b = pow(b, 0.44);
-        //     r = scene.envLightIntense * pow(r, scene.envLightExp);
-        //     g = scene.envLightIntense * pow(g, scene.envLightExp);
-        //     b = scene.envLightIntense * pow(b, scene.envLightExp);
-        //     // return vec3(r,g,b);
-        //     ambColor = vec3(r,g,b);
-        // }
-
-        // return ambColor;
         ambColor = getEnvColor(ray.dir);
         return ambColor;
         
     }
     Object *obj = intersection.object;
-    // qDebug() << obj->name.c_str();
     vec3 hit = ray.origin + ray.dir * intersection.t;
-
     vec3 N = obj->getNormal(hit);
     vec3 nl = N.dot(ray.dir) < 0 ? N: N * -1;
-    vec3 f = obj->getMaterial()->getDiffuseColor(ray.uv);
-
-    vec3 reflectColor = obj->getMaterial()->getReflectColor(ray.uv);
-
-    // Russian roulette: starting at depth 5, each recursive step will stop with a probability of p.
-    double p = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // max refl
-
-
-    // if (++depth>3){
-    //     return obj->getMaterial()->getEmission() * E; 
-    // }
+    
+    vec3 albedo = obj->getMaterial()->getDiffuseColor(ray.uv);
+    double p = albedo.x > albedo.y && albedo.x > albedo.z ? albedo.x : albedo.y > albedo.z ? albedo.y : albedo.z; // max refl
+    // double p = albedo.x > albedo.y && albedo.x > albedo.z ? albedo.x : albedo.y > albedo.z ? albedo.y : albedo.z; // max refl
+    p = p * 0.9;    
     // Russian roulette termination.
 
     if (++depth>5){
         if (drand48()<p) { // Multiply by 0.9 to avoid infinite loop with colours of 1.0
-            f=f*(1.0/p);
+            albedo=albedo*(1.0/p);
         }
         else {
             return obj->getMaterial()->getEmission() * E;
         }
     }
 
-    double randomVal = drand48();
+    double randomVal = drand48() * obj->getMaterial()->energy;
     if (randomVal <= obj->getMaterial()->refract){
+        // vec3 reflectColor = obj->getMaterial()->getReflectColor(ray.uv);
+        vec3 refractColor = obj->getMaterial()->getRefractColor(ray.uv);
+
         vec3 refl = ray.dir - N * 2 * N.dot(ray.dir);
         Ray reflRay(hit, refl); // Ideal dielectric REFRACTION
         bool into = N.dot(nl) > 0;              // Ray from outside going in?
         double nc = 1, nt = obj->getMaterial()->ior, nnt = into ? nc / nt : nt / nc, ddn = ray.dir.dot(nl), cos2t;
         if ((cos2t = 1 - nnt * nnt * (1 - ddn * ddn)) < 0){ // Total internal reflection
-            return obj->getMaterial()->getEmission() + f * tracing(reflRay, depth);
+            return obj->getMaterial()->getEmission() + albedo * tracing(reflRay, depth);
         }
         vec3 tdir = (ray.dir * nnt - N * ((into ? 1 : -1) * (ddn * nnt + sqrt(cos2t)))).normalize();
 
         Ray refrRay(hit, tdir);
-        double a = nt - nc, b = nt + nc, R0 = a * a / (b * b), c = 1 - (into ? -ddn : tdir.dot(N));
-        double Re = R0 + (1 - R0) * c * c * c * c * c, Tr = 1 - Re, P = .25 + .5 * Re, RP = Re / P, TP = Tr / (1 - P);
-        return obj->getMaterial()->getEmission() + f * (depth > 2 ? (drand48() < P ? // Russian roulette
+        double a = nt - nc;
+        double b = nt + nc;
+        double R0 = a * a / (b * b);
+        double c = 1 - (into ? -ddn : tdir.dot(N));
+        double Re = R0 + (1 - R0) * c * c * c * c * c;
+        double Tr = 1 - Re;
+        double P = .25 + .5 * Re;
+        double RP = Re / P;
+        double TP = Tr / (1 - P);
+
+        return obj->getMaterial()->getEmission() + refractColor * (depth > 2 ? (drand48() < P ? // Russian roulette
                             tracing(reflRay, depth) * RP : tracing(refrRay, depth) * TP) :
                             tracing(reflRay, depth) * Re + tracing(refrRay, depth) * Tr);
     }
     else if (randomVal <= obj->getMaterial()->refract + obj->getMaterial()->reflection ){
-
+        vec3 reflectColor = obj->getMaterial()->getReflectColor(ray.uv);
         vec3 refl = ray.dir - N * 2 * N.dot(ray.dir);
         
         Ray reflRay(hit, refl);
         return obj->getMaterial()->getEmission() + reflectColor * tracing(reflRay, depth);
     }
     else{
-        double r1 = 2 * M_PI * drand48(); // random ø angle
-        double r2 = drand48(); // random distance from sphere center cos θ
-        double r2s = sqrt(r2);
+        // cos weighted sample
+        double r1 = 2 * M_PI * drand48(); 
+        double r2 = drand48(); 
+        double rad = sqrt(r2);
         vec3 w = nl;
         vec3 u = ((fabs(w.x) > 0.1 ? vec3(0, 1, 0) : vec3(1, 0, 0)).cross(w)).normalize();
         vec3 v = w.cross(u);  
-        // cos weighted estimator
-        vec3 d = (u * cos(r1) * r2s + v * sin(r1) * r2s + w * sqrt(1 - r2)).normalize();
+        vec3 d = (u * cos(r1) * rad + v * sin(r1) * rad + w * sqrt(1 - r2)).normalize();
 
         Ray reflRay(hit, d);
         // Sphere Area light sample
@@ -192,14 +172,14 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
             
             if (shadow.object && shadow.object == light){
                 double omega = 2 * M_PI * (1 - cos_a_max);
-                e = e + f * M_1_PI * (light->getMaterial()->getEmission() * l.dot(nl) * omega); // 1/pi for brdf
+                e = e + albedo * M_1_PI * (light->getMaterial()->getEmission() * l.dot(nl) * omega); // 1/pi for brdf
             }
         }
         // return f;
-        return obj->getMaterial()->getEmission() * E + e + f * (tracing(reflRay, depth, 0));
+        return obj->getMaterial()->getEmission() * E + e + albedo * (tracing(reflRay, depth, 0));
         #else
 
-        return obj->getMaterial()->getEmission() + f * (tracing(reflRay, depth));
+        return obj->getMaterial()->getEmission() + albedo * (tracing(reflRay, depth));
 
         #endif        
     }
@@ -324,6 +304,10 @@ void Raytracer::setupScene(const std::string& scenePath){
                     material->reflectColor = vec3(mat["reflectColor"][0].GetFloat(), mat["reflectColor"][1].GetFloat(), mat["reflectColor"][2].GetFloat());    
                 }
 
+                if (mat.HasMember("refractColor")){
+                    material->refractColor = vec3(mat["refractColor"][0].GetFloat(), mat["refractColor"][1].GetFloat(), mat["refractColor"][2].GetFloat());    
+                }
+
                 if (mat.HasMember("emissionColor")){
                     material->setEmission(vec3(mat["emissionColor"][0].GetFloat(), mat["emissionColor"][1].GetFloat(), mat["emissionColor"][2].GetFloat()));    
                 }
@@ -392,7 +376,7 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     samples = _samples;    
 
     QString path = QDir::currentPath();
-    std::string name = "/scene/dof.json";
+    std::string name = "/scene/plane.json";
     std::string fullpath = path.toUtf8().constData() + name;
     setupScene(fullpath);
     
@@ -570,7 +554,7 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
 
 void Raytracer::renderIndirectProgressive(vec3 *colorArray, bool& abort, bool& restart, int &samples) {
     vec3 color(0,0,0);
-    vec3 r(0,0,0);
+    vec3 radiance(0,0,0);
 
     scene.focalLength = (scene.ta - scene.ro).length();
     
@@ -596,14 +580,14 @@ void Raytracer::renderIndirectProgressive(vec3 *colorArray, bool& abort, bool& r
     vec3 cy = (cx.cross(rd)).normalize();
 
 
-    #pragma omp parallel for schedule(dynamic, 1) private(color, r)       // OpenMP
+    #pragma omp parallel for schedule(dynamic, 1) private(color, radiance)       // OpenMP
     for (unsigned short i = 0; i < height; ++i){
         this -> progress = 100.*i / (height - 1);
         // qDebug() << "Rendering " << "spp:" << (samples + 1) * 4 << " " << 100.*i / (height - 1) << '%';
 
         for (unsigned short j = 0; j < width; ++j){
             color = colorArray[i*width+j];
-            r = vec3();
+            radiance = vec3();
 
             // super samples
             for (int sy = 0; sy < 2; ++sy) { // 2x2 subpixel rows
@@ -658,18 +642,38 @@ void Raytracer::renderIndirectProgressive(vec3 *colorArray, bool& abort, bool& r
                         primiaryRay = Ray(scene.ro, rd.normalized());
                     }
                     
-                    r = r + tracing(primiaryRay, 0) * 0.25;
+                    radiance = radiance + tracing(primiaryRay, 0) * 0.25;
                 }
             }
 
-            color = (color * samples + vec3(clamp(r.x), clamp(r.y), clamp(r.z))) * (1.0/ (samples + 1));
+            // vec3 laverage += radiance
+            // //Ld - this part of the code is the same for both versions
+            // float lum = dot(rgb, vec3(0.2126f, 0.7152f, 0.0722f));
+            // float L = (scale / averageLum) * radiance;
+            // float Ld = (L * (1.0 + L / lumwhite2)) / (1.0 + L);
+            // //first
+            // vec3 xyY = RGBtoxyY(rgb);
+            // xyY.z *= Ld;
+
+
+            // rgb = xyYtoRGB(xyY);
+            //second
+            // rgb = (rgb / radiance) * Ld;
+            // float luma = dot(color, vec3(0.2126, 0.7152, 0.0722));
+            // float toneMappedLuma = luma / (1.0 + luma);
+            // color *= toneMappedLuma / luma;
+            // color = pow(color, vec3(1.0 / gamma));
+
+            // clamp
+            color = (color * samples + vec3(clamp(radiance.x), clamp(radiance.y), clamp(radiance.z))) * (1.0/ (samples + 1));
             colorArray[i*width+j] = color;
         }
-    }
-
-    
-    
+    }   
 }
+
+// vec3 Raytracer::toneMapping(vec3 &cradiance)const{
+
+// }
 
 void Raytracer::renderIndirect(double &time, QImage &image) {
     struct timeval start, end;

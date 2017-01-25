@@ -186,5 +186,6 @@ public:
     void setupScene(const std::string& scenePath);
     void unloadScene();
     vec3 getEnvColor(const vec3 &dir) const;
+    // vec3 toneMapping(const vec3 &radiance) const;
 };
 

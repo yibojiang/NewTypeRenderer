@@ -48,7 +48,8 @@ public:
         for (unsigned int i=0; i<rawMaterial.size(); i++) {
             std::string texture_path = "/textures/";
             Material *material= new Material();
-
+            material->diffuseColor = vec3(rawMaterial[i].diffuse[0], rawMaterial[i].diffuse[1], rawMaterial[i].diffuse[2]);
+            material->diffuse = 1;
             if (!rawMaterial[i].diffuse_texname.empty()){
                 texture_path = "/textures/";
                 if (rawMaterial[i].diffuse_texname[0] == '/'){
@@ -57,10 +58,10 @@ public:
                 texture_path = texture_path + rawMaterial[i].diffuse_texname;
                 qDebug() << "diffuse texture:" << texture_path.c_str();
 
-                material->diffuse = 1;
-                material->diffuseColor = vec3(rawMaterial[i].diffuse[0], rawMaterial[i].diffuse[1], rawMaterial[i].diffuse[2]);
-                material->setDiffuseTexture(texture_path);
                 
+                
+                // qDebug() << "diffuse color" << material->diffuseColor;
+                material->setDiffuseTexture(texture_path);
             }
             
             if (!rawMaterial[i].specular_texname.empty()){
@@ -93,7 +94,7 @@ public:
             for (size_t f = 0; f < indicesSize; f++) {
 
                 // Triangle vertex coordinates
-                vec3 p1 = vec3(
+                vec3 p1 = vec3( 
                         rawShape[i].mesh.positions[ rawShape[i].mesh.indices[3*f] * 3     ],
                         rawShape[i].mesh.positions[ rawShape[i].mesh.indices[3*f] * 3 + 1 ],
                         rawShape[i].mesh.positions[ rawShape[i].mesh.indices[3*f] * 3 + 2 ]

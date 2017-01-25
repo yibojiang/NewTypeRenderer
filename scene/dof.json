@@ -25,8 +25,7 @@
             "roughness": 0,
             "emission": 0,
             "ior": 1.5,
-            "diffuseColor": [0.95,0.95,0.95],
-            "reflectColor": [0.75,0.25,0.25],
+            "refractorColor": [1,1,1],
             "emissionColor": [0,0,0]
         },
         "red":{

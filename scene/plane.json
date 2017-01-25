@@ -1,6 +1,6 @@
 {   
     "envlight":{
-        "intense": 0.0,
+        "intense": 0.1,
         "exp": 1,
         "hdri": "/textures/Newport_Loft_Ref.hdr"
     },
@@ -27,6 +27,7 @@
             "ior": 1.5,
             "diffuseColor": [0.95,0.95,0.95],
             "reflectColor": [0.75,0.25,0.25],
+            "refractColor": [1,1,1],
             "emissionColor": [1,1,1]
         },
         "red":{
@@ -82,7 +83,16 @@
             "emissionColor": [0,0,0],
             "diffuseTexture": "/textures/wood.png"
         },
-
+        "white":{
+            "diffuse": 1,
+            "reflection": 0,
+            "roughness": 0,
+            "emission": 0,
+            "ior": 0,
+            "diffuseColor": [1,1,1],
+            "reflectColor": [0.05,0.05,0.05],
+            "emissionColor": [0,0,0]
+        },
         "light":{
             "diffuse": 0,
             "reflection": 0,
@@ -101,12 +111,12 @@
         "transform": {
             "position": [
                 0,
-                350,
+                50,
                 300
             ],
             "target": [
                 50,
-                50,
+                40,
                 100
             ],
             "up": [
@@ -118,7 +128,7 @@
         "fov": 40,
         "focusOn": true,
         "focalLength": 150,
-        "aperture": 1
+        "aperture": 0.8
     },
     "primitives": [
         {
@@ -165,7 +175,7 @@
             },
 
             "type": "mesh",
-            "material": "wood",
+            "material": "marble",
             "path":"plane.obj"
         },
         {
@@ -173,24 +183,24 @@
             "transform": {
                 "position": [
                     50,
-                    0,
+                    35,
                     100
                 ],
                 "scale": [
-                    10,
-                    10,
-                    10
+                    11,
+                    11,
+                    11
                 ],
                 "rotation": [
                     0,
-                    60,
+                    30,
                     0
                 ]
             },
 
             "type": "mesh",
-            "path": "dragon.obj",
-            "material": "metal"
+            "path": "baby.obj",
+            "material": "glass"
         }
         
     ]

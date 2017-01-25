@@ -30,6 +30,7 @@ public:
 
     vec3 diffuseColor;
     vec3 reflectColor;
+    vec3 refractColor;
     vec3 emissionColor;
     bool useDiffuseTexture;
     bool useBumpTexture;
@@ -62,6 +63,10 @@ public:
 
     vec3 getReflectColor(const vec2&){
         return reflectColor;
+    }
+
+    vec3 getRefractColor(const vec2&){
+        return refractColor;
     }
 
     vec3 getEmission(){

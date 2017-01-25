@@ -2,7 +2,7 @@
     "envlight":{
         "intense": 1,
         "exp": 1,
-        "hdri": "/textures/Mono_Lake_B_Ref.hdr"
+        "hdri": "/textures/Ridgecrest_Road_Ref.hdr"
     },
     "materials": {
         "white":{
@@ -59,7 +59,7 @@
             "diffuse": 0,
             "specular": 0,
             "roughness": 0,
-            "emission": 0,
+            "emission": 90,
             "ior": 0,
             "diffuseColor": [0,0,0],
             "reflectColor": [0,0,0],
@@ -75,13 +75,13 @@
         "transform": {
             "position": [
                 0,
-                50,
+                10,
                 500
             ],
             "target": [
-                0,
-                500,
-                50
+                -100,
+                250,
+                300
             ],
             "up": [
                 0,
@@ -89,7 +89,7 @@
                 0
             ]
         },
-        "fov": 60
+        "fov": 90
     },
 
     "primitives": [
@@ -98,13 +98,13 @@
             "transform": {
                 "position": [
                     0,
-                    450,
-                    -10
+                    550,
+                    550
                 ],
                 "scale": [
-                    0,
-                    0,
-                    0
+                    20,
+                    20,
+                    20
                 ],
                 "rotation": [
                     0,
