@@ -52,6 +52,16 @@ struct vec3 {
         stream << p.x << ',' << p.y << ',' << p.z;
         return stream;
     }
+
+    vec3& lerp(vec3 &v, float t){
+        // t = clamp(t, 0.0, 1.0);
+        
+        this->x = this->x * (1-t) + (v.x - this->x) * t;
+        this->y = this->y * (1-t) + (v.y - this->y) * t;
+        this->z = this->z * (1-t) + (v.z - this->z) * t;
+        return *this;
+    }
+
 };
 
 struct vec4 {

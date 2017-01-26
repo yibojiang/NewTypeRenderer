@@ -13,6 +13,9 @@ inline mat3 setCamera( vec3 ro, vec3 ta, vec3 up )
   return mat3( cu, cv, cw );
 }
 
+
+
+
 inline vec3 abs(vec3 &v){
     return vec3(fabs(v.x), fabs(v.y), fabs(v.z));
 }
@@ -29,6 +32,33 @@ inline vec3 clamp(vec3 &v, vec3 &a, vec3 &b){
 
 inline vec3 clamp(vec3 &v, vec3 a, vec3 b){ return vec3(clamp(v.x, a.x, b.x), clamp(v.y, a.y, b.y), clamp(v.z, a.z, b.z)); }
 
+
+inline float chiGGX(float v){
+    return v > 0 ? 1 : 0;
+}
+
+inline float saturate(float v){
+    return clamp(v, 0.0, 1.0);
+}
+
+// inline float GGX_Distribution(vec3 n, vec3 h, float alpha){
+//     float NoH = n.dot(h);
+//     float alpha2 = alpha * alpha;
+//     float NoH2 = NoH * NoH;
+//     float den = NoH2 * alpha2 + (1 - NoH2);
+//     return (chiGGX(NoH) * alpha2) / ( M_PI * den * den );
+// }
+
+inline float GGX_PartialGeometryTerm(vec3 v, vec3 n, vec3 h, float alpha){
+    float VoH2 = v.dot(h);
+    float chi = chiGGX( VoH2 / v.dot(n) );
+    VoH2 = VoH2 * VoH2;
+    float tan2 = ( 1 - VoH2 ) / VoH2;
+    return (chi * 2) / ( 1 + sqrt( 1 + alpha * alpha * tan2 ) );
+}
+
+
+
 inline void ons(const vec3& v1, vec3& v2, vec3& v3) {
     if (fabs(v1.x) > fabs(v1.y)) {
         // project to the y = 0 plane and construct a normalized orthogonal vector in this plane
@@ -41,6 +71,12 @@ inline void ons(const vec3& v1, vec3& v2, vec3& v3) {
     }
     v3 = v1.cross(v2);
 }
+
+inline vec3 Fresnel_Schlick(float cosT, vec3 F0){
+  return F0 + (vec3(1,1,1)-F0) * pow( 1 - cosT, 5);
+}
+
+
 
 inline double fract(double f){
     return f = f-(long)f;
@@ -86,19 +122,19 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
     vec3 albedo = obj->getMaterial()->getDiffuseColor(ray.uv);
     double p = albedo.x > albedo.y && albedo.x > albedo.z ? albedo.x : albedo.y > albedo.z ? albedo.y : albedo.z; // max refl
     // double p = albedo.x > albedo.y && albedo.x > albedo.z ? albedo.x : albedo.y > albedo.z ? albedo.y : albedo.z; // max refl
-    p = p * 0.9;    
+    
     // Russian roulette termination.
 
     if (++depth>5){
-        if (drand48()<p) { // Multiply by 0.9 to avoid infinite loop with colours of 1.0
-            albedo=albedo*(1.0/p);
+        if (drand48()<p*0.9) { // Multiply by 0.9 to avoid infinite loop with colours of 1.0
+            albedo=albedo*(0.9/p);
         }
         else {
             return obj->getMaterial()->getEmission() * E;
         }
     }
 
-    double randomVal = drand48() * obj->getMaterial()->energy;
+    double randomVal = drand48();
     if (randomVal <= obj->getMaterial()->refract){
         // vec3 reflectColor = obj->getMaterial()->getReflectColor(ray.uv);
         vec3 refractColor = obj->getMaterial()->getRefractColor(ray.uv);
@@ -128,11 +164,93 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
                             tracing(reflRay, depth) * Re + tracing(refrRay, depth) * Tr);
     }
     else if (randomVal <= obj->getMaterial()->refract + obj->getMaterial()->reflection ){
+        #ifdef COOK_TORRANCE
         vec3 reflectColor = obj->getMaterial()->getReflectColor(ray.uv);
-        vec3 refl = ray.dir - N * 2 * N.dot(ray.dir);
+        float roughness = obj->getMaterial()->roughness;
         
+        vec3 viewVector = -ray.dir.normalize();      
+        vec3 refl = ray.dir.reflect(N).normalize();  
+
+        float rand1 = drand48();
+        // Important sample
+        float tan_theta = roughness * sqrt(rand1/(1 - rand1));
+        float theta = atan(tan_theta);
+        float sin_theta = sin(theta);
+        
+        float phi = 2 * M_PI * drand48();
+        float x = sin_theta * cos(phi);
+        float y = cos(theta);
+        float z = sin(phi) * sin_theta;
+        
+        vec3 w = refl.normalize();
+        vec3 u = ((fabs(w.x) > 0.1 ? vec3(0, 1, 0) : vec3(1, 0, 0)).cross(w)).normalize();
+        vec3 v = w.cross(u).normalize();  
+        
+        vec3 sampleVector( 
+        x * u.x + y * w.x + z * v.x, 
+        x * u.y + y * w.y + z * v.y, 
+        x * u.z + y * w.z + z * v.z); 
+        sampleVector.normalize();
+        
+        vec3 halfVector = (sampleVector + viewVector).normalize();
+        
+
+        Ray reflRay(hit, sampleVector);
+        
+        
+        // float NdotV = saturate(N.dot(viewVector));
+        // float NdotH = saturate(halfVector.dot(N));
+        // float NdotL = saturate(sampleVector.dot(N));
+        // float VdotH = saturate(viewVector.dot(halfVector));
+        // float LdotH = saturate(sampleVector.dot(halfVector));
+
+
+        float cosT = N.dot(sampleVector);
+        float sinT = sqrt( 1.0 - cosT * cosT);
+
+        // return vec3(sinT,sinT,sinT);
+        // Calculate fresnel
+        vec3 F0 = obj->getMaterial()->F0;
+        // F0 = vec3(1,1,1) * 0.1;
+        vec3 fresnel = Fresnel_Schlick(viewVector.dot(halfVector), F0);
+        
+        // // Geometry term
+        float geometry = GGX_PartialGeometryTerm(viewVector, N, halfVector, roughness)
+         * GGX_PartialGeometryTerm(sampleVector, N, halfVector, roughness);
+
+        // return vec3(geometry,geometry,geometry);
+         // return fresnel;
+        // Calculate the Cook-Torrance denominator
+        float denominator =  saturate( 4 * ( fabs(N.dot(viewVector)) * fabs(N.dot(halfVector)) + 0.05) );
+
+
+        // kS += fresnel;
+        // Accumulate the radiance
+        
+        // vec3 reflectColor = vec3(1,1,1);
+        
+        
+        // float test = saturate(denominator);
+
+        // if (test >0 ){
+        //     return vec3(0,1,0);
+        // }
+        // else if (test <0 ){
+        //     return vec3(1,0,0);   
+        // }
+        // else{
+        //     return vec3(0,0,1);      
+        // }
+        return obj->getMaterial()->getEmission() + fresnel * geometry/denominator/sinT * tracing(reflRay, depth);
+        
+        // return obj->getMaterial()->getEmission() + reflectColor * tracing(reflRay, depth);
+        #else
+        vec3 reflectColor = obj->getMaterial()->getReflectColor(ray.uv);
+        reflectColor = vec3(1,1,1);
+        vec3 refl = ray.dir - N * 2 * N.dot(ray.dir);
         Ray reflRay(hit, refl);
         return obj->getMaterial()->getEmission() + reflectColor * tracing(reflRay, depth);
+        #endif
     }
     else{
         // cos weighted sample
@@ -272,12 +390,21 @@ void Raytracer::setupScene(const std::string& scenePath){
                 if (mat.HasMember("diffuse")){
                    material->diffuse = mat["diffuse"].GetFloat();
                 }
+
+                if (mat.HasMember("specular")){
+                    material->specular = mat["specular"].GetFloat();
+                }
+                
                 if (mat.HasMember("reflection")){
                     material->reflection = mat["reflection"].GetFloat();
                 }
                 
                 if (mat.HasMember("roughness")){
                    material->roughness = mat["roughness"].GetFloat();
+                }
+
+                if (mat.HasMember("metallic")){
+                   material->metallic = mat["metallic"].GetFloat();
                 }
 
                 if (mat.HasMember("diffuseRoughness")){
@@ -376,7 +503,7 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     samples = _samples;    
 
     QString path = QDir::currentPath();
-    std::string name = "/scene/plane.json";
+    std::string name = "/scene/roughness.json";
     std::string fullpath = path.toUtf8().constData() + name;
     setupScene(fullpath);
     

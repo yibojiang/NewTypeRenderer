@@ -25,6 +25,7 @@
 
 #define WIREFRAME_ON
 #define EXPLICIT_LIGHT_SAMPLE
+#define COOK_TORRANCE
 
 
 
