@@ -33,7 +33,7 @@ inline vec3 clamp(vec3 &v, vec3 &a, vec3 &b){
 inline vec3 clamp(vec3 &v, vec3 a, vec3 b){ return vec3(clamp(v.x, a.x, b.x), clamp(v.y, a.y, b.y), clamp(v.z, a.z, b.z)); }
 
 
-inline float chiGGX(float v){
+inline int chiGGX(float v){
     return v > 0 ? 1 : 0;
 }
 
@@ -52,6 +52,9 @@ inline float saturate(float v){
 inline float GGX_PartialGeometryTerm(vec3 v, vec3 n, vec3 h, float alpha){
     float VoH2 = v.dot(h);
     float chi = chiGGX( VoH2 / v.dot(n) );
+    if (chi == 0){
+        return 0;
+    }
     VoH2 = VoH2 * VoH2;
     float tan2 = ( 1 - VoH2 ) / VoH2;
     return (chi * 2) / ( 1 + sqrt( 1 + alpha * alpha * tan2 ) );
@@ -124,7 +127,7 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
     // double p = albedo.x > albedo.y && albedo.x > albedo.z ? albedo.x : albedo.y > albedo.z ? albedo.y : albedo.z; // max refl
     
     // Russian roulette termination.
-
+    // p = 0.1;
     if (++depth>5){
         if (drand48()<p*0.9) { // Multiply by 0.9 to avoid infinite loop with colours of 1.0
             albedo=albedo*(0.9/p);
@@ -206,14 +209,17 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
 
 
         float cosT = N.dot(sampleVector);
+        // cosT = halfVector.dot(N);
         float sinT = sqrt( 1.0 - cosT * cosT);
+        // sinT = sin_theta;
+
 
         // return vec3(sinT,sinT,sinT);
         // Calculate fresnel
         vec3 F0 = obj->getMaterial()->F0;
-        // F0 = vec3(1,1,1) * 0.1;
+        // return F0;
         vec3 fresnel = Fresnel_Schlick(viewVector.dot(halfVector), F0);
-        
+        // return fresnel;
         // // Geometry term
         float geometry = GGX_PartialGeometryTerm(viewVector, N, halfVector, roughness)
          * GGX_PartialGeometryTerm(sampleVector, N, halfVector, roughness);
@@ -221,8 +227,8 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
         // return vec3(geometry,geometry,geometry);
          // return fresnel;
         // Calculate the Cook-Torrance denominator
-        float denominator =  saturate( 4 * ( fabs(N.dot(viewVector)) * fabs(N.dot(halfVector)) + 0.05) );
-
+        float denominator =  saturate( 4 * ( fabs(N.dot(viewVector)) * fabs(N.dot(halfVector)) + 0.0) );
+        // denominator = denominator == 0 ? eps : denominator;
 
         // kS += fresnel;
         // Accumulate the radiance
@@ -241,7 +247,9 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
         // else{
         //     return vec3(0,0,1);      
         // }
-        return obj->getMaterial()->getEmission() + fresnel * geometry/denominator/sinT * tracing(reflRay, depth);
+        // return vec3(sinT, sinT, sinT);
+        return obj->getMaterial()->getEmission() + fresnel * geometry * sinT / denominator * tracing(reflRay, depth);
+        // return obj->getMaterial()->getEmission() + fresnel * geometry * sinT / (denominator) * tracing(reflRay, depth);
         
         // return obj->getMaterial()->getEmission() + reflectColor * tracing(reflRay, depth);
         #else

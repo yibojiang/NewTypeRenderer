@@ -36,12 +36,11 @@ public:
 
         float f0 = fabs ((1.0 - this->ior) / (1.0 + this->ior));
         f0 = f0 * f0;
-        
         this->F0 = vec3(f0, f0, f0);
         this->F0.lerp(reflectColor, this->metallic);
         // qDebug() << "f0" << this->F0;
         // qDebug() << "metallic" << this->metallic;
-        
+
     }
 
     ~Material(){}

@@ -144,7 +144,7 @@ void RenderThread::render()
 
 Window::Window(QWidget *parent) :
  QMainWindow(parent) {
-    width = 800, height = 600;
+    width = 1280, height = 720;
     resize(width, height);
 
     setContextMenuPolicy(Qt::NoContextMenu);
