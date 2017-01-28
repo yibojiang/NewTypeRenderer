@@ -42,6 +42,7 @@ public:
     virtual void setMaterial(Material* material){
         this->material = material;
         this->material->init();
+
     }
 
     Material* getMaterial(){

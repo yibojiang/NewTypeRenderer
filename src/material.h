@@ -29,15 +29,33 @@ public:
     }
 
     void init(){
+        
+        float f0 = fabs ((1.0 - this->ior) / (1.0 + this->ior));
+        f0 = f0 * f0;
+        // this->F0 = vec3(f0, f0, f0);
+        // this->F0.lerp(reflectColor, this->metallic);
+        qDebug() << "material init" << this->metallic;
+        this->F0 = f0 * (1-this->metallic) + this->metallic;
+        if (this->F0 > 1){
+            this->F0 = 1;
+        }
+
+        if (this->F0< 0){
+            this->F0 = 0;
+        }
+
+        
+        this->diffuse = (1 - this->F0) * (1 - metallic);
+        this->reflection = this->F0;
+    
+        qDebug() << "diffuse" << this->diffuse;
+        qDebug() << "reflection" << this->reflection;
         float energy = this->diffuse + this->reflection + this->refract;
         this->diffuse = this->diffuse/energy;
         this->reflection = this->reflection/energy;
         this->refract = this->refract/energy;
-
-        float f0 = fabs ((1.0 - this->ior) / (1.0 + this->ior));
-        f0 = f0 * f0;
-        this->F0 = vec3(f0, f0, f0);
-        this->F0.lerp(reflectColor, this->metallic);
+        // this->F0 = fmin(1, this->F0);
+        // this->F0 = fmax(0, this->F0);
         // qDebug() << "f0" << this->F0;
         // qDebug() << "metallic" << this->metallic;
 
@@ -57,7 +75,8 @@ public:
     float emission;
     float ior;
     // float energy;
-    vec3 F0;
+    // vec3 F0;
+    float F0;
     float metallic;
 
 

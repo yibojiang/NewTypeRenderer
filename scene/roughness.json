@@ -2,7 +2,7 @@
     "envlight":{
         "intense": 1,
         "exp": 1,
-        "hdri": "/textures/Ridgecrest_Road_Ref.hdr"
+        "hdri": "/textures/Newport_Loft_Ref.hdr"
     },
     "materials": {
         "metal":{
@@ -62,7 +62,7 @@
             
         },
         "metal4":{
-            "diffuse": 0.0,
+            "diffuse": 0.2,
             "reflection": 1,
             "refract": 0,
             "diffuseRoughness": 0,
@@ -76,7 +76,7 @@
             
         },
         "metal5":{
-            "diffuse": 0.0,
+            "diffuse": 0.2,
             "reflection": 1,
             "refract": 0,
             "diffuseRoughness": 0,
@@ -90,7 +90,7 @@
             
         },
         "metal6":{
-            "diffuse": 0,
+            "diffuse": 0.2,
             "reflection": 1,
             "refract": 0,
             "diffuseRoughness": 0,
@@ -104,7 +104,7 @@
             
         },
         "metal7":{
-            "diffuse": 0,
+            "diffuse": 0.2,
             "reflection": 1,
             "refract": 0,
             "diffuseRoughness": 0,
@@ -197,9 +197,9 @@
                     50
                 ],
                 "scale": [
-                    300,
+                    800,
                     1,
-                    300
+                    800
                 ],
                 "rotation": [
                     0,

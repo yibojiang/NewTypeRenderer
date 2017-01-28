@@ -1,0 +1,108 @@
+{   
+    "envlight":{
+        "intense": 0.5,
+        "exp": 1,
+        "hdri": "/textures/Newport_Loft_Ref.hdr"
+    },
+    "materials": {
+        "floor":{
+            "diffuse": 0,
+            "reflection": 1,
+            "refract": 0,
+            "diffuseRoughness": 0,
+            "roughness": 0.0,
+            "metallic": 0.0,
+            "emission": 0,
+            "ior": 1.4,
+            "diffuseColor": [0.99,0.99,0.99],
+            "reflectColor": [1.0,1.0,1.0],
+            "emissionColor": [0,0,0]
+            
+        },
+        "light":{
+            "diffuse": 1,
+            "reflection": 0,
+            "roughness": 0,
+            "emission": 20,
+            "ior": 0,
+            "diffuseColor": [0,0,0],
+            "reflectColor": [0,0,0],
+            "emissionColor": [1,1,1]
+
+        }
+    },
+    "camera": 
+    {
+        "name": "camera",
+        "transform": {
+            "position": [
+                100,
+                200,
+                400
+            ],
+            "target": [
+                145,
+                5,
+                80
+            ],
+            "up": [
+                0,
+                1,
+                0
+            ]
+        },
+        "fov": 60,
+        "focusOn": false,
+        "focalLength": 150,
+        "aperture": 1
+    },
+    "primitives": [
+        {
+            "name": "light",
+            "transform": {
+                "position": [
+                    50,
+                    200,
+                    50
+                ],
+                "scale": [
+                    30,
+                    30,
+                    30
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "sphere",
+            "material": "light"
+        },
+        {
+            "name": "floor",
+            "transform": {
+                "position": [
+                    50,
+                    0,
+                    50
+                ],
+                "scale": [
+                    2000,
+                    1,
+                    2000
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "mesh",
+            "material": "floor",
+            "path":"plane2.obj"
+        }
+    ]
+}
