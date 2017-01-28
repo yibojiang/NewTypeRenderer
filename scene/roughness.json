@@ -13,7 +13,7 @@
             "roughness": 0.0,
             "metallic": 1.0,
             "emission": 0,
-            "ior": 1.44,
+            "ior": 1.4,
             "diffuseColor": [0.99,0.99,0.99],
             "reflectColor": [1.0,1.0,1.0],
             "emissionColor": [0,0,0]
@@ -27,7 +27,7 @@
             "roughness": 0.1,
             "metallic": 1,
             "emission": 0,
-            "ior": 1.44,
+            "ior": 1.4,
             "diffuseColor": [0.99,0.99,0.99],
             "reflectColor": [1.0,1.0,1.0],
             "emissionColor": [0,0,0]
@@ -41,7 +41,7 @@
             "roughness": 0.2,
             "metallic": 1,
             "emission": 0,
-            "ior": 1.44,
+            "ior": 1.4,
             "diffuseColor": [0.99,0.99,0.99],
             "reflectColor": [1.0,1.0,1.0],
             "emissionColor": [0,0,0]
@@ -55,7 +55,7 @@
             "roughness": 0.5,
             "metallic": 1,
             "emission": 0,
-            "ior": 1.44,
+            "ior": 1.4,
             "diffuseColor": [0.5,0.5,0.5],
             "reflectColor": [1.0,1.0,1.0],
             "emissionColor": [0,0,0]
@@ -69,7 +69,7 @@
             "roughness": 0.0,
             "metallic": 0.0,
             "emission": 0,
-            "ior": 1.44,
+            "ior": 1.4,
             "diffuseColor": [0.5,0.5,0.5],
             "reflectColor": [1.0,1.0,1.0],
             "emissionColor": [0,0,0]
@@ -83,7 +83,7 @@
             "roughness": 0.1,
             "metallic": 0.0,
             "emission": 0,
-            "ior": 1.44,
+            "ior": 1.4,
             "diffuseColor": [0.5,0.5,0.5],
             "reflectColor": [1.0,1.0,1.0],
             "emissionColor": [0,0,0]
@@ -97,7 +97,7 @@
             "roughness": 0.2,
             "metallic": 0.0,
             "emission": 0,
-            "ior": 1.44,
+            "ior": 1.4,
             "diffuseColor": [0.5,0.5,0.5],
             "reflectColor": [1.0,1.0,1.0],
             "emissionColor": [0,0,0]
@@ -111,7 +111,7 @@
             "roughness": 0.5,
             "metallic": 0.0,
             "emission": 0,
-            "ior": 1.44,
+            "ior": 1.4,
             "diffuseColor": [0.5,0.5,0.5],
             "reflectColor": [1.0,1.0,1.0],
             "emissionColor": [0,0,0]
@@ -144,13 +144,13 @@
         "name": "camera",
         "transform": {
             "position": [
-                0,
-                40,
-                200
+                50,
+                36,
+                300
             ],
             "target": [
-                0,
-                40,
+                50,
+                16,
                 50
             ],
             "up": [
@@ -197,9 +197,9 @@
                     50
                 ],
                 "scale": [
-                    0,
-                    0,
-                    0
+                    300,
+                    1,
+                    300
                 ],
                 "rotation": [
                     0,
@@ -309,8 +309,8 @@
             "transform": {
                 "position": [
                     0,
-                    60,
-                    60
+                    16,
+                    110
                 ],
                 "scale": [
                     16,
@@ -332,8 +332,8 @@
             "transform": {
                 "position": [
                     40,
-                    60,
-                    60
+                    16,
+                    110
                 ],
                 "scale": [
                     16,
@@ -355,8 +355,8 @@
             "transform": {
                 "position": [
                     80,
-                    60,
-                    60
+                    16,
+                    110
                 ],
                 "scale": [
                     16,
@@ -378,8 +378,8 @@
             "transform": {
                 "position": [
                     120,
-                    60,
-                    60
+                    16,
+                    110
                 ],
                 "scale": [
                     16,

@@ -169,65 +169,64 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
         float roughness = obj->getMaterial()->roughness;
         
         vec3 viewVector = -ray.dir.normalize();      
-        vec3 refl = ray.dir.reflect(N).normalize();  
+        // vec3 refl = ray.dir.reflect(N).normalize();  
 
         float rand1 = drand48();
         // Important sample
         float tan_theta = roughness * sqrt(rand1/(1 - rand1));
         float theta = atan(tan_theta);
-        float sin_theta = sin(theta);
         
+        // float theta = atan(sqrt(-roughness*roughness*log(1-drand48())));
+        float sin_theta = sin(theta);
         float phi = 2 * M_PI * drand48();
         float x = sin_theta * cos(phi);
         float y = cos(theta);
         float z = sin(phi) * sin_theta;
         
-        vec3 w = refl.normalize();
+        vec3 w = N.normalize();
         vec3 u = ((fabs(w.x) > 0.1 ? vec3(0, 1, 0) : vec3(1, 0, 0)).cross(w)).normalize();
         vec3 v = w.cross(u).normalize();  
 
-        vec3 sampleVector( 
+
+        vec3 m( 
         x * u.x + y * w.x + z * v.x, 
         x * u.y + y * w.y + z * v.y, 
         x * u.z + y * w.z + z * v.z); 
-        sampleVector.normalize();
-        
+        m.normalize();
+
+        vec3 sampleVector = ray.dir.reflect(m);        
         vec3 halfVector = (sampleVector + viewVector).normalize();
+        // halfVector = m;
         
         Ray reflRay(hit, sampleVector);
-        
-        float cosT = N.dot(sampleVector);
-        float sinT = sqrt( 1.0 - cosT * cosT);
-        
         // Calculate fresnel
-        vec3 F0 = obj->getMaterial()->F0;
-        vec3 fresnel = Fresnel_Schlick(viewVector.dot(halfVector), F0);
-        
-        // // Geometry term
-        float geometry = GGX_PartialGeometryTerm(viewVector, N, halfVector, roughness)
-         * GGX_PartialGeometryTerm(sampleVector, N, halfVector, roughness);
+        float F0 = obj->getMaterial()->F0.x;
+        // F0 = 1.0;
+        // F0 =0.5;
+        float fresnel = F0 + (1-F0) * pow((1 - sampleVector.dot(halfVector)), 5);
 
+        // return obj->getMaterial()->getEmission() + vec3(fresnel, fresnel, fresnel) * cosT;
+        // vec3 fresnel = Fresnel_Schlick(viewVector.dot(halfVector), F0);
+
+        
+        // Geometry term
+        // float geometry = GGX_PartialGeometryTerm(viewVector, N, halfVector, roughness)
+        //  * GGX_PartialGeometryTerm(sampleVector, N, halfVector, roughness);
+        float NdotH = N.dot(halfVector);
+        // float HdotV = halfVector.dot(viewVector);
+        float NdotL = N.dot(sampleVector);
+        float VdotH = viewVector.dot(halfVector);
+        float NdotV = N.dot(viewVector);
+        float geometry = fmin(1, 
+            fmin( 2*NdotH*NdotV/VdotH, 
+                2*NdotH*NdotL/VdotH));
+        // return vec3(geometry, geometry, geometry);
+        // return obj->getMaterial()->getEmission() + vec3(geometry, geometry, geometry);
         // Calculate the Cook-Torrance denominator
-        float denominator =  ( 4 * ( fabs(N.dot(viewVector)) * fabs(N.dot(halfVector))));
-        
-        // float test = saturate(denominator);
-
-        // if (test >0 ){
-        //     return vec3(0,1,0);
-        // }
-        // else if (test <0 ){
-        //     return vec3(1,0,0);   
-        // }
-        // else{
-        //     return vec3(0,0,1);      
-        // }
-        // return vec3(sinT, sinT, sinT);
-        return obj->getMaterial()->getEmission() + fresnel * geometry * sinT / denominator * tracing(reflRay, depth);
-        // return obj->getMaterial()->getEmission() + fresnel * geometry * sinT / (denominator) * tracing(reflRay, depth);
-        
-        // return obj->getMaterial()->getEmission() + reflectColor * tracing(reflRay, depth);
+        float denominator =  4 * (N.dot(viewVector));
+        return obj->getMaterial()->getEmission() + reflectColor * fresnel * geometry / denominator * tracing(reflRay, depth);
         #else
-        
+
         vec3 reflectColor = obj->getMaterial()->getReflectColor(ray.uv);
         reflectColor = vec3(1,1,1);
         vec3 refl = ray.dir - N * 2 * N.dot(ray.dir);
@@ -487,6 +486,7 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
 
     QString path = QDir::currentPath();
     std::string name = "/scene/roughness.json";
+    // std::string name = "/scene/cornellbox.json";
     std::string fullpath = path.toUtf8().constData() + name;
     setupScene(fullpath);
     

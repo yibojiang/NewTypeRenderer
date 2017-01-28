@@ -1,0 +1,401 @@
+{   
+    "envlight":{
+        "intense": 1,
+        "exp": 1,
+        "hdri": "/textures/Newport_Loft_Ref.hdr"
+    },
+    "materials": {
+        "metal":{
+            "diffuse": 0,
+            "reflection": 1,
+            "refract": 0,
+            "diffuseRoughness": 0,
+            "roughness": 0.0,
+            "metallic": 1.0,
+            "emission": 0,
+            "ior": 1.4,
+            "diffuseColor": [0.99,0.99,0.99],
+            "reflectColor": [1.0,1.0,1.0],
+            "emissionColor": [0,0,0]
+            
+        },
+         "metal1":{
+            "diffuse": 0,
+            "reflection": 1,
+            "refract": 0,
+            "diffuseRoughness": 0,
+            "roughness": 0.1,
+            "metallic": 1,
+            "emission": 0,
+            "ior": 1.4,
+            "diffuseColor": [0.99,0.99,0.99],
+            "reflectColor": [1.0,1.0,1.0],
+            "emissionColor": [0,0,0]
+            
+        },
+        "metal2":{
+            "diffuse": 0,
+            "reflection": 1,
+            "refract": 0,
+            "diffuseRoughness": 0,
+            "roughness": 0.2,
+            "metallic": 1,
+            "emission": 0,
+            "ior": 1.4,
+            "diffuseColor": [0.99,0.99,0.99],
+            "reflectColor": [1.0,1.0,1.0],
+            "emissionColor": [0,0,0]
+            
+        },
+        "metal3":{
+            "diffuse": 0,
+            "reflection": 1,
+            "refract": 0,
+            "diffuseRoughness": 0,
+            "roughness": 0.5,
+            "metallic": 1,
+            "emission": 0,
+            "ior": 1.4,
+            "diffuseColor": [0.5,0.5,0.5],
+            "reflectColor": [1.0,1.0,1.0],
+            "emissionColor": [0,0,0]
+            
+        },
+        "metal4":{
+            "diffuse": 0.0,
+            "reflection": 1,
+            "refract": 0,
+            "diffuseRoughness": 0,
+            "roughness": 0.0,
+            "metallic": 0.0,
+            "emission": 0,
+            "ior": 1.4,
+            "diffuseColor": [0.5,0.5,0.5],
+            "reflectColor": [1.0,1.0,1.0],
+            "emissionColor": [0,0,0]
+            
+        },
+        "metal5":{
+            "diffuse": 0.0,
+            "reflection": 1,
+            "refract": 0,
+            "diffuseRoughness": 0,
+            "roughness": 0.1,
+            "metallic": 0.0,
+            "emission": 0,
+            "ior": 1.4,
+            "diffuseColor": [0.5,0.5,0.5],
+            "reflectColor": [1.0,1.0,1.0],
+            "emissionColor": [0,0,0]
+            
+        },
+        "metal6":{
+            "diffuse": 0,
+            "reflection": 1,
+            "refract": 0,
+            "diffuseRoughness": 0,
+            "roughness": 0.2,
+            "metallic": 0.0,
+            "emission": 0,
+            "ior": 1.4,
+            "diffuseColor": [0.5,0.5,0.5],
+            "reflectColor": [1.0,1.0,1.0],
+            "emissionColor": [0,0,0]
+            
+        },
+        "metal7":{
+            "diffuse": 0,
+            "reflection": 1,
+            "refract": 0,
+            "diffuseRoughness": 0,
+            "roughness": 0.5,
+            "metallic": 0.0,
+            "emission": 0,
+            "ior": 1.4,
+            "diffuseColor": [0.5,0.5,0.5],
+            "reflectColor": [1.0,1.0,1.0],
+            "emissionColor": [0,0,0]
+            
+        },
+        "grey":{
+            "diffuse": 1,
+            "reflection": 0,
+            "roughness": 0,
+            "emission": 0,
+            "ior": 0,
+            "diffuseColor": [0.75,0.75,0.75],
+            "reflectColor": [0.05,0.05,0.05],
+            "emissionColor": [0,0,0]
+        },
+        "light":{
+            "diffuse": 1,
+            "reflection": 0,
+            "roughness": 0,
+            "emission": 20,
+            "ior": 0,
+            "diffuseColor": [0,0,0],
+            "reflectColor": [0,0,0],
+            "emissionColor": [1,1,1]
+
+        }
+    },
+    "camera": 
+    {
+        "name": "camera",
+        "transform": {
+            "position": [
+                50,
+                36,
+                300
+            ],
+            "target": [
+                50,
+                16,
+                50
+            ],
+            "up": [
+                0,
+                1,
+                0
+            ]
+        },
+        "fov": 60,
+        "focusOn": false,
+        "focalLength": 150,
+        "aperture": 1
+    },
+    "primitives": [
+        {
+            "name": "light",
+            "transform": {
+                "position": [
+                    50,
+                    90,
+                    50
+                ],
+                "scale": [
+                    0,
+                    0,
+                    0
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "sphere",
+            "material": "light"
+        },
+        {
+            "name": "floor",
+            "transform": {
+                "position": [
+                    50,
+                    0,
+                    50
+                ],
+                "scale": [
+                    300,
+                    1,
+                    300
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "mesh",
+            "material": "grey",
+            "path":"plane2.obj"
+        },
+        {
+            "name": "sphere",
+            "transform": {
+                "position": [
+                    0,
+                    16,
+                    60
+                ],
+                "scale": [
+                    16,
+                    16,
+                    16
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "box",
+            "material": "metal"
+        },
+        {
+            "name": "box",
+            "transform": {
+                "position": [
+                    40,
+                    16,
+                    60
+                ],
+                "scale": [
+                    16,
+                    16,
+                    16
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "box",
+            "material": "metal1"
+        },
+        {
+            "name": "box",
+            "transform": {
+                "position": [
+                    80,
+                    16,
+                    60
+                ],
+                "scale": [
+                    16,
+                    16,
+                    16
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "box",
+            "material": "metal2"
+        },
+        {
+            "name": "box",
+            "transform": {
+                "position": [
+                    120,
+                    16,
+                    60
+                ],
+                "scale": [
+                    16,
+                    16,
+                    16
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "box",
+            "material": "metal3"
+        },
+        {
+            "name": "box",
+            "transform": {
+                "position": [
+                    0,
+                    16,
+                    110
+                ],
+                "scale": [
+                    16,
+                    16,
+                    16
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "box",
+            "material": "metal4"
+        },
+        {
+            "name": "box",
+            "transform": {
+                "position": [
+                    40,
+                    16,
+                    110
+                ],
+                "scale": [
+                    16,
+                    16,
+                    16
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "box",
+            "material": "metal5"
+        },
+        {
+            "name": "box",
+            "transform": {
+                "position": [
+                    80,
+                    16,
+                    110
+                ],
+                "scale": [
+                    16,
+                    16,
+                    16
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "box",
+            "material": "metal6"
+        },
+        {
+            "name": "box",
+            "transform": {
+                "position": [
+                    120,
+                    16,
+                    110
+                ],
+                "scale": [
+                    16,
+                    16,
+                    16
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "box",
+            "material": "metal7"
+        }
+
+    ]
+}
