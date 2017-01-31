@@ -1,0 +1,169 @@
+{   
+    "envlight":{
+        "intense": 1,
+        "exp": 1,
+        "hdri": "/textures/Newport_Loft_Ref.hdr"
+    },
+    "materials": {
+        "iron":{
+            "refract": 0,
+            "metallic": 1.0,
+            "roughness": 0,
+            "emission": 0,
+            "ior": 2.950,
+            "diffuseColor": [0.75,0.75,0.75],
+            "reflectColor": [0.75,0.75,0.75],
+            "emissionColor": [0,0,0]
+            
+        },
+        "glass":{
+            "metallic": 0.0,
+            "refract": 1,
+            "roughness": 0,
+            "emission": 0,
+            "ior": 1.5,
+            "refractorColor": [1,1,1],
+            "emissionColor": [0,0,0]
+        },
+        "floor":{
+            "metallic": 0.1,
+            "roughness": 1,
+            "emission": 0,
+            "ior": 1.5,
+            "diffuseColor": [1,1,1],
+            "reflectColor": [0.05,0.05,0.05],
+            "emissionColor": [0,0,0],
+            "diffuseTexture": "/textures/wood.png"
+        },
+        "earth":{
+            "metallic": 0.0,
+            "roughness": 0,
+            "emission": 0,
+            "ior": 1.5,
+            "diffuseColor": [1,1,1],
+            "reflectColor":  [1,1,1],
+            "emissionColor": [0,0,0],
+            "diffuseTexture": "/textures/earth.png"
+        },
+        "white":{
+            "metallic": 0.0,
+            "roughness": 0,
+            "emission": 0,
+            "ior": 1.5,
+            "diffuseColor": [1,1,1],
+            "reflectColor":  [1,1,1],
+            "emissionColor": [0,0,0]
+        },
+        "light":{
+            "diffuse": 0,
+            "reflection": 0,
+            "roughness": 0,
+            "emission": 300,
+            "ior": 0,
+            "diffuseColor": [0,0,0],
+            "reflectColor": [0,0,0],
+            "emissionColor": [1,1,1]
+
+        }
+    },
+    "camera": 
+    {
+        "name": "camera",
+        "transform": {
+            "position": [
+                110,
+                100,
+                -60
+            ],
+            "target": [
+                40,
+                50,
+                40
+            ],
+            "up": [
+                0,
+                1,
+                0
+            ]
+        },
+        "fov": 100,
+        "focusOn": false,
+        "focalLength": 150,
+        "aperture": 0.4
+    },
+    "primitives": [
+        {
+            "name": "light",
+            "transform": {
+                "position": [
+                    65,
+                    300,
+                    100
+                ],
+                "scale": [
+                    0,
+                    0,
+                    0
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "sphere",
+            "material": "light"
+        },
+        {
+            "name": "car",
+            "transform": {
+                "position": [
+                    50,
+                    16,
+                    100
+                ],
+                "scale": [
+                    0.5,
+                    0.5,
+                    0.5
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "mesh",
+            "path": "soff.obj",
+            "material": "iron"
+        },
+        {
+            "name": "floor",
+            "transform": {
+                "position": [
+                    50,
+                    0,
+                    100
+                ],
+                "scale": [
+                    0,
+                    0,
+                    0
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "mesh",
+            "material": "iron",
+            "path":"plane.obj",
+            "color": [1, 1, 1]
+        }
+        
+    ]
+}

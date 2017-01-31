@@ -1,0 +1,198 @@
+{   
+    "envlight":{
+        "intense": 1,
+        "rotate": 5,
+        "exp": 1,
+        "hdri": "/textures/Factory_Catwalk_2k.hdr"
+    },
+    "materials": {
+        "iron":{
+            "refract": 0,
+            "metallic": 1.0,
+            "roughness": 0,
+            "emission": 0,
+            "ior": 2.950,
+            "diffuseColor": [0.75,0.75,0.75],
+            "reflectColor": [0.75,0.75,0.75],
+            "emissionColor": [0,0,0]
+            
+        },
+        "glass":{
+            "metallic": 0.0,
+            "refract": 1,
+            "roughness": 0,
+            "emission": 0,
+            "ior": 1.5,
+            "refractorColor": [1,1,1],
+            "emissionColor": [0,0,0]
+        },
+        "floor":{
+            "diffuse": 0.5,
+            "reflection": 0.5,
+            "metallic": 0.1,
+            "roughness": 1,
+            "glossy": 1,
+            "emission": 0,
+            "ior": 1.5,
+            "diffuseColor": [1,1,1],
+            "reflectColor": [0.05,0.05,0.05],
+            "emissionColor": [0,0,0],
+            "diffuseTexture": "/textures/wood.png"
+        },
+        "earth":{
+            "metallic": 0.0,
+            "roughness": 0,
+            "emission": 0,
+            "ior": 1.5,
+            "diffuseColor": [1,1,1],
+            "reflectColor":  [1,1,1],
+            "emissionColor": [0,0,0],
+            "diffuseTexture": "/textures/earth.png"
+        },
+        "white":{
+            "diffuse": 1.0,
+            "reflection": 0.0,
+            "metallic": 0.0,
+            "roughness": 0,
+            "emission": 0,
+            "ior": 1.5,
+            "useBackground": false,
+            "diffuseColor": [1,1,1],
+            "reflectColor":  [1,1,1],
+            "emissionColor": [0,0,0]
+        },
+        "light":{
+            "diffuse": 0,
+            "reflection": 0,
+            "roughness": 0,
+            "emission": 300,
+            "ior": 0,
+            "diffuseColor": [0,0,0],
+            "reflectColor": [0,0,0],
+            "emissionColor": [1,1,1]
+
+        }
+    },
+    "camera": 
+    {
+        "name": "camera",
+        "transform": {
+            "position": [
+                70,
+                30,
+                180
+            ],
+            "target": [
+                40,
+                0,
+                100
+            ],
+            "up": [
+                0,
+                1,
+                0
+            ]
+        },
+        "fov": 100,
+        "focusOn": true,
+        "focalLength": 150,
+        "aperture": 1.2
+    },
+    "primitives": [
+        {
+            "name": "light",
+            "transform": {
+                "position": [
+                    65,
+                    300,
+                    100
+                ],
+                "scale": [
+                    0,
+                    0,
+                    0
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "sphere",
+            "material": "light"
+        },
+        {
+            "name": "car",
+            "transform": {
+                "position": [
+                    50,
+                    18,
+                    100
+                ],
+                "scale": [
+                    0.2,
+                    0.2,
+                    0.2
+                ],
+                "rotation": [
+                    0,
+                    -10,
+                    0
+                ]
+            },
+            "type": "mesh",
+            "path": "ferrari_599gtb.obj",
+            "material": "iron"
+        },
+        {
+            "name": "floor",
+            "transform": {
+                "position": [
+                    50,
+                    0,
+                    100
+                ],
+                "scale": [
+                    2000,
+                    500,
+                    500
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "mesh",
+            "material": "white",
+            "path":"plane.obj"
+        },
+        {
+            "name": "wall",
+            "transform": {
+                "position": [
+                    0,
+                    0,
+                    -50
+                ],
+                "scale": [
+                    2000,
+                    500,
+                    500
+                ],
+                "rotation": [
+                    90,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "mesh",
+            "material": "white",
+            "path":"plane.obj"
+        }
+        
+    ]
+}

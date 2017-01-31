@@ -23,10 +23,9 @@
 #include "HDRLoader.h"
 
 
-#define WIREFRAME_ON
+// #define WIREFRAME_ON
 #define EXPLICIT_LIGHT_SAMPLE
-#define COOK_TORRANCE
-
+// #define RUSSIAN_ROULETTE_TERMINATION
 
 
 class Intersection {
@@ -48,6 +47,7 @@ public:
     HDRImage hdri;
     double envLightIntense;
     double envLightExp;
+    double envRotate;
     bool hasHdri;
     Scene(){
         // root = new Transform();
@@ -178,6 +178,8 @@ public:
     
     void renderIndirect(double &time, QImage &image);
     void renderDirect(double &time, QImage &directImage, QImage &normalImage, QImage &boundingBoxImage);
+    void testPixel(int x, int y);
+    void testRaytracing(Ray &ray, int depth);
     unsigned short width;
     unsigned short height;
     void setResolution(const int &width, const int &height);

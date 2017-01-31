@@ -1,87 +1,59 @@
 {   
     "envlight":{
-        "intense": 0.1,
+        "intense": 0.7,
         "exp": 1,
         "hdri": "/textures/Newport_Loft_Ref.hdr"
     },
     "materials": {
-        "metal":{
-            "diffuse": 0,
-            "reflection": 1,
+        "sliver":{
+            "metallic": 1.0,
             "refract": 0,
-            "diffuseRoughness": 0,
             "roughness": 0,
             "emission": 0,
-            "ior": 1.5,
-            "diffuseColor": [0.99,0.99,0.99],
-            "reflectColor": [0.99,0.99,0.99],
-            "emissionColor": [0,0,0]
+            "ior": 15,
+            "diffuseColor": [0.54,0.54,0.54],
+            "reflectColor": [0.54,0.54,0.54]
+            
+        },
+         "plactic":{
+            "metallic": 0.3,
+            "refract": 0,
+            "roughness": 0,
+            "emission": 0,
+            "ior": 1.46,
+            "diffuseColor": [1.0, 0.35, 0.5],
+            "reflectColor": [1.0, 0.35, 0.5]
+            
+        },
+         "Titanium":{
+            "metallic": 1,
+            "refract": 0,
+            "roughness": 0.1,
+            "emission": 0,
+            "ior": 2.16,
+            "diffuseColor": [1,1,1],
+            "reflectColor": [1,1,1]
             
         },
         "glass":{
-            "diffuse": 0,
-            "reflection": 0,
+            "metallic": 0.0,
             "refract": 1,
             "roughness": 0,
             "emission": 0.0,
             "ior": 1.5,
             "diffuseColor": [0.95,0.95,0.95],
-            "reflectColor": [0.75,0.25,0.25],
-            "refractColor": [1,1,1],
-            "emissionColor": [1,1,1]
-        },
-        "red":{
-            "diffuse": 1,
-            "reflection": 0,
-            "roughness": 0,
-            "emission": 0,
-            "ior": 0,
-            "diffuseColor": [0.65,0.35,0.25],
-            "reflectColor": [1,1,1],
-            "emissionColor": [0,0,0]
-        },    
-        "china":{
-            "diffuse": 0.9,
-            "reflection": 0.1,
-            "roughness": 0,
-            "emission": 0,
-            "ior": 0,
-            "diffuseColor": [0.99,0.99,0.99],
-            "reflectColor": [1,1,1],
-            "emissionColor": [0,0,0]
-        },
-        "blue":{
-            "diffuse": 1,
-            "reflection": 0,
-            "roughness": 0,
-            "emission": 0,
-            "ior": 0,
-            "diffuseColor": [0.25,0.25,0.75],
-            "reflectColor": [1,1,1],
-            "emissionColor": [0,0,0],
-            "diffuseTexture": "/textures/earth.png"
-        },
-        "marble":{
-            "diffuse": 0.3,
-            "reflection": 0.7,
-            "roughness": 0,
-            "emission": 0,
-            "ior": 0,
-            "diffuseColor": [1,1,1],
-            "reflectColor": [0.05,0.05,0.05],
-            "emissionColor": [0,0,0],
-            "diffuseTexture": "/textures/marble.png"
+            "reflectColor": [0.95,0.95,0.95],
+            "refractColor": [1,1,1]
         },
         "wood":{
-            "diffuse": 1,
-            "reflection": 0,
+            "metallic": 0.0,
             "roughness": 0,
             "emission": 0,
-            "ior": 0,
+            "ior": 1.5,
             "diffuseColor": [1,1,1],
             "reflectColor": [0.05,0.05,0.05],
             "emissionColor": [0,0,0],
-            "diffuseTexture": "/textures/wood.png"
+            "diffuseTexture": "/textures/wood2.png"
         },
         "white":{
             "diffuse": 1,
@@ -110,14 +82,14 @@
         "name": "camera",
         "transform": {
             "position": [
-                0,
-                50,
-                300
+                20,
+                220,
+                270
             ],
             "target": [
-                50,
-                40,
-                100
+                30,
+                20,
+                130
             ],
             "up": [
                 0,
@@ -140,9 +112,9 @@
                     100
                 ],
                 "scale": [
-                    20,
-                    20,
-                    20
+                    30,
+                    30,
+                    30
                 ],
                 "rotation": [
                     0,
@@ -175,21 +147,21 @@
             },
 
             "type": "mesh",
-            "material": "marble",
+            "material": "wood",
             "path":"plane.obj"
         },
         {
             "name": "ring",
             "transform": {
                 "position": [
-                    50,
-                    35,
-                    100
+                    12,
+                    -0.2,
+                    150
                 ],
                 "scale": [
-                    11,
-                    11,
-                    11
+                    15,
+                    35,
+                    15
                 ],
                 "rotation": [
                     0,
@@ -199,8 +171,77 @@
             },
 
             "type": "mesh",
-            "path": "baby.obj",
+            "path": "ring2.obj",
+            "material": "sliver"
+        },
+        {
+            "name": "sphere",
+            "transform": {
+                "position": [
+                    50,
+                    20.1,
+                    100
+                ],
+                "scale": [
+                    20,
+                    20,
+                    20
+                ],
+                "rotation": [
+                    0,
+                    30,
+                    0
+                ]
+            },
+
+            "type": "sphere",
             "material": "glass"
+        },
+        {
+            "name": "sphere",
+            "transform": {
+                "position": [
+                    80,
+                    20.1,
+                    140
+                ],
+                "scale": [
+                    20,
+                    20,
+                    20
+                ],
+                "rotation": [
+                    0,
+                    30,
+                    0
+                ]
+            },
+
+            "type": "sphere",
+            "material": "plactic"
+        },
+        {
+            "name": "sphere",
+            "transform": {
+                "position": [
+                    -10,
+                    20.1,
+                    110
+                ],
+                "scale": [
+                    20,
+                    20,
+                    20
+                ],
+                "rotation": [
+                    0,
+                    30,
+                    0
+                ]
+            },
+
+            "type": "sphere",
+            "material": "Titanium"
         }
         
     ]

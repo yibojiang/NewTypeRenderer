@@ -49,7 +49,51 @@ public:
             std::string texture_path = "/textures/";
             Material *material= new Material();
             material->diffuseColor = vec3(rawMaterial[i].diffuse[0], rawMaterial[i].diffuse[1], rawMaterial[i].diffuse[2]);
-            material->diffuse = 1;
+            
+            material->glossy = rawMaterial[i].shininess;
+            material->roughness = sqrt(2.0/(2.0+rawMaterial[i].shininess));
+            
+            material->ior = rawMaterial[i].ior;
+            material->emissionColor = vec3(rawMaterial[i].emission[0], rawMaterial[i].emission[1], rawMaterial[i].emission[2]);
+            if (material->emissionColor.length()>0){
+                material->emission = 100;
+            }
+            material->reflectColor = vec3(rawMaterial[i].specular[0], rawMaterial[i].specular[1], rawMaterial[i].specular[2]);
+            // material->refract = rawMaterial[i].dissolve < 1 ? 1-rawMaterial[i].dissolve:0;
+            material->refract = 1 - rawMaterial[i].dissolve;
+            material->metallic = material->reflectColor.length()/sqrt(3.0);
+
+            if (material->diffuseColor.length() == 0){
+                material->diffuse = 0;
+            }
+            else{
+                material->diffuse = 1;    
+            }
+            
+
+            if (material->reflectColor.length() == 0){
+                material->reflection = 0;
+            }
+            else{
+                material->reflection = 1;    
+            }
+            
+            // material->diffuseColor.normalize();
+            // material->reflectColor.normalize();
+
+            // material->metallic = std::clamp(material->metallic, 0, 1);
+
+            material->metallic = fmin(material->metallic, 1);
+            material->metallic = fmax(material->metallic, 0);
+            material->metallic = 1;
+            // material->metallic = 0;
+            // material->metallic = 1;
+            // material->reflectColor = vec3(1,1,1);
+
+            
+            
+            // material->diffuse = 1;
+
             if (!rawMaterial[i].diffuse_texname.empty()){
                 texture_path = "/textures/";
                 if (rawMaterial[i].diffuse_texname[0] == '/'){
@@ -84,7 +128,16 @@ public:
                 
             }
             
+            material->init();
+            qDebug() << rawMaterial[i].name.c_str() << "diffuse"<< material->diffuse;
+            qDebug() << rawMaterial[i].name.c_str() << "reflection"<< material->reflection;
+            qDebug() << rawMaterial[i].name.c_str() << "refract"<< material->refract;
+            qDebug() << rawMaterial[i].name.c_str() << "metallic"<< material->metallic;
+            qDebug() << rawMaterial[i].name.c_str() << "roughness"<< material->roughness;
+            qDebug() << rawMaterial[i].name.c_str() << "ior"<< material->ior;
+            qDebug() << rawMaterial[i].name.c_str() << "specularColor"<< material->reflectColor;
             materials.push_back(material);
+
         }
 
         qDebug() << "material loaded." << materials.size();

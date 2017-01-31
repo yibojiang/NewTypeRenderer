@@ -69,9 +69,63 @@ double Extents::intersect(const Ray &r) const{ // returns distance, 0 if nohit
         return 0;
     }
 
-    if (tmin <= 0){
+    if (tmin < 0){
         return tmax;
     }
+    
+    return tmin;
+    
+}
+
+double Extents::intersectNear(const Ray &r) const{ // returns distance, 0 if nohit    
+    
+    double tmin = -inf;
+    double tmax = inf;
+    for (uint8_t i = 0; i < SLABCOUNT; ++i){
+        double tNear = (-dnear[i] - r.origin.dot(BVH::normals[i])) / r.dir.dot(BVH::normals[i]);
+        double tFar = (-dfar[i] - r.origin.dot(BVH::normals[i])) / r.dir.dot(BVH::normals[i]);
+
+        // Swap near and far t.
+        if (tNear > tFar){
+            std::swap(tFar, tNear);
+        }
+
+        if (tNear > tmin){
+            tmin = tNear;
+        }
+
+        if (tFar < tmax){
+            tmax = tFar;
+        }
+    }
+
+    if (tmax <= 0){
+        return 0;
+    }
+
+    if (tmin > tmax){
+        return 0;
+    }
+
+    // if (fabs(tmax-tmin)<eps){
+    //     return -1;
+    // }
+
+    
+    // if (tmin < eps){
+    //     // return fmax(fmin(fabs(tmin), tmax), eps * 2);
+    //     return fmin(fabs(tmin), tmax);
+    //     // return -1;
+    // }
+
+    // inside the boundingbox
+    if (tmin < eps){
+        // tmin = 1000;
+        tmin = eps*2;
+        // tmin = -1;
+    }
+    //     return fmax(fmin(fabs(tmin), tmax), eps * 2);
+    // }
     
     return tmin;
     
@@ -191,7 +245,18 @@ void BVH::setup(Scene &scene){
     qDebug() << "build bvh done." << " time: " << time;
     qDebug() << "max depth: " << OctreeNode::maxDepth;
     
+    logOn = false;
     // octree.traverse();
+
+    // std::priority_queue<HitNode> hitNodes;
+    // hitNodes.push(HitNode(new OctreeNode(), 1));
+    // hitNodes.push(HitNode(new OctreeNode(), 10));
+    // hitNodes.push(HitNode(new OctreeNode(), 3));
+    // hitNodes.push(HitNode(new OctreeNode(), 8));
+    // while(hitNodes.size()>0){
+    //     qDebug() << "top:" << hitNodes.top().t;
+    //     hitNodes.pop();
+    // }
 }
 
 
@@ -253,10 +318,12 @@ void OctreeNode::traverse(){
 Extents OctreeNode::computeExetents(){
     // qDebug() << this -> depth;
     if (this->isLeaf){
+        this->name = objects[0]->name + "_boundingbox";
         // qDebug() << "leaf node" << this->object->name.c_str();
         for (unsigned int i = 0; i < this->objects.size(); ++i){
             Extents e = this->objects[i]->getBounds();
             this->extents.extendBy(e);
+
         }
         // this->extents = this->object->getBounds();
         return this->extents;
@@ -367,6 +434,7 @@ void OctreeNode::addObject(Object *obj){
         if (depth > debugDepth) qDebug() << "new child at " << depth << childIdx;
         // qDebug() << "new child at " << depth << childIdx;
         this->children[childIdx] = new OctreeNode(this);
+        this->children[childIdx]->name = std::to_string(depth) + "_" + std::to_string(childIdx);
         this->children[childIdx]->depth = depth + 1;
         // this->children[childIdx]->object = obj;
         this->children[childIdx]->objects.push_back(obj);
@@ -476,6 +544,7 @@ void OctreeNode::intersectTest(Ray &r, Intersection &intersection) const{
 
     // Hit the bounding box.
     if (test > eps){
+
         if (this->isLeaf){
             for (unsigned int i = 0; i < this->objects.size(); ++i){
                 double t = this->objects[i]->intersect(r);
@@ -488,6 +557,8 @@ void OctreeNode::intersectTest(Ray &r, Intersection &intersection) const{
             
         }
         else{
+            // add the child node into a priority list, and check distance.
+            
             for (int i = 0; i < 8; ++i){
                 if (this->children[i]){
                     this->children[i]->intersectTest(r, intersection);
@@ -518,11 +589,97 @@ Intersection BVH::intersectBVH(const Ray& ray) const{
 }
 
 
-Intersection BVH::intersect(Ray& ray) const{
+void BVH::intersectNode(Ray& r, const OctreeNode *node, Intersection &intersection, std::priority_queue<HitNode> &hitNodes){
+    if (logOn) qDebug() << "checking node: " << node->name.c_str();
+    if (node->isLeaf){
+        if (logOn) qDebug() << "checking leaf node: " << node->name.c_str();
+        
+        for (unsigned int i = 0; i < node->objects.size(); ++i){
+            double t = node->objects[i]->intersect(r);
+
+            if (t > eps &&  t < intersection.t){
+                 t = node->objects[i]->intersect(r);
+                 intersection.object = node->objects[i];
+                 intersection.t = t;
+                 // if (logOn) qDebug() << "hit object: " << intersection.object->name.c_str() << "depth" <<  node->depth << t;   
+            }    
+        }
+    }
+    else{
+        for (int i = 0; i < 8; ++i){
+            if (node->children[i]){
+                double test = node->children[i]->extents.intersectNear(r);
+                if (test > eps){
+                    // if (logOn){
+                    //     qDebug() << "adding " << node->children[i]->name.c_str() << test;
+                    // }
+                    hitNodes.push(HitNode(node->children[i], test));
+                    // intersectNode(r, nearstNode->children[i], intersection, hitNodes);
+                }
+            }    
+            
+            // qDebug() << "child" << i << "finish";
+        }
+    }
+
+    if (hitNodes.size() == 0){
+        // qDebug() << "miss";
+        return;
+    }
+
+    const OctreeNode *nearstNode = hitNodes.top().node;
+    double nearestHit = hitNodes.top().t;
+    hitNodes.pop();
+    // if (logOn){
+    //     qDebug() << "checking" << nearstNode->name.c_str() << nearestHit << "with" << intersection.t;
+    // }
+    
+    if (nearestHit >  intersection.t){
+        // if (logOn){
+        //     qDebug() << "end" << nearestHit - intersection.t;
+        // }
+        return;
+    }
+    // qDebug() << "checking" << nearstNode->name.c_str() << nearestHit;
+    // if (logOn){
+    //     qDebug() << "checking node: " << node->name.c_str() << "distance: " <<nearestHit;
+    // }
+    intersectNode(r, nearstNode, intersection, hitNodes);
+    
+}
+
+Intersection BVH::intersect(Ray& ray){
+    // this->logOn = logOn;
     // std::priority_queue<OctreeNode> closeNode;
     // qDebug() << "BVH::intersect";
+    std::priority_queue<HitNode> hitNodes;
+    // qDebug() <<"new ray:"<< hitNodes.size();
     Intersection closestIntersection;
-    octree->intersectTest(ray, closestIntersection);
+
+    // octree->intersectTest(ray, closestIntersection);
+    
+    
+    double test = octree->extents.intersectNear(ray);
+    // if (logOn){
+    //     qDebug() << "scene distance:" << test;
+    // }
+    if (test > eps){
+
+        this->intersectNode(ray, octree, closestIntersection, hitNodes);
+    }
+    
+    // if (logOn) qDebug() << "miss scene" << test;
+    
+    // if (logOn){
+    //     if (closestIntersection.object){
+    //         qDebug() << "end with" << closestIntersection.object->name.c_str();        
+    //     }
+    //     else{
+    //         qDebug() << "end with null";
+    //     }    
+    // }
+    
+    
     return closestIntersection;   
 }
 

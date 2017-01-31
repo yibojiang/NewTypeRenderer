@@ -56,50 +56,55 @@
             "emissionColor": [0,0,0]
         },
         "red":{
+            "metallic": 0.0,
             "diffuse": 1,
             "reflection": 0,
             "roughness": 0,
             "emission": 0,
-            "ior": 0,
+            "ior": 1,
             "diffuseColor": [0.75,0.25,0.25],
-            "reflectColor": [1,1,1],
+            "reflectColor": [0.75,0.25,0.25],
             "emissionColor": [0,0,0]
         },    
         "blue":{
+            "metallic": 0.0,
             "diffuse": 1,
             "reflection": 0,
             "roughness": 0,
             "emission": 0,
-            "ior": 0,
+            "ior": 1,
             "diffuseColor": [0.25,0.25,0.75],
-            "reflectColor": [1,1,1],
+            "reflectColor": [0.25,0.25,0.75],
             "emissionColor": [0,0,0]
         },
         "green":{
+            "metallic": 0.0,
             "diffuse": 1,
             "reflection": 0,
             "roughness": 0,
             "emission": 0,
-            "ior": 0,
+            "ior": 1,
             "diffuseColor": [0.25,0.75,0.25],
-            "reflectColor": [1,1,1],
+            "reflectColor": [0.25,0.75,0.25],
             "emissionColor": [0,0,0]
         },
         "grey":{
+            "metallic": 0.0,
             "diffuse": 1,
             "reflection": 0,
             "roughness": 0,
             "emission": 0,
-            "ior": 0,
+            "ior": 1,
             "diffuseColor": [0.75,0.75,0.75],
-            "reflectColor": [0.05,0.05,0.05],
+            "reflectColor": [0.75,0.75,0.75],
             "emissionColor": [0,0,0]
         },
         "light":{
+            "metallic": 0.0,
             "diffuse": 1,
             "reflection": 0,
             "roughness": 0,
-            "emission": 50,
+            "emission": 30,
             "ior": 0,
             "diffuseColor": [0,0,0],
             "reflectColor": [0,0,0],
@@ -237,9 +242,9 @@
                     50
                 ],
                 "scale": [
-                    0,
+                    100,
                     1,
-                    0
+                    100
                 ],
                 "rotation": [
                     180,

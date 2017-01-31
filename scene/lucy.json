@@ -1,68 +1,93 @@
 {   
+    "envlight":{
+        "intense": 1,
+        "exp": 1,
+        "hdri": "/textures/TropicalRuins_3k.hdr"
+    },
     "materials": {
-        "white":{
-            "diffuse": 1,
-            "relection": 0,
+        "iron":{
             "refract": 0,
+            "metallic": 1.0,
+            "roughness": 0.1,
+            "emission": 0,
+            "ior": 2.950,
+            "diffuseColor": [0.75,0.75,0.75],
+            "reflectColor": [0.75,0.75,0.75],
+            "emissionColor": [0,0,0]
+        },
+         "gold":{
+            "refract": 0,
+            "metallic": 1.0,
+            "roughness": 0,
+            "emission": 0,
+            "ior": 0.47,
+            "diffuseColor": [0.75,0.65,0.27],
+            "reflectColor": [0.75,0.65,0.27],
+            "emissionColor": [0,0,0]
+            
+        },
+         "sliver":{
+            "metallic": 1.0,
+            "refract": 0,
+            "roughness": 0,
+            "emission": 0,
+            "ior": 15,
+            "diffuseColor": [0.74,0.74,0.74],
+            "reflectColor": [0.74,0.74,0.74]
+            
+        },
+        "bronze":{
+            "refract": 0,
+            "metallic": 1.0,
+            "roughness": 0,
+            "emission": 0,
+            "ior": 1.18,
+            "diffuseColor": [0.6,0.14,0.07],
+            "reflectColor": [0.6,0.14,0.07],
+            "emissionColor": [0,0,0]
+        },
+        "glass":{
+            "metallic": 0.0,
+            "refract": 1,
+            "roughness": 0,
+            "emission": 0,
+            "ior": 1.5,
+            "refractorColor": [1,1,1],
+            "emissionColor": [0,0,0]
+        },
+        "floor":{
+            "metallic": 0.1,
+            "roughness": 1,
             "emission": 0,
             "ior": 1.5,
             "diffuseColor": [1,1,1],
-            "reflectColor": [1,1,1],
-            "emissionColor": [0,0,0]
+            "reflectColor": [0.05,0.05,0.05],
+            "emissionColor": [0,0,0],
+            "diffuseTexture": "/textures/wood.png"
         },
-        "red":{
-            "diffuse": 1,
-            "relection": 0,
-            "emission": 0,
-            "ior": 0,
-            "diffuseColor": [0.75,0.25,0.25],
-            "reflectColor": [0,0,0],
-            "emissionColor": [0,0,0]
-        },
-        "blue":{
-            "diffuse": 1,
-            "relection": 0,
+        "earth":{
+            "metallic": 0.0,
             "roughness": 0,
             "emission": 0,
-            "ior": 0,
-            "diffuseColor": [0.25,0.25,0.75],
-            "reflectColor": [0,0,0],
-            "emissionColor": [0,0,0]    
+            "ior": 1.5,
+            "diffuseColor": [1,1,1],
+            "reflectColor":  [1,1,1],
+            "emissionColor": [0,0,0],
+            "diffuseTexture": "/textures/earth.png"
+            
         },
-    
-        "green":{
-            "diffuse": 1,
-            "relection": 0,
-            "roughness": 0.0,
+        "wall":{
+            "metallic": 0.0,
+            "roughness": 0,
             "emission": 0,
-            "ior": 0,
-            "diffuseColor": [0.75,0.75,0.75],
-            "reflectColor": [0,0,0],
-            "emissionColor": [0,0,0]    
-        },
-        "floor":{
-            "diffuse": 0.2,
-            "relection": 0.8,
-            "roughness": 0.0,
-            "emission": 0,
-            "ior": 0,
-            "diffuseColor": [0.25,0.25,0.25],
-            "reflectColor": [0,0,0],
-            "emissionColor": [0,0,0]    
-        },
-        "back":{
-            "diffuse": 1,
-            "relection": 0,
-            "roughness": 0.0,
-            "emission": 0,
-            "ior": 0,
-            "diffuseColor": [0.25,0.75,0.25],
-            "reflectColor": [0,0,0],
-            "emissionColor": [0,0,0]    
+            "ior": 1.5,
+            "diffuseColor": [1,1,1],
+            "reflectColor":  [1,1,1],
+            "emissionColor": [0,0,0]
         },
         "light":{
             "diffuse": 0,
-            "relection": 0,
+            "reflection": 0,
             "roughness": 0,
             "emission": 300,
             "ior": 0,
@@ -70,26 +95,21 @@
             "reflectColor": [0,0,0],
             "emissionColor": [1,1,1]
 
-        },
-        "envlight":{
-            "lightTexture": "/textures/earth.png"
         }
-    
-
     },
     "camera": 
     {
         "name": "camera",
         "transform": {
             "position": [
-                0,
-                40,
-                250
+                50,
+                20,
+                280
             ],
             "target": [
-                0,
-                55,
-                50
+                50,
+                42,
+                100
             ],
             "up": [
                 0,
@@ -97,114 +117,24 @@
                 0
             ]
         },
-        "fov": 60
+        "fov": 60,
+        "focusOn": true,
+        "focalLength": 150,
+        "aperture": 0.4
     },
-
     "primitives": [
-        {
-            "name": "floor",
-            "transform": {
-                "position": [
-                    0,
-                    0,
-                    0
-                ],
-                "scale": [
-                    400,
-                    0.1,
-                    400
-                ],
-                "rotation": [
-                    0,
-                    0,
-                    0
-                ]
-            },
-
-            "type": "box",
-            "material": "floor"
-        },
-        {
-            "name": "back",
-            "transform": {
-                "position": [
-                    0,
-                    0,
-                    -150
-                ],
-                "scale": [
-                    400,
-                    400,
-                    0.1
-                ],
-                "rotation": [
-                    0,
-                    0,
-                    0
-                ]
-            },
-
-            "type": "box",
-            "material": "floor"
-        },
-        {
-            "name": "left",
-            "transform": {
-                "position": [
-                    -100,
-                    0,
-                    0
-                ],
-                "scale": [
-                    0.1,
-                    400,
-                    400
-                ],
-                "rotation": [
-                    0,
-                    0,
-                    0
-                ]
-            },
-
-            "type": "box",
-            "material": "red"
-        },
-        {
-            "name": "right",
-            "transform": {
-                "position": [
-                    100,
-                    0,
-                    0
-                ],
-                "scale": [
-                    0.1,
-                    400,
-                    400
-                ],
-                "rotation": [
-                    0,
-                    0,
-                    0
-                ]
-            },
-
-            "type": "box",
-            "material": "blue"
-        },
         {
             "name": "light",
             "transform": {
                 "position": [
-                    0,
-                    120,
-                    200
+                    65,
+                    200,
+                    100
                 ],
                 "scale": [
-                    6,
-                    6,
-                    6
+                    0,
+                    0,
+                    0
                 ],
                 "rotation": [
                     0,
@@ -217,17 +147,17 @@
             "material": "light"
         },
         {
-            "name": "cube",
+            "name": "lucy",
             "transform": {
                 "position": [
+                    -10,
                     0,
-                    0,
-                    50
+                    100
                 ],
                 "scale": [
-                    400,
-                    400,
-                    400
+                    450,
+                    450,
+                    450
                 ],
                 "rotation": [
                     0,
@@ -235,9 +165,108 @@
                     0
                 ]
             },
+
             "type": "mesh",
             "path": "lucy.obj",
-            "material": "white"
+            "material": "bronze"
+        },
+        {
+            "name": "lucy",
+            "transform": {
+                "position": [
+                    50,
+                    0,
+                    100
+                ],
+                "scale": [
+                    450,
+                    450,
+                    450
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "mesh",
+            "path": "lucy.obj",
+            "material": "sliver"
+        },
+        {
+            "name": "lucy",
+            "transform": {
+                "position": [
+                    110,
+                    0,
+                    100
+                ],
+                "scale": [
+                    450,
+                    450,
+                    450
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "mesh",
+            "path": "lucy.obj",
+            "material": "gold"
+        },
+        {
+            "name": "floor",
+            "transform": {
+                "position": [
+                    50,
+                    0,
+                    100
+                ],
+                "scale": [
+                    500,
+                    1,
+                    500
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "mesh",
+            "material": "iron",
+            "path":"plane.obj",
+            "color": [1, 1, 1]
+        },
+        {
+            "name": "wall",
+            "transform": {
+                "position": [
+                    50,
+                    0,
+                    -300
+                ],
+                "scale": [
+                    500,
+                    1,
+                    500
+                ],
+                "rotation": [
+                    90,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "mesh",
+            "material": "iron",
+            "path":"plane.obj",
+            "color": [1, 1, 1]
         }
         
     ]

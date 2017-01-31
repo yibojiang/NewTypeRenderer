@@ -6,21 +6,18 @@
     },
     "materials": {
         "metal":{
-            "diffuse": 0,
-            "reflection": 1,
             "refract": 0,
-            "diffuseRoughness": 0,
+            "metallic": 1.0,
             "roughness": 0,
             "emission": 0,
-            "ior": 1.5,
-            "diffuseColor": [0.75,0.25,0.15],
-            "reflectColor": [0.75,0.75,0.45],
+            "ior": 0.47,
+            "diffuseColor": [0.75,0.65,0.27],
+            "reflectColor": [0.75,0.65,0.27],
             "emissionColor": [0,0,0]
             
         },
         "glass":{
-            "diffuse": 0,
-            "reflection": 0,
+            "metallic": 0.0,
             "refract": 1,
             "roughness": 0,
             "emission": 0,
@@ -28,48 +25,34 @@
             "refractorColor": [1,1,1],
             "emissionColor": [0,0,0]
         },
-        "red":{
-            "diffuse": 1,
-            "reflection": 0,
-            "roughness": 0,
-            "emission": 0,
-            "ior": 0,
-            "diffuseColor": [0.65,0.35,0.25],
-            "reflectColor": [1,1,1],
-            "emissionColor": [0,0,0]
-        },    
-        "china":{
-            "diffuse": 0.9,
-            "reflection": 0.1,
-            "roughness": 0,
-            "emission": 0,
-            "ior": 0,
-            "diffuseColor": [0.99,0.99,0.99],
-            "reflectColor": [1,1,1],
-            "emissionColor": [0,0,0]
-        },
-        "blue":{
-            "diffuse": 1,
-            "reflection": 0,
-            "roughness": 0,
-            "emission": 0,
-            "ior": 0,
-            "diffuseColor": [0.25,0.25,0.75],
-            "reflectColor": [1,1,1],
-            "emissionColor": [0,0,0],
-            "diffuseTexture": "/textures/earth.png"
-        },
-    
         "floor":{
-            "diffuse": 0.3,
-            "reflection": 0.7,
+            "metallic": 0.5,
             "roughness": 0,
             "emission": 0,
-            "ior": 0,
+            "ior": 1.5,
             "diffuseColor": [1,1,1],
             "reflectColor": [0.05,0.05,0.05],
             "emissionColor": [0,0,0],
             "diffuseTexture": "/textures/marble.png"
+        },
+        "earth":{
+            "metallic": 0.0,
+            "roughness": 0,
+            "emission": 0,
+            "ior": 1.5,
+            "diffuseColor": [1,1,1],
+            "reflectColor":  [1,1,1],
+            "emissionColor": [0,0,0],
+            "diffuseTexture": "/textures/earth.png"
+        },
+        "white":{
+            "metallic": 0.0,
+            "roughness": 0,
+            "emission": 0,
+            "ior": 1.5,
+            "diffuseColor": [1,1,1],
+            "reflectColor":  [1,1,1],
+            "emissionColor": [0,0,0]
         },
         "light":{
             "diffuse": 0,
@@ -94,7 +77,7 @@
             ],
             "target": [
                 40,
-                40,
+                35,
                 120
             ],
             "up": [
@@ -165,9 +148,9 @@
                     -10
                 ],
                 "scale": [
-                    0.05,
-                    0.05,
-                    0.05
+                    0.04,
+                    0.04,
+                    0.04
                 ],
                 "rotation": [
                     0,
@@ -178,31 +161,30 @@
 
             "type": "mesh",
             "path": "venus.obj",
-            "material": "china"
+            "material": "white"
         },
         {
-            "name": "glass",
+            "name": "earth",
             "transform": {
                 "position": [
-                    120,
-                    0,
-                    5
+                    125,
+                    32.01,
+                    0
                 ],
                 "scale": [
-                    7,
-                    7,
-                    7
+                    32,
+                    32,
+                    32
                 ],
                 "rotation": [
                     0,
-                    100,
+                    10,
                     0
                 ]
             },
 
-            "type": "mesh",
-            "path": "dragon.obj",
-            "material": "blue"
+            "type": "sphere",
+            "material": "earth"
         },
         {
             "name": "floor",

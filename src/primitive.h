@@ -409,14 +409,14 @@ public:
         // double dist = -r.origin.dot(nl) + center.dot(nl);
         // double tt = dist / r.dir.dot(nl);
 
-        if (r.dir.dot(normal) == 0){
-            return 0;
-        }
+        // if (fabs(r.dir.dot(normal)) < eps){
+        //     return 0;
+        // }
 
         
-        if (normal == vec3(0,0,0)){             // triangle is degenerate
-            return 0; 
-        }
+        // if (normal == vec3(0,0,0)){             // triangle is degenerate
+        //     return 0; 
+        // }
 
         double dn = r.dir.dot(normal);
         if (fabs(dn) < eps) {     // ray is  parallel to triangle plane
@@ -475,8 +475,18 @@ public:
             bounds.dnear[i] = fmin(d1, fmin(d2, d3));
             bounds.dfar[i] = fmax(d1, fmax(d2, d3));
             
-            bounds.dfar[i] += eps;
-            bounds.dnear[i] -= eps;
+            // bounds.dnear[i]-=eps;
+            // bounds.dfar[i]+=eps;
+            // qDebug() << this->name.c_str() << "near" << bounds.dnear[i];
+            // qDebug() << this->name.c_str() << "far" << bounds.dfar[i];
+            // if ( fabs(bounds.dfar[i] - bounds.dnear[i]) < eps){
+            //     bounds.dnear[i]-=eps;
+            //     bounds.dfar[i]+=eps;
+            // }
+
+            
+            
+            
         
         }
     }

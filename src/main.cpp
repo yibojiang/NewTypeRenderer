@@ -144,7 +144,10 @@ void RenderThread::render()
 
 Window::Window(QWidget *parent) :
  QMainWindow(parent) {
+    // width = 100, height = 80;
     width = 960, height = 540;
+    // width = 640, height = 360;
+    // width = 1280, height = 720;
     resize(width, height);
 
     setContextMenuPolicy(Qt::NoContextMenu);
@@ -487,6 +490,9 @@ void Window::mousePressEvent(QMouseEvent *event)
 {
     this->pressPos = event->pos();
     if (event->button() == Qt::LeftButton) {
+        // tracer->testRa
+        qDebug() << event->pos();
+        tracer->testPixel(event->pos().x(), event->pos().y());
         // lastPoint = event->pos();
         // scribbling = true;
         

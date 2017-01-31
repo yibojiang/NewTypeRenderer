@@ -110,7 +110,10 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
     
     vec3 ambColor(0,0,0);
     if (!intersection.object){
-        ambColor = getEnvColor(ray.dir);
+        
+        ambColor = getEnvColor(ray.dir);    
+        
+        
         return ambColor;
         
     }
@@ -119,23 +122,34 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
     vec3 N = obj->getNormal(hit);
     vec3 nl = N.dot(ray.dir) < 0 ? N: N * -1;
     
+    
     vec3 albedo = obj->getMaterial()->getDiffuseColor(ray.uv);
+    
     vec3 refractColor = obj->getMaterial()->getRefractColor(ray.uv);
     vec3 reflectColor = obj->getMaterial()->getReflectColor(ray.uv);
+    
+    #ifdef RUSSIAN_ROULETTE_TERMINATION
+    // Russian roulette termination.
     double p = albedo.x > albedo.y && albedo.x > albedo.z ? albedo.x : albedo.y > albedo.z ? albedo.y : albedo.z; // max refl
     double p1 = refractColor.x > refractColor.y && refractColor.x > refractColor.z ? refractColor.x : refractColor.y > refractColor.z ? refractColor.y : refractColor.z;
     double p2 = reflectColor.x > reflectColor.y && reflectColor.x > reflectColor.z ? reflectColor.x : reflectColor.y > reflectColor.z ? reflectColor.y : reflectColor.z; // max refl
     p = fmax(p, fmax(p1, p2));
-    // Russian roulette termination.
-    // p = 0.1;
     if (++depth>5){
         if (drand48()<p*0.9) { // Multiply by 0.9 to avoid infinite loop with colours of 1.0
             albedo=albedo*(0.9/p);
+            refractColor=refractColor*(0.9/p);
+            reflectColor=reflectColor*(0.9/p);
         }
         else {
             return obj->getMaterial()->getEmission() * E;
         }
     }
+    #else
+
+    if (++depth>5){
+        return obj->getMaterial()->getEmission() * E;
+    }
+    #endif
 
     double randomVal = drand48();
     if (randomVal <= obj->getMaterial()->refract){
@@ -220,8 +234,17 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
         #else
 
         vec3 refl = ray.dir - N * 2 * N.dot(ray.dir);
+        vec3 view = -ray.dir;
+        vec3 half = (view + refl).normalize();
+        float NdotH = saturate(N.dot(half));
+        float NdotL = saturate(N.dot(refl));
         Ray reflRay(hit, refl);
-        return obj->getMaterial()->getEmission() + reflectColor * tracing(reflRay, depth);
+        float glossy = obj->getMaterial()->glossy;
+        // float factor = (glossy+1)/(2*M_PI); original phong
+        // float factor = (glossy+2)/(2*M_PI);
+        float factor = (glossy+2)*(glossy+4)/(8*M_PI*(pow(2, -glossy*0.5)+glossy));
+        // return obj->getMaterial()->getEmission() + reflectColor * tracing(reflRay, depth);
+        return obj->getMaterial()->getEmission() + reflectColor * factor * pow(NdotH, glossy) * NdotL * tracing(reflRay, depth);
         #endif
     }
     else{
@@ -264,6 +287,11 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
                 double omega = 2 * M_PI * (1 - cos_a_max);
                 e = e + albedo * M_1_PI * (light->getMaterial()->getEmission() * l.dot(nl) * omega); // 1/pi for brdf
             }
+        }
+
+        
+        if (obj->getMaterial()->useBackground){
+            albedo = getEnvColor(ray.dir);
         }
         // return f;
         return obj->getMaterial()->getEmission() * E + e + albedo * (tracing(reflRay, depth, 0));
@@ -339,6 +367,9 @@ void Raytracer::setupScene(const std::string& scenePath){
         scene.LoadHdri(envLight["hdri"].GetString());
         scene.envLightIntense = envLight["intense"].GetFloat();
         scene.envLightExp = envLight["exp"].GetFloat();
+        if (envLight.HasMember("rotate")){
+            scene.envRotate = envLight["rotate"].GetFloat()/180.0*M_PI;
+        }
     }
     if (document.HasMember("primitives")){
 
@@ -374,6 +405,16 @@ void Raytracer::setupScene(const std::string& scenePath){
                 if (mat.HasMember("roughness")){
                    material->roughness = mat["roughness"].GetFloat();
                 }
+
+                if (mat.HasMember("glossy")){
+                   material->glossy = mat["glossy"].GetFloat();
+                }
+
+                if (mat.HasMember("useBackground")){
+                    material->useBackground = mat["useBackground"].GetBool();
+                }
+            
+
 
                 if (mat.HasMember("metallic")){
                    material->metallic = mat["metallic"].GetFloat();
@@ -507,8 +548,9 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     samples = _samples;    
 
     QString path = QDir::currentPath();
-    std::string name = "/scene/empty.json";
-    // std::string name = "/scene/cornellbox.json";
+    // std::string name = "/scene/plane.json";
+    std::string name = "/scene/cornellbox.json";
+    // std::string name = "/scene/sponza.json";
     std::string fullpath = path.toUtf8().constData() + name;
     setupScene(fullpath);
     
@@ -567,10 +609,15 @@ void Raytracer::moveCamera(float x, float y){
 vec3 Raytracer::getEnvColor(const vec3 &dir) const{
     vec3 ambColor(0,0,0);
     if (scene.hasHdri){
+
+        mat3 m(cos(scene.envRotate),0, sin(scene.envRotate),
+                    0,         1,       0,
+                sin(scene.envRotate),0, -cos(scene.envRotate));
+        vec3 newdir = m * dir;
         // hdri  
         HDRImage hdri = scene.hdri;
-        double u = atan2(dir.x, dir.z) / ( 2.0 * M_PI ) + 0.5;
-        double v = asin(-dir.y) / M_PI + 0.5;
+        double u = atan2(-newdir.x, newdir.z) / ( 2.0 * M_PI ) + 0.5;
+        double v = asin(-newdir.y) / M_PI + 0.5;
         int hdrx = u* (hdri.width-1);
         int hdry = v* (hdri.height-1);
         double r = hdri.colors[hdry*hdri.width*3 + hdrx*3];
@@ -588,6 +635,59 @@ vec3 Raytracer::getEnvColor(const vec3 &dir) const{
     return ambColor;
 }
 
+void Raytracer::testPixel(int x, int y){
+
+    float near = scene.near;
+    mat3 ca = scene.ca;
+    vec3 ro = scene.ro;
+    double u = x * 1.0 / width;
+    double v = (height - y) * 1.0 / height;
+    u = (u * 2.0 - 1.0);
+    v = (v * 2.0 - 1.0);
+    // u = u * width/height;
+    v = v * height/width;
+    vec3 rd = ca * (vec3(u, v, near)).normalize();
+    Ray ray(ro, rd);
+    
+    
+    testRaytracing(ray, 0);
+    
+    // ambColor = getEnvColor(ray.dir);
+    // if (intersection.object) {
+    // }
+}
+
+void Raytracer::testRaytracing(Ray& ray, int depth){ 
+    if (++depth > 2){
+        return;
+    }
+
+    bvh.logOn=true;
+    Intersection intersection = bvh.intersect(ray);
+    bvh.logOn=false;
+    qDebug() << depth <<"distance: " << intersection.t;
+    if (!intersection.object){
+        qDebug() << "miss";
+        return;
+    }
+    Object *obj = intersection.object;
+    qDebug() << "  hit:" << obj->name.c_str();
+    vec3 hit = ray.origin + ray.dir * intersection.t;
+    vec3 N = obj->getNormal(hit);
+    vec3 nl = N.dot(ray.dir) < 0 ? N: N * -1;
+
+    double r1 = 2 * M_PI * drand48(); 
+    double r2 = drand48(); 
+    double rad = sqrt(r2);
+    vec3 w = nl;
+    vec3 u = ((fabs(w.x) > 0.1 ? vec3(0, 1, 0) : vec3(1, 0, 0)).cross(w)).normalize();
+    vec3 v = w.cross(u);  
+    vec3 d = (u * cos(r1) * rad + v * sin(r1) * rad + w * sqrt(1 - r2)).normalize();
+
+    Ray reflRay(hit, d);
+    testRaytracing(reflRay, depth);
+}
+
 void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalImage, QImage &boundingBoxImage) {
     struct timeval start, end;
     gettimeofday(&start, NULL);
@@ -599,7 +699,7 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
     vec3 boundingBoxColor;
     vec3 ambColor(0.15, 0.15, 0.15);
 
-
+    
     // vec3 ambColor(0,0,0);
     // vec3 lig = vec3(-1, -3, -1.5).normalize();
     vec3 pointLig(50 , 78, 60);
@@ -647,21 +747,30 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
                 normalColor = vec3((N.x + 1)*0.5, (N.y + 1)*0.5, (N.z+1) * 0.25 + 0.5) * 255;
                 // normalColor = obj->c * 255;
 
-                vec3 ld = (pointLig - hit).normalize();
+                // vec3 ld = (pointLig - hit).normalize();
 
-                vec3 diffuseColor =  obj->getMaterial()->getDiffuseColor(ray.uv) * fmax(ld.dot(N), 0) * obj->getMaterial()->diffuse;
-                
-                vec3 reflect = ray.dir.reflect(N);
-                vec3 specularColor = obj->getMaterial()->getReflectColor(ray.uv) * this->getEnvColor(reflect) * pow(fmax(reflect.dot(ld), 0), 10) * obj->getMaterial()->reflection;
-                
-                Ray shadowRay(hit, ld);
-                Intersection shadow = bvh.intersect(shadowRay);
-                double distToLight = (pointLig - hit).length();
-                if (shadow.object && shadow.t <= distToLight){
-                    directColor = directColor * clamp(3.8 * shadow.t/(distToLight), 0.0, 1.0); 
-                    // directColor = vec3();
+                vec3 albedo;
+                if (obj->getMaterial()->useBackground){
+                    // albedo = getEnvColor(ray.dir)/fmax(ld.dot(N), 0);
+                    albedo = getEnvColor(ray.dir);
                 }
-                directColor = diffuseColor + specularColor;
+                else{
+                    albedo = obj->getMaterial()->getDiffuseColor(ray.uv);
+                }
+                // vec3 diffuseColor =  albedo * fmax(ld.dot(N), 0) * obj->getMaterial()->diffuse;
+                
+                // vec3 reflect = ray.dir.reflect(N);
+                // vec3 specularColor = obj->getMaterial()->getReflectColor(ray.uv) * this->getEnvColor(reflect) * pow(fmax(reflect.dot(ld), 0), 10) * obj->getMaterial()->reflection;
+                
+                // Ray shadowRay(hit, ld);
+                // Intersection shadow = bvh.intersect(shadowRay);
+                // double distToLight = (pointLig - hit).length();
+                // if (shadow.object && shadow.t <= distToLight){
+                //     directColor = directColor * clamp(3.8 * shadow.t/(distToLight), 0.0, 1.0); 
+                //     // directColor = vec3();
+                // }
+                // directColor = diffuseColor + specularColor;
+                directColor = albedo * N.dot(-ray.dir);
             }
             else{
                 directColor = ambColor;
@@ -810,8 +919,6 @@ void Raytracer::renderIndirectProgressive(vec3 *colorArray, bool& abort, bool& r
 void Raytracer::renderIndirect(double &time, QImage &image) {
     struct timeval start, end;
     gettimeofday(&start, NULL);
-
-    
 
     int samps = samples / 4;
     isRendering = true;

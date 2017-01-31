@@ -1,0 +1,93 @@
+{   
+    "envlight":{
+        "intense": 1,
+        "exp": 1,
+        "hdri": "/textures/Playa_Sunrise_Env.hdr"
+    },
+    "materials": {
+        "light":{
+            "diffuse": 0,
+            "specular": 0,
+            "roughness": 0,
+            "emission": 0,
+            "ior": 0,
+            "diffuseColor": [0,0,0],
+            "reflectColor": [0,0,0],
+            "emissionColor": [1,1,1]
+        }
+    },
+    "camera": 
+    {
+        "name": "camera",
+        "transform": {
+            "position": [
+                100,
+                150,
+                500
+            ],
+            "target": [
+                0,
+                240,
+                0
+            ],
+            "up": [
+                0,
+                1,
+                0
+            ]
+        },
+        "fov": 110,
+        "focusOn": false,
+        "focalLength": 150,
+        "aperture": 0.4
+    },
+
+    "primitives": [
+        {
+            "name": "light",
+            "transform": {
+                "position": [
+                    0,
+                    200,
+                    0
+                ],
+                "scale": [
+                    5,
+                    5,
+                    5
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+
+            "type": "sphere",
+            "material": "light"
+        },
+        {
+            "name": "house",
+            "transform": {
+                "position": [
+                    0,
+                    0,
+                    0
+                ],
+                "scale": [
+                    10,
+                    10,
+                    10
+                ],
+                "rotation": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+            "type": "mesh",
+            "path": "lost_empire.obj",
+            "material": "white"
+        }
+    ]
+}

@@ -1,86 +1,33 @@
 {   
     "envlight":{
-        "intense": 1,
+        "intense": 100,
         "exp": 1,
         "hdri": "/textures/Ridgecrest_Road_Ref.hdr"
     },
     "materials": {
-        "white":{
-            "diffuse": 1,
-            "specular": 0,
-            "refract": 0,
-            "emission": 0,
-            "ior": 1.5,
-            "diffuseColor": [0.1,0.1,0.1],
-            "reflectColor": [1,1,1],
-            "emissionColor": [0,0,0]
-        },
-        "red":{
-            "diffuse": 1,
-            "specular": 0,
-            "emission": 0,
-            "ior": 0,
-            "diffuseColor": [0.75,0.25,0.25],
-            "reflectColor": [0,0,0],
-            "emissionColor": [0,0,0]
-        },
-        "blue":{
-            "diffuse": 1,
-            "specular": 0,
-            "roughness": 0,
-            "emission": 0,
-            "ior": 0,
-            "diffuseColor": [0.25,0.25,0.75],
-            "reflectColor": [0,0,0],
-            "emissionColor": [0,0,0]    
-        },
-    
-        "green":{
-            "diffuse": 1,
-            "specular": 0,
-            "roughness": 0.0,
-            "emission": 0,
-            "ior": 0,
-            "diffuseColor": [0.75,0.75,0.75],
-            "reflectColor": [0,0,0],
-            "emissionColor": [0,0,0]    
-        },
-        "back":{
-            "diffuse": 1,
-            "specular": 0,
-            "roughness": 0.0,
-            "emission": 0,
-            "ior": 0,
-            "diffuseColor": [0.25,0.75,0.25],
-            "reflectColor": [0,0,0],
-            "emissionColor": [0,0,0]    
-        },
         "light":{
             "diffuse": 0,
             "specular": 0,
             "roughness": 0,
-            "emission": 90,
+            "emission": 0,
             "ior": 0,
             "diffuseColor": [0,0,0],
             "reflectColor": [0,0,0],
             "emissionColor": [1,1,1]
-
         }
-    
-
     },
     "camera": 
     {
         "name": "camera",
         "transform": {
             "position": [
-                0,
-                10,
+                100,
+                100,
                 500
             ],
             "target": [
                 -100,
-                250,
+                430,
                 300
             ],
             "up": [
@@ -89,7 +36,10 @@
                 0
             ]
         },
-        "fov": 90
+        "fov": 110,
+        "focusOn": false,
+        "focalLength": 150,
+        "aperture": 0.4
     },
 
     "primitives": [
@@ -98,13 +48,13 @@
             "transform": {
                 "position": [
                     0,
-                    550,
-                    550
+                    10000,
+                    0
                 ],
                 "scale": [
-                    20,
-                    20,
-                    20
+                    0,
+                    0,
+                    0
                 ],
                 "rotation": [
                     0,
@@ -122,7 +72,7 @@
                 "position": [
                     0,
                     0,
-                    200
+                    0
                 ],
                 "scale": [
                     40,
@@ -131,7 +81,7 @@
                 ],
                 "rotation": [
                     0,
-                    -90,
+                    0,
                     0
                 ]
             },
@@ -139,6 +89,5 @@
             "path": "sponza.obj",
             "material": "white"
         }
-        
     ]
 }
