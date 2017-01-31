@@ -549,8 +549,8 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
 
     QString path = QDir::currentPath();
     // std::string name = "/scene/plane.json";
-    std::string name = "/scene/cornellbox.json";
-    // std::string name = "/scene/sponza.json";
+    // std::string name = "/scene/cornellbox.json";
+    std::string name = "/scene/sponza.json";
     std::string fullpath = path.toUtf8().constData() + name;
     setupScene(fullpath);
     
@@ -741,8 +741,9 @@ void Raytracer::renderDirect(double &time, QImage &directImage, QImage &normalIm
             if (intersection.object) {
                 Object *obj = intersection.object;
                 // vec3 f = obj->getMaterial()->getDiffuseColor(ray.uv);
-                vec3 hit = ro + rd * intersection.t;
-                vec3 N = obj->getNormal(hit);
+                // vec3 hit = ro + rd * intersection.t;
+                // vec3 N = obj->getNormal(hit);
+                vec3 N = ray.normal;
                 // N = ray.dir.dot(N) < 0 ? N : -N;
                 normalColor = vec3((N.x + 1)*0.5, (N.y + 1)*0.5, (N.z+1) * 0.25 + 0.5) * 255;
                 // normalColor = obj->c * 255;

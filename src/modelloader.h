@@ -190,10 +190,28 @@ public:
                     uv3=vec2();
                 }
 
+                vec3 n1 = vec3( 
+                        rawShape[i].mesh.normals[ rawShape[i].mesh.indices[3*f] * 3     ],
+                        rawShape[i].mesh.normals[ rawShape[i].mesh.indices[3*f] * 3 + 1 ],
+                        rawShape[i].mesh.normals[ rawShape[i].mesh.indices[3*f] * 3 + 2 ]
+                );
+
+                vec3 n2 = vec3(
+                        rawShape[i].mesh.normals[ rawShape[i].mesh.indices[3*f + 1] * 3     ],
+                        rawShape[i].mesh.normals[ rawShape[i].mesh.indices[3*f + 1] * 3 + 1 ],
+                        rawShape[i].mesh.normals[ rawShape[i].mesh.indices[3*f + 1] * 3 + 2 ]
+                );
+
+                vec3 n3 = vec3(
+                        rawShape[i].mesh.normals[ rawShape[i].mesh.indices[3*f + 2] * 3     ],
+                        rawShape[i].mesh.normals[ rawShape[i].mesh.indices[3*f + 2] * 3 + 1 ],
+                        rawShape[i].mesh.normals[ rawShape[i].mesh.indices[3*f + 2] * 3 + 2 ]
+                );
+
                 Triangle *face = new Triangle(p1, p2, p3);
                 // face -> setupVertices(p1, p2, p3);
                 face -> setupUVs(uv1, uv2, uv3);
-                // face -> setupNormals(n1, n2, n3);    
+                face -> setupNormals(n1, n2, n3);    
                 mesh->addFace(face);
 
                 // int materialIdx = rawShape[i].mesh.material_ids[f];
