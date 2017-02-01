@@ -8,7 +8,7 @@ struct Ray {
     vec3 origin;
     vec3 dir;
     vec2 uv;
-    // vec3 normal;
+    vec3 normal;
     Ray(vec3 ro) { origin = ro; dir = vec3(1,0,0); }
     Ray(vec3 ro, vec3 rd){ origin = ro; dir = rd; }
 
@@ -146,6 +146,8 @@ public:
         // float v = asin( sp.y ) / M_PI + 0.5;
         r.uv = vec2((atan2(sp.x, sp.z)) / ( 2.0 * M_PI ) + 0.5, 
                     asin(sp.y) / M_PI + 0.5) ;
+
+        r.normal = getNormal(hit);
         // return (t = b - det) > eps ? t : ((t = b + det) > eps ? t : 0);
         return t;
     }
@@ -282,6 +284,9 @@ public:
             return 0;
         }
 
+        vec3 hit = r.origin + r.dir*tmin;
+        r.normal = getNormal(hit);
+
         return tmin;
     } 
     
@@ -359,6 +364,9 @@ public:
     vec3 n1, n2, n3;
     vec3 normal, u, v;
     vec3 p1, p2, p3;
+    double  s, t;
+    // bool normalAtVertex;
+
     
 
     // Triangle(){}
@@ -370,7 +378,9 @@ public:
         v = this->p3 - this->p1;
         normal = u.cross(v).normalize();              // cross product
         isMesh = false;
+        // normalAtVertex = false;
     }
+
     ~Triangle(){
 
     }
@@ -390,6 +400,7 @@ public:
         n1 = _n1.normalize();
         n2 = _n2.normalize();
         n3 = _n3.normalize();
+        // normalAtVertex = true;
     }
 
     void setupUVs(vec2 uv1, vec2 uv2, vec2 uv3){
@@ -399,6 +410,7 @@ public:
     }
 
     vec3 getNormal(const vec3 &) const{    
+
         return normal;
         // return n1;
         // return n1 * (1 - s -t) + n2 * s + n3 * t;
@@ -444,7 +456,7 @@ public:
         D = uv * uv - uu * vv;
 
         // get and test parametric coords
-        double s, t;
+        // double s, t;
         s = (uv * wv - vv * wu) / D;
         if (s < 0.0 || s > 1.0){         // I is outside T
             return 0;
@@ -457,6 +469,8 @@ public:
 
         // r.uv = (uv1 * s +  uv2 * (1 - s));
         r.uv = uv1 * (1 - s -t) + uv2 * s + uv3 * t;
+
+        r.normal = getNormal(hit);
         // r.normal = n1 * (1 - s -t) + n2 * s + n3 * t;
         // r.uv = vec2(drand48(), drand48());
 
