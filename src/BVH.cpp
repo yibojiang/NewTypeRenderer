@@ -590,18 +590,20 @@ Intersection BVH::intersectBVH(const Ray& ray) const{
 
 
 void BVH::intersectNode(Ray& r, const OctreeNode *node, Intersection &intersection, std::priority_queue<HitNode> &hitNodes){
+
     if (logOn) qDebug() << "checking node: " << node->name.c_str();
     if (node->isLeaf){
         if (logOn) qDebug() << "checking leaf node: " << node->name.c_str();
         
         for (unsigned int i = 0; i < node->objects.size(); ++i){
+
             double t = node->objects[i]->intersect(r);
 
             if (t > eps &&  t < intersection.t){
                  t = node->objects[i]->intersect(r);
                  intersection.object = node->objects[i];
                  intersection.t = t;
-                 // if (logOn) qDebug() << "hit object: " << intersection.object->name.c_str() << "depth" <<  node->depth << t;   
+            //      // if (logOn) qDebug() << "hit object: " << intersection.object->name.c_str() << "depth" <<  node->depth << t;   
             }    
         }
     }
@@ -610,9 +612,7 @@ void BVH::intersectNode(Ray& r, const OctreeNode *node, Intersection &intersecti
             if (node->children[i]){
                 double test = node->children[i]->extents.intersectNear(r);
                 if (test > eps){
-                    // if (logOn){
-                    //     qDebug() << "adding " << node->children[i]->name.c_str() << test;
-                    // }
+                    // if (logOn) qDebug() << "adding " << node->children[i]->name.c_str() << test;
                     hitNodes.push(HitNode(node->children[i], test));
                     // intersectNode(r, nearstNode->children[i], intersection, hitNodes);
                 }
@@ -640,10 +640,7 @@ void BVH::intersectNode(Ray& r, const OctreeNode *node, Intersection &intersecti
         // }
         return;
     }
-    // qDebug() << "checking" << nearstNode->name.c_str() << nearestHit;
-    // if (logOn){
-    //     qDebug() << "checking node: " << node->name.c_str() << "distance: " <<nearestHit;
-    // }
+    
     intersectNode(r, nearstNode, intersection, hitNodes);
     
 }
@@ -664,7 +661,6 @@ Intersection BVH::intersect(Ray& ray){
     //     qDebug() << "scene distance:" << test;
     // }
     if (test > eps){
-
         this->intersectNode(ray, octree, closestIntersection, hitNodes);
     }
     

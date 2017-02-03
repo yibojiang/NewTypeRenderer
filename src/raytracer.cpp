@@ -72,11 +72,6 @@ inline void ons(const vec3& v1, vec3& v2, vec3& v3) {
     v3 = v1.cross(v2);
 }
 
-inline vec3 Fresnel_Schlick(float cosT, vec3 F0){
-  return F0 + (vec3(1,1,1)-F0) * pow( 1 - cosT, 5);
-}
-
-
 
 inline double fract(double f){
     return f = f-(long)f;
@@ -176,7 +171,7 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
         double RP = Re / P;
         double TP = Tr / (1 - P);
 
-        return obj->getMaterial()->getEmission() + refractColor * (depth > 2 ? (drand48() < P ? // Russian roulette
+    return obj->getMaterial()->getEmission() + refractColor * (depth > 2 ? (drand48() < P ? // Russian roulette
                             tracing(reflRay, depth) * RP : tracing(refrRay, depth) * TP) :
                             tracing(reflRay, depth) * Re + tracing(refrRay, depth) * Tr);
     }
@@ -187,7 +182,6 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
         // Important sample
         // float rand1 = drand48();
         // float tan_theta = roughness * sqrt(rand1/(1 - rand1));
-        
         float tan_theta = sqrt(-roughness*roughness*log(1-drand48()));
         // float theta = atan(sqrt(-roughness*roughness*log(1-drand48())));
         float theta = atan(tan_theta);
@@ -209,14 +203,13 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
 
         vec3 sampleVector = ray.dir.reflect(m);        
         vec3 halfVector = (sampleVector + viewVector).normalize();
-        // halfVector = m;
         
         Ray reflRay(hit, sampleVector);
-        // Calculate fresnel
+        // Calculate fresnel with Fresnel_Schlick approixmation
         float F0 = obj->getMaterial()->F0;
         float fresnel = F0 + (1 - F0) * pow((1 - sampleVector.dot(halfVector)), 5);
         
-        // Geometry term
+        // Geometry term GGX Distribution
         // float geometry = GGX_PartialGeometryTerm(viewVector, N, halfVector, roughness)
         //  * GGX_PartialGeometryTerm(sampleVector, N, halfVector, roughness);
         float NdotH = (N.dot(halfVector));
@@ -224,12 +217,45 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
         float VdotH = (viewVector.dot(halfVector));
         float NdotV = (N.dot(viewVector));
         float geometry = fmin(1,  fmin( 2*NdotH*NdotV/VdotH, 2*NdotH*NdotL/VdotH));
-        // return vec3(geometry, geometry, geometry);
 
         // Calculate the Cook-Torrance denominator
         float denominator =  4 * NdotV;
-        return obj->getMaterial()->getEmission() + reflectColor * saturate(fresnel * geometry / denominator) * tracing(reflRay, depth);
-        // return obj->getMaterial()->getEmission() + reflectColor * fresnel * geometry / denominator ;
+        vec3 specularColor = reflectColor * saturate(fresnel * geometry / denominator);
+
+        #ifdef EXPLICIT_LIGHT_SAMPLE
+        vec3 e;
+        for (unsigned int i = 0; i < scene.lights.size(); i++) {
+            Object* light = scene.lights[i];
+            vec3 sw = light->getCentriod() - hit;
+            vec3 su = ((fabs(sw.x) > .1 ? vec3(0, 1, 0) : vec3(1, 0, 0)).cross(sw)).normalize();
+            vec3 sv = sw.cross(su);
+            
+            // Sphere light
+            Sphere* s = (Sphere*)light;
+            double cos_a_max = sqrt(1 - s->rad * s->rad / (hit - s->getCentriod()).dot(hit - s->getCentriod()));
+            double eps1 = drand48(), eps2 = drand48();
+            double cos_a = 1 - eps1 + eps1 * cos_a_max;
+            double sin_a = sqrt(1 - cos_a * cos_a);
+            double phi = 2 * M_PI * eps2;
+            vec3 l = su * cos(phi) * sin_a + sv * sin(phi) * sin_a + sw * cos_a;
+            l.normalize();
+            qDebug() << l;
+            Ray shadowRay(hit, l);
+            Intersection shadow = bvh.intersect(shadowRay);
+            
+            if (shadow.object && shadow.object == light){
+                double omega = 2 * M_PI * (1 - cos_a_max);
+                e = e + specularColor * M_1_PI * (light->getMaterial()->getEmission() * l.dot(nl) * omega); // 1/pi for brdf
+            }
+        }
+
+        return obj->getMaterial()->getEmission() * E + e + specularColor * (tracing(reflRay, depth, 0));
+        #else
+        return obj->getMaterial()->getEmission() + specularColor * tracing(reflRay, depth);
+        #endif
+
+       
+        
 
         #else
 
@@ -244,6 +270,7 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
         // float factor = (glossy+2)/(2*M_PI);
         float factor = (glossy+2)*(glossy+4)/(8*M_PI*(pow(2, -glossy*0.5)+glossy));
         // return obj->getMaterial()->getEmission() + reflectColor * tracing(reflRay, depth);
+
         return obj->getMaterial()->getEmission() + reflectColor * factor * pow(NdotH, glossy) * NdotL * tracing(reflRay, depth);
         #endif
     }
@@ -290,10 +317,10 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
         }
 
         
-        if (obj->getMaterial()->useBackground){
-            albedo = getEnvColor(ray.dir);
-        }
-        // return f;
+        // if (obj->getMaterial()->useBackground){
+        //     albedo = getEnvColor(ray.dir);
+        // }
+        
         return obj->getMaterial()->getEmission() * E + e + albedo * (tracing(reflRay, depth, 0));
         #else
 
@@ -548,9 +575,11 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     samples = _samples;    
 
     QString path = QDir::currentPath();
-    // std::string name = "/scene/plane.json";
+    // std::string name = "/scene/empty.json";
+    // std::string name = "/scene/sportcar.json";
+    std::string name = "/scene/plane.json";
     // std::string name = "/scene/cornellbox.json";
-    std::string name = "/scene/sponza.json";
+    // std::string name = "/scene/sponza.json";
     std::string fullpath = path.toUtf8().constData() + name;
     setupScene(fullpath);
     

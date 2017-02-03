@@ -25,6 +25,12 @@
                     "shell": true,        
                 },
                 {
+                    "name": "Qmake & Make & Debug",
+                    "cmd": ["/usr/local/bin/qmake tracer.pro && make && lldb tracer.app && run"],
+                    "working_dir": "${project_path:}",
+                    "shell": true,        
+                },
+                {
                     "name": "Build & Run",
                     "cmd": ["/usr/local/bin/clang-omp++ -fopenmp -o tracer $file && ./tracer"],
                     "working_dir": "${project_path:${folder}}",

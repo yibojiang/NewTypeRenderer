@@ -68,4 +68,10 @@ Makefile*
 # QtCtreator CMake
 CMakeLists.txt.user*
 
+# Models and Textures
+models/
+textures/
+
+
+
 BUILD_RESULT
