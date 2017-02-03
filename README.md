@@ -48,7 +48,7 @@ Run
 ```
 
 ## Usage
-1) Create models/ foler and textures/ folder in the project path.
-2) Put all models models folder, textures and mtl in textures folder.
-3) Create scene json file.
-4) Load the scene and render.
+- Create models/ foler and textures/ folder in the project path.
+- Put all models models folder, textures and mtl in textures folder.
+- Create scene json file.
+- Load the scene and render.
