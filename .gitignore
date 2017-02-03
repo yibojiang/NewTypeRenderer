@@ -69,8 +69,6 @@ Makefile*
 CMakeLists.txt.user*
 
 # Models and Textures
-models/
-textures/
 
 
 

@@ -222,37 +222,37 @@ vec3 Raytracer::tracing(Ray &ray, int depth, int E = 1){
         float denominator =  4 * NdotV;
         vec3 specularColor = reflectColor * saturate(fresnel * geometry / denominator);
 
-        #ifdef EXPLICIT_LIGHT_SAMPLE
-        vec3 e;
-        for (unsigned int i = 0; i < scene.lights.size(); i++) {
-            Object* light = scene.lights[i];
-            vec3 sw = light->getCentriod() - hit;
-            vec3 su = ((fabs(sw.x) > .1 ? vec3(0, 1, 0) : vec3(1, 0, 0)).cross(sw)).normalize();
-            vec3 sv = sw.cross(su);
+        // #ifdef EXPLICIT_LIGHT_SAMPLE
+        // vec3 e;
+        // for (unsigned int i = 0; i < scene.lights.size(); i++) {
+        //     Object* light = scene.lights[i];
+        //     vec3 sw = light->getCentriod() - hit;
+        //     vec3 su = ((fabs(sw.x) > .1 ? vec3(0, 1, 0) : vec3(1, 0, 0)).cross(sw)).normalize();
+        //     vec3 sv = sw.cross(su);
             
-            // Sphere light
-            Sphere* s = (Sphere*)light;
-            double cos_a_max = sqrt(1 - s->rad * s->rad / (hit - s->getCentriod()).dot(hit - s->getCentriod()));
-            double eps1 = drand48(), eps2 = drand48();
-            double cos_a = 1 - eps1 + eps1 * cos_a_max;
-            double sin_a = sqrt(1 - cos_a * cos_a);
-            double phi = 2 * M_PI * eps2;
-            vec3 l = su * cos(phi) * sin_a + sv * sin(phi) * sin_a + sw * cos_a;
-            l.normalize();
-            qDebug() << l;
-            Ray shadowRay(hit, l);
-            Intersection shadow = bvh.intersect(shadowRay);
+        //     // Sphere light
+        //     Sphere* s = (Sphere*)light;
+        //     double cos_a_max = sqrt(1 - s->rad * s->rad / (hit - s->getCentriod()).dot(hit - s->getCentriod()));
+        //     double eps1 = drand48(), eps2 = drand48();
+        //     double cos_a = 1 - eps1 + eps1 * cos_a_max;
+        //     double sin_a = sqrt(1 - cos_a * cos_a);
+        //     double phi = 2 * M_PI * eps2;
+        //     vec3 l = su * cos(phi) * sin_a + sv * sin(phi) * sin_a + sw * cos_a;
+        //     l.normalize();
+        //     qDebug() << l;
+        //     Ray shadowRay(hit, l);
+        //     Intersection shadow = bvh.intersect(shadowRay);
             
-            if (shadow.object && shadow.object == light){
-                double omega = 2 * M_PI * (1 - cos_a_max);
-                e = e + specularColor * M_1_PI * (light->getMaterial()->getEmission() * l.dot(nl) * omega); // 1/pi for brdf
-            }
-        }
+        //     if (shadow.object && shadow.object == light){
+        //         double omega = 2 * M_PI * (1 - cos_a_max);
+        //         e = e + specularColor * M_1_PI * (light->getMaterial()->getEmission() * l.dot(nl) * omega); // 1/pi for brdf
+        //     }
+        // }
 
-        return obj->getMaterial()->getEmission() * E + e + specularColor * (tracing(reflRay, depth, 0));
-        #else
+        // return obj->getMaterial()->getEmission() * E + e + specularColor * (tracing(reflRay, depth, 0));
+        // #else
         return obj->getMaterial()->getEmission() + specularColor * tracing(reflRay, depth);
-        #endif
+        // #endif
 
        
         
@@ -577,8 +577,8 @@ Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples){
     QString path = QDir::currentPath();
     // std::string name = "/scene/empty.json";
     // std::string name = "/scene/sportcar.json";
-    std::string name = "/scene/plane.json";
-    // std::string name = "/scene/cornellbox.json";
+    // std::string name = "/scene/plane.json";
+    std::string name = "/scene/cornellbox.json";
     // std::string name = "/scene/sponza.json";
     std::string fullpath = path.toUtf8().constData() + name;
     setupScene(fullpath);
