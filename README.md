@@ -18,6 +18,7 @@ a Monte Carlo Pathtracer with qt4 GUI in C++.
  - BVH Structure Acceleration
  - a Progressively Rendering Renderview
  - Mutithread rendering on CPU
+ - Scene description Json-format
 
 ## Compiling
 Install clang-openmp
@@ -45,3 +46,9 @@ Run
 ```
     ./tracer.app/Contents/MacOS/tracer
 ```
+
+## Usage
+1) Create models/ foler and textures/ folder in the project path.
+2) Put all models models folder, textures and mtl in textures folder.
+3) Create scene json file.
+4) Load the scene and render.
