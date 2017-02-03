@@ -183,7 +183,7 @@
 
             "type": "mesh",
             "material": "red",
-            "path":"plane2.obj"
+            "path":"plane.obj"
         },
         {
             "name": "right",
@@ -207,7 +207,7 @@
 
             "type": "mesh",
             "material": "blue",
-            "path":"plane2.obj"
+            "path":"plane.obj"
         },
         {
             "name": "floor",
@@ -231,7 +231,7 @@
 
             "type": "mesh",
             "material": "grey",
-            "path":"plane2.obj"
+            "path":"plane.obj"
         },
         {
             "name": "ceil",
@@ -255,7 +255,7 @@
 
             "type": "mesh",
             "material": "grey",
-            "path":"plane2.obj"
+            "path":"plane.obj"
         },
         {
             "name": "back",
@@ -279,7 +279,7 @@
 
             "type": "mesh",
             "material": "grey",
-            "path":"plane2.obj"
+            "path":"plane.obj"
         },
         {
             "name": "front",
@@ -303,7 +303,7 @@
 
             "type": "mesh",
             "material": "green",
-            "path":"plane2.obj"
+            "path":"plane.obj"
         },
         {
             "name": "sphere",
