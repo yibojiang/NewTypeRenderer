@@ -69,7 +69,7 @@ Makefile*
 CMakeLists.txt.user*
 
 # Models and Textures
-
+/images
 
 
 BUILD_RESULT
