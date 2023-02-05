@@ -11,9 +11,9 @@
 
 #include "math/Matrix.h"
 
-#include "Scene.h"
 #include "BVH.h"
 #include "Image.h"
+#include "basic/Scene.h"
 #include "basic/SceneNode.h"
 #include "HDRLoader/HDRloader.h"
 
@@ -30,43 +30,46 @@ namespace new_type_renderer
 
         ~Raytracer();
 
-        Color tracing(Ray& ray, int depth, int E);
+        Color Tracing(Ray& ray, int depth, int E);
         
-        void renderIndirectProgressive(Color* colorArray, bool& abort, bool& restart, int& samples);
+        void RenderIndirectProgressive(Color* colorArray, bool& abort, bool& restart, int& samples);
 
-        void renderIndirect(double& time, Image& image);
+        void RenderIndirect(double& time, Image& image);
 
-        void renderDirect(double& time, Image& directImage, Image& normalImage, Image& boundingBoxImage);
+        void RenderDirect(double& time, Image& directImage, Image& normalImage, Image& boundingBoxImage);
 
-        void testPixel(int x, int y);
+        void TestPixel(int x, int y);
 
-        void testRaytracing(Ray& ray, int depth);
+        void TestRaytracing(Ray& ray, int depth);
 
-        void setResolution(const int& width, const int& height);
+        void SetResolution(const int& width, const int& height);
 
-        void rotateCamera(float, float, float);
+        void RotateCamera(float, float, float);
 
-        void moveCamera(float, float);
+        void MoveCamera(float, float);
 
-        void scaleCamera(float);
+        void ScaleCamera(float);
 
-        void setupScene(const std::string& scenePath);
+        void UnloadScene();
 
-        void unloadScene();
+        Color GetEnvColor(const Vector3& dir) const;
 
-        Color getEnvColor(const Vector3& dir) const;
-
-        // Vector3 toneMapping(const Vector3 &radiance) const;
+        // Vector3 ToneMapping(const Vector3 &radiance) const;
     public:
         Scene scene;
-        BVH bvh;
+
         int curSamples;
+
         int samples;
+
         double progress;
-        bool isRendering;
-        std::string scenePath;
+
+        bool is_rendering;
+
+        std::string scene_path;
 
         unsigned short width;
+
         unsigned short height;
     };
 }

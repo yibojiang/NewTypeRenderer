@@ -178,16 +178,16 @@ namespace new_type_renderer
 
     inline Vector3 Clamp(Vector3& v, Vector3& a, Vector3& b)
     {
-        return Vector3(Clamp(v.x, a.x, b.x), Clamp(v.y, a.y, b.y), Clamp(v.z, a.z, b.z));
+        return Vector3{ Clamp(v.x, a.x, b.x), Clamp(v.y, a.y, b.y), Clamp(v.z, a.z, b.z) };
     }
 
     inline Vector3 Clamp(Vector3& v, Vector3 a, Vector3 b)
     {
-        return Vector3(Clamp(v.x, a.x, b.x), Clamp(v.y, a.y, b.y), Clamp(v.z, a.z, b.z));
+        return Vector3{ Clamp(v.x, a.x, b.x), Clamp(v.y, a.y, b.y), Clamp(v.z, a.z, b.z) };
     }
 
     inline Vector4 Clamp(Vector4& v, Vector4 a, Vector4 b)
     {
-        return Vector4(Clamp(v.x, a.x, b.x), Clamp(v.y, a.y, b.y), Clamp(v.z, a.z, b.z), Clamp(v.w, a.w, b.w));
+        return Vector4{ Clamp(v.x, a.x, b.x), Clamp(v.y, a.y, b.y), Clamp(v.z, a.z, b.z), Clamp(v.w, a.w, b.w) };
     }
 }

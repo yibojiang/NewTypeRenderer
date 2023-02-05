@@ -15,46 +15,39 @@ namespace new_type_renderer
         std::string name;
         bool isMesh;
 
-        Object()
-        {
-        }
+        Object() {}
 
         virtual ~Object()
         {
         }
 
-        virtual Vector3 getNormal(const Vector3&) const { return Vector3(1); }
+        virtual Vector3 GetNormal(const Vector3&) const { return Vector3(1); }
 
-        virtual double intersect(Ray&) { return 0; }
+        virtual float Intersect(Ray&) { return 0; }
 
-        virtual double getProjectAngleToSphere()
+        virtual float GetProjectAngleToSphere()
         {
             return M_PI;
         }
 
 
-        void setMaterial(Material* in_material)
+        void SetMaterial(Material* _material)
         {
-            material = in_material;
+            material = _material;
         }
 
-        Material* getMaterial()
+        Material* GetMaterial() const
         {
-            return this->material;
+            return material;
         }
 
-        virtual Vector3 getCentriod() const { return Vector3(); }
+        virtual Vector3 GetCentriod() const = 0;
 
+        virtual void UpdateTransformMatrix(const Matrix4x4&) = 0;
 
-        virtual void updateTransformMatrix(const Matrix4x4&)
-        {
-        }
+        virtual void ComputeBounds() = 0;
 
-        virtual void computebounds()
-        {
-        }
-
-        Extents getBounds()
+        Extents GetBounds()
         {
             return bounds;
         }
@@ -64,6 +57,4 @@ namespace new_type_renderer
 
         Material* material;
     };
-
-    
 }

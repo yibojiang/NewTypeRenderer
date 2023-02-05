@@ -25,13 +25,13 @@ namespace new_type_renderer
 
         void Destroy();
 
-        Intersection Intersect(Ray&);
+        Intersection Intersect(Ray&) const;
 
         Intersection IntersectBoundingBox(const Ray&) const;
 
         Intersection IntersectBVH(const Ray& ray) const;
 
-        void IntersectNode(Ray& ray, const OctreeNode* node, Intersection& intersection, std::priority_queue<HitNode>&);
+        void IntersectNode(Ray& ray, const OctreeNode* node, Intersection& intersection, std::priority_queue<HitNode>&) const;
         
     public:
         Scene* scene;

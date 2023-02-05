@@ -24,17 +24,17 @@ namespace new_type_renderer
             isMesh = false;
         }
 
-        double intersect(Ray& r) override
+        float Intersect(Ray& r) override
         {
             return (-r.origin.Dot(normal) - off) / (normal).Dot(r.dir);
         }
 
-        Vector3 getNormal(const Vector3&) const override
+        Vector3 GetNormal(const Vector3&) const override
         {
             return normal;
         }
 
-        void updateTransformMatrix(const Matrix4x4& m) override
+        void UpdateTransformMatrix(const Matrix4x4& m) override
         {
             auto normalDir = Vector4(normal, 0);
             normalDir = m * normalDir;
@@ -46,8 +46,6 @@ namespace new_type_renderer
             auto origin3 = Vector3(origin.x, origin.y, origin.z);
             off = origin3.Dot(normal);
         }
-
-        // virtual Vector3 debug(Vector3 _pos) const{return Vector3(1);}
     };
 
 
@@ -73,7 +71,7 @@ namespace new_type_renderer
             this->center = pos;
         }
 
-        double intersect(Ray& r) override
+        float Intersect(Ray& r) override
         {
             // returns distance, 0 if nohit
             Vector3 op = center - r.origin; // Solve t^2*d.d + 2*t*(o-p).d + (o-p).(o-p)-R^2 = 0
@@ -105,17 +103,17 @@ namespace new_type_renderer
             r.uv = Vector2((atan2(sp.x, sp.z)) / (2.0 * M_PI) + 0.5,
                            asin(sp.y) / M_PI + 0.5);
 
-            r.normal = getNormal(hit);
+            r.normal = GetNormal(hit);
             // return (t = b - det) > eps ? t : ((t = b + det) > eps ? t : 0);
             return t;
         }
 
-        Vector3 getNormal(const Vector3& _pos) const override
+        Vector3 GetNormal(const Vector3& _pos) const override
         {
             return (_pos - center) / rad;
         }
 
-        void updateTransformMatrix(const Matrix4x4& m) override
+        void UpdateTransformMatrix(const Matrix4x4& m) override
         {
             this->m = m;
             auto pos = Vector4(center, 1);
@@ -126,7 +124,7 @@ namespace new_type_renderer
             rad = dir.Length();
         }
 
-        void computebounds() override
+        void ComputeBounds() override
         {
             // bounds = new Extents();
             for (uint8_t i = 0; i < SLABCOUNT; ++i)
@@ -138,7 +136,7 @@ namespace new_type_renderer
             }
         }
 
-        Vector3 getCentriod() const override
+        virtual Vector3 GetCentriod() const override
         {
             return center;
         }
@@ -232,7 +230,7 @@ namespace new_type_renderer
         // } 
 
 
-        double intersect(Ray& r) override
+        float Intersect(Ray& r) override
         {
             // returns distance, 0 if nohit
             double t1 = (-dnear[0] - r.origin.Dot(normals[0])) / r.dir.Dot(normals[0]);
@@ -256,12 +254,12 @@ namespace new_type_renderer
             }
 
             Vector3 hit = r.origin + r.dir * tmin;
-            r.normal = getNormal(hit);
+            r.normal = GetNormal(hit);
 
             return tmin;
         }
 
-        Vector3 getNormal(const Vector3& _pos) const override
+        Vector3 GetNormal(const Vector3& _pos) const override
         {
             for (int i = 0; i < 3; ++i)
             {
@@ -288,7 +286,7 @@ namespace new_type_renderer
             return Vector3();
         }
 
-        void updateTransformMatrix(const Matrix4x4& m) override
+        void UpdateTransformMatrix(const Matrix4x4& m) override
         {
             for (int i = 0; i < 3; ++i)
             {
@@ -310,7 +308,7 @@ namespace new_type_renderer
             updatePlane();
         }
 
-        void computebounds() override
+        void ComputeBounds() override
         {
             for (uint8_t i = 0; i < SLABCOUNT; ++i)
             {
@@ -332,7 +330,7 @@ namespace new_type_renderer
             }
         }
 
-        Vector3 getCentriod() const override
+        virtual Vector3 GetCentriod() const override
         {
             return center;
         }
@@ -348,13 +346,13 @@ namespace new_type_renderer
         Vector3 p1, p2, p3;
         double s, t;
 
-        Triangle(Vector3 p1, Vector3 p2, Vector3 p3)
+        Triangle(Vector3 in_p1, Vector3 in_p2, Vector3 in_p3)
         {
-            this->p1 = p1;
-            this->p2 = p2;
-            this->p3 = p3;
-            u = this->p2 - this->p1;
-            v = this->p3 - this->p1;
+            p1 = in_p1;
+            p2 = in_p2;
+            p3 = in_p3;
+            u = p2 - p1;
+            v = p3 - p1;
             normal = u.Cross(v).Normalize();
             isMesh = false;
         }
@@ -363,41 +361,39 @@ namespace new_type_renderer
         {
         }
 
-        void setupVertices(const Vector3 p1, const Vector3 p2, const Vector3 p3)
+        void setupVertices(const Vector3 in_p1, const Vector3 in_p2, const Vector3 in_p3)
         {
-            this->p1 = p1;
-            this->p2 = p2;
-            this->p3 = p3;
-            u = this->p2 - this->p1;
-            v = this->p3 - this->p1;
+            p1 = in_p1;
+            p2 = in_p2;
+            p3 = in_p3;
+            u = p2 - p1;
+            v = p3 - p1;
             normal = u.Cross(v).Normalize(); // Cross product
             isMesh = false;
         }
 
-        void setupNormals(Vector3 _n1, Vector3 _n2, Vector3 _n3)
+        void setupNormals(Vector3 in_n1, Vector3 in_n2, Vector3 in_n3)
         {
-            // normal = _normal.Normalize();
-            n1 = _n1.Normalize();
-            n2 = _n2.Normalize();
-            n3 = _n3.Normalize();
-            // normalAtVertex = true;
+            n1 = in_n1.Normalize();
+            n2 = in_n2.Normalize();
+            n3 = in_n3.Normalize();
         }
 
-        void setupUVs(Vector2 uv1, Vector2 uv2, Vector2 uv3)
+        void setupUVs(Vector2 in_uv1, Vector2 in_uv2, Vector2 in_uv3)
         {
-            this->uv1 = uv1;
-            this->uv2 = uv2;
-            this->uv3 = uv3;
+            uv1 = in_uv1;
+            uv2 = in_uv2;
+            uv3 = in_uv3;
         }
 
-        Vector3 getNormal(const Vector3&) const override
+        Vector3 GetNormal(const Vector3&) const override
         {
             return normal;
             // return n1;
             // return n1 * (1 - s -t) + n2 * s + n3 * t;
         }
 
-        double intersect(Ray& r) override
+        float Intersect(Ray& r) override
         {
             // returns distance, 0 if nohit        
             // Vector3 nl = r.dir.Dot(normal) > 0 ? normal : normal * -1;
@@ -459,7 +455,7 @@ namespace new_type_renderer
             // r.uv = (uv1 * s +  uv2 * (1 - s));
             r.uv = uv1 * (1 - s - t) + uv2 * s + uv3 * t;
 
-            r.normal = getNormal(hit);
+            r.normal = GetNormal(hit);
             // r.normal = n1 * (1 - s -t) + n2 * s + n3 * t;
             // r.uv = Vector2(drand48(), drand48());
 
@@ -469,7 +465,7 @@ namespace new_type_renderer
             return tt;
         }
 
-        void computebounds() override
+        void ComputeBounds() override
         {
             for (uint8_t i = 0; i < SLABCOUNT; ++i)
             {
@@ -491,31 +487,28 @@ namespace new_type_renderer
             }
         }
 
-        Vector3 getCentriod() const override
+        Vector3 GetCentriod() const override
         {
             return (p1 + p2 + p3) / 3.0;
         }
 
-
-        void updateTransformMatrix(const Matrix4x4& m) override
+        void UpdateTransformMatrix(const Matrix4x4& m) override
         {
-            // qDebug()<<"update mesh matrix";
+            Vector4 vp1(p1, 1.0);
+            Vector4 vp2(p2, 1.0);
+            Vector4 vp3(p3, 1.0);
 
-            Vector4 p1(this->p1, 1.0);
-            Vector4 p2(this->p2, 1.0);
-            Vector4 p3(this->p3, 1.0);
-            // qDebug() << v1 << v2 << v3;
-            p1 = m * p1;
-            p2 = m * p2;
-            p3 = m * p3;
-            // qDebug() << "after: " << p1 << p2 << p3;
-            this->p1 = Vector3(p1.x, p1.y, p1.z);
-            this->p2 = Vector3(p2.x, p2.y, p2.z);
-            this->p3 = Vector3(p3.x, p3.y, p3.z);
+            vp1 = m * vp1;
+            vp2 = m * vp2;
+            vp3 = m * vp3;
 
-            this->n1 = m * this->n1;
-            this->n2 = m * this->n2;
-            this->n3 = m * this->n3;
+            p1 = Vector3(vp1.x, vp1.y, vp1.z);
+            p2 = Vector3(vp2.x, vp2.y, vp2.z);
+            p3 = Vector3(vp3.x, vp3.y, vp3.z);
+
+            n1 = m * n1;
+            n2 = m * n2;
+            n3 = m * n3;
         }
     };
 
@@ -555,7 +548,6 @@ namespace new_type_renderer
     class Mesh : public Object
     {
     public:
-        // std::vector<Face*> faces;
         std::vector<Triangle*> faces;
 
         Mesh()
@@ -571,7 +563,7 @@ namespace new_type_renderer
             }
         }
 
-        void updateTransformMatrix(const Matrix4x4& m) override
+        void UpdateTransformMatrix(const Matrix4x4& m) override
         {
             for (uint32_t i = 0; i < faces.size(); ++i)
             {
@@ -597,7 +589,17 @@ namespace new_type_renderer
             }
         }
 
-        void addFace(Triangle* face)
+        void ComputeBounds() override
+        {
+
+        }
+
+        Vector3 GetCentriod() const override
+        {
+            return Vector3{};
+        }
+
+        void AddFace(Triangle* face)
         {
             faces.push_back(face);
         }

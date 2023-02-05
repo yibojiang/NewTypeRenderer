@@ -48,6 +48,12 @@
     <ClCompile Include="src\basic\Transform.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\basic\Scene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\basic\Camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\math\Matrix.h">
@@ -218,7 +224,7 @@
     <ClInclude Include="src\core\OctreeNode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\core\Scene.h">
+    <ClInclude Include="src\basic\Scene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\core\Raytracer.h">
@@ -228,6 +234,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\core\Color.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\basic\Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

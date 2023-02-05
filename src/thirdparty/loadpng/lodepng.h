@@ -359,7 +359,7 @@ void lodepng_color_mode_cleanup(LodePNGColorMode* info);
 unsigned lodepng_color_mode_copy(LodePNGColorMode* dest, const LodePNGColorMode* source);
 
 void lodepng_palette_clear(LodePNGColorMode* info);
-/*add 1 color to the palette*/
+/*Add 1 color to the palette*/
 unsigned lodepng_palette_add(LodePNGColorMode* info,
                              unsigned char r, unsigned char g, unsigned char b, unsigned char a);
 
@@ -604,7 +604,7 @@ typedef struct LodePNGEncoderSettings
   If colortype is 3, PLTE is _always_ created.*/
   unsigned force_palette;
 #ifdef LODEPNG_COMPILE_ANCILLARY_CHUNKS
-  /*add LodePNG identifier and version as a text chunk, for debugging*/
+  /*Add LodePNG identifier and version as a text chunk, for debugging*/
   unsigned add_id;
   /*encode text chunks as zTXt chunks instead of tEXt chunks, and use compression in iTXt chunks*/
   unsigned text_compression;
@@ -669,7 +669,7 @@ unsigned lodepng_encode(unsigned char** out, size_t* outsize,
 
 /*
 The lodepng_chunk functions are normally not needed, except to traverse the
-unknown chunks stored in the LodePNGInfo struct, or add new ones to it.
+unknown chunks stored in the LodePNGInfo struct, or Add new ones to it.
 It also allows traversing the chunks of an encoded PNG file yourself.
 
 PNG standard chunk naming conventions:
@@ -1141,7 +1141,7 @@ background color, the interlace method, unknown chunks, ...
 
 When encoding to a PNG with colortype 3, the encoder will generate a PLTE chunk.
 If the palette contains any colors for which the alpha channel is not 255 (so
-there are translucent colors in the palette), it'll add a tRNS chunk.
+there are translucent colors in the palette), it'll Add a tRNS chunk.
 
 LodePNGColorMode info_raw
 -------------------------
@@ -1170,7 +1170,7 @@ can encode the colors of all pixels without information loss.
 *) force_palette: if colortype is 2 or 6, you can make the encoder write a PLTE
    chunk if force_palette is true. This can used as suggested palette to convert
    to by viewers that don't support more than 256 colors (if those still exist)
-*) add_id: add text chunk "Encoder: LodePNG <version>" to the image.
+*) add_id: Add text chunk "Encoder: LodePNG <version>" to the image.
 *) text_compression: default 1. If 1, it'll store texts as zTXt instead of tEXt chunks.
   zTXt chunks use zlib compression on the text. This gives a smaller result on
   large texts but a larger result on small texts (such as a single program name).
@@ -1340,7 +1340,7 @@ Check the implementation of lodepng_error_text to see the meaning of each code.
 8. chunks and PNG editing
 -------------------------
 
-If you want to add extra chunks to a PNG you encode, or use LodePNG for a PNG
+If you want to Add extra chunks to a PNG you encode, or use LodePNG for a PNG
 editor that should follow the rules about handling of unknown chunks, or if your
 program is able to read other types of chunks than the ones handled by LodePNG,
 then that's possible with the chunk functions of LodePNG.
@@ -1433,12 +1433,12 @@ if you set the option settings.remember_unknown_chunks to 1. By default, this
 option is off (0).
 
 The encoder will always encode unknown chunks that are stored in the info_png.
-If you need it to add a particular chunk that isn't known by LodePNG, you can
+If you need it to Add a particular chunk that isn't known by LodePNG, you can
 use lodepng_chunk_append or lodepng_chunk_create to the chunk data in
 info_png.unknown_chunks_data[x].
 
 Chunks that are known by LodePNG should not be added in that way. E.g. to make
-LodePNG add a bKGD chunk, set background_defined to true and add the correct
+LodePNG Add a bKGD chunk, set background_defined to true and Add the correct
 parameters there instead.
 
 
@@ -1635,7 +1635,7 @@ symbol.
 *) 08 jun 2007: fixed bug with 2- and 4-bit color, and small interlaced images
 *) 04 jun 2007: improved support for Visual Studio 2005: crash with accessing
     invalid std::vector element [0] fixed, and level 3 and 4 warnings removed
-*) 02 jun 2007: made the encoder add a tag with version by default
+*) 02 jun 2007: made the encoder Add a tag with version by default
 *) 27 may 2007: zlib and png code separated (but still in the same file),
     simple encoder/decoder functions added for more simple usage cases
 *) 19 may 2007: minor fixes, some code cleaning, new error added (error 69),

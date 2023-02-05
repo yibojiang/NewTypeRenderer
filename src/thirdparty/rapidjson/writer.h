@@ -454,7 +454,7 @@ protected:
             Level* level = level_stack_.template Top<Level>();
             if (level->valueCount > 0) {
                 if (level->inArray) 
-                    os_->Put(','); // add comma if it is not the first element in array
+                    os_->Put(','); // Add comma if it is not the first element in array
                 else  // in object
                     os_->Put((level->valueCount % 2 == 0) ? ',' : ':');
             }

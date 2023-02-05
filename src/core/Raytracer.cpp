@@ -80,29 +80,29 @@ namespace new_type_renderer
         return Vector3(pow(v.x, 1 / 2.2), pow(v.y, 1 / 2.2), pow(v.z, 1 / 2.2));
     }
 
-    Color Raytracer::tracing(Ray& ray, int depth, int E = 1)
+    Color Raytracer::Tracing(Ray& ray, int depth, int E = 1)
     {
         // Intersection intersection = scene.Intersect(ray);
-        Intersection intersection = bvh.Intersect(ray);
+        Intersection intersection = scene.Intersect(ray);
 
         Color ambColor(0, 0, 0);
         if (!intersection.object)
         {
-            ambColor = getEnvColor(ray.dir);
+            ambColor = GetEnvColor(ray.dir);
 
 
             return ambColor;
         }
         Object* obj = intersection.object;
         Vector3 hit = ray.origin + ray.dir * intersection.t;
-        Vector3 N = obj->getNormal(hit);
+        Vector3 N = obj->GetNormal(hit);
         Vector3 nl = N.Dot(ray.dir) < 0 ? N : N * -1;
 
 
-        Color albedo = obj->getMaterial()->getDiffuseColor(ray.uv);
+        Color albedo = obj->GetMaterial()->getDiffuseColor(ray.uv);
 
-        Color refractColor = obj->getMaterial()->getRefractColor(ray.uv);
-        Color reflectColor = obj->getMaterial()->getReflectColor(ray.uv);
+        Color refractColor = obj->GetMaterial()->getRefractColor(ray.uv);
+        Color reflectColor = obj->GetMaterial()->getReflectColor(ray.uv);
 
 #ifdef RUSSIAN_ROULETTE_TERMINATION
         // Russian roulette termination.
@@ -117,31 +117,31 @@ namespace new_type_renderer
                 reflectColor = reflectColor * (0.9 / p);
             }
             else {
-                return obj->getMaterial()->getEmission() * E;
+                return obj->GetMaterial()->getEmission() * E;
             }
         }
 #else
 
         if (++depth > 5)
         {
-            return obj->getMaterial()->getEmission() * E;
+            return obj->GetMaterial()->getEmission() * E;
         }
 #endif
 
         double randomVal = Random01();
-        if (randomVal <= obj->getMaterial()->refract)
+        if (randomVal <= obj->GetMaterial()->refract)
         {
-            // Vector3 reflectColor = obj->getMaterial()->getReflectColor(ray.uv);
+            // Vector3 reflectColor = obj->GetMaterial()->getReflectColor(ray.uv);
 
 
             Vector3 refl = ray.dir - N * 2 * N.Dot(ray.dir);
             Ray reflRay(hit, refl); // Ideal dielectric REFRACTION
             bool into = N.Dot(nl) > 0; // Ray from outside going in?
-            double nc = 1, nt = obj->getMaterial()->ior, nnt = into ? nc / nt : nt / nc, ddn = ray.dir.Dot(nl), cos2t;
+            double nc = 1, nt = obj->GetMaterial()->ior, nnt = into ? nc / nt : nt / nc, ddn = ray.dir.Dot(nl), cos2t;
             if ((cos2t = 1 - nnt * nnt * (1 - ddn * ddn)) < 0)
             {
                 // Total internal reflection
-                return obj->getMaterial()->getEmission() + albedo * tracing(reflRay, depth);
+                return obj->GetMaterial()->getEmission() + albedo * Tracing(reflRay, depth);
             }
             Vector3 tdir = (ray.dir * nnt - N * ((into ? 1 : -1) * (ddn * nnt + sqrt(cos2t)))).Normalize();
 
@@ -156,18 +156,18 @@ namespace new_type_renderer
             double RP = Re / P;
             double TP = Tr / (1 - P);
 
-            return obj->getMaterial()->getEmission() + refractColor * (depth > 2
+            return obj->GetMaterial()->getEmission() + refractColor * (depth > 2
                                                                            ? (Random01() < P
                                                                                   ? // Russian roulette
-                                                                                  tracing(reflRay, depth) * RP
-                                                                                  : tracing(refrRay, depth) * TP)
-                                                                           : tracing(reflRay, depth) * Re + tracing(
+                                                                                  Tracing(reflRay, depth) * RP
+                                                                                  : Tracing(refrRay, depth) * TP)
+                                                                           : Tracing(reflRay, depth) * Re + Tracing(
                                                                                refrRay, depth) * Tr);
         }
-        if (randomVal <= obj->getMaterial()->refract + obj->getMaterial()->reflection)
+        if (randomVal <= obj->GetMaterial()->refract + obj->GetMaterial()->reflection)
         {
 #ifdef COOK_TORRANCE
-            float roughness = obj->getMaterial()->roughness;
+            float roughness = obj->GetMaterial()->roughness;
             Vector3 viewVector = -ray.dir;
             // Important sample
             // float rand1 = drand48();
@@ -196,7 +196,7 @@ namespace new_type_renderer
 
             Ray reflRay(hit, sampleVector);
             // Calculate fresnel with Fresnel_Schlick approixmation
-            float F0 = obj->getMaterial()->F0;
+            float F0 = obj->GetMaterial()->F0;
             float fresnel = F0 + (1 - F0) * pow((1 - sampleVector.Dot(halfVector)), 5);
 
             // Geometry term GGX Distribution
@@ -212,7 +212,7 @@ namespace new_type_renderer
             float denominator = 4 * NdotV;
             Color specularColor = reflectColor * Saturate(fresnel * geometry / denominator);
 
-            return obj->getMaterial()->getEmission() + specularColor * tracing(reflRay, depth);
+            return obj->GetMaterial()->getEmission() + specularColor * Tracing(reflRay, depth);
 
 
 #else
@@ -223,13 +223,13 @@ namespace new_type_renderer
             float NdotH = saturate(N.Dot(half));
             float NdotL = saturate(N.Dot(refl));
             Ray reflRay(hit, refl);
-            float glossy = obj->getMaterial()->glossy;
+            float glossy = obj->GetMaterial()->glossy;
             // float factor = (glossy+1)/(2*M_PI); original phong
             // float factor = (glossy+2)/(2*M_PI);
             float factor = (glossy + 2) * (glossy + 4) / (8 * M_PI * (pow(2, -glossy * 0.5) + glossy));
-            // return obj->getMaterial()->getEmission() + reflectColor * tracing(reflRay, depth);
+            // return obj->GetMaterial()->getEmission() + reflectColor * Tracing(reflRay, depth);
 
-            return obj->getMaterial()->getEmission() + reflectColor * factor * pow(NdotH, glossy) * NdotL * tracing(reflRay, depth);
+            return obj->GetMaterial()->getEmission() + reflectColor * factor * pow(NdotH, glossy) * NdotL * Tracing(reflRay, depth);
 #endif
         }
         // cos weighted sample
@@ -249,13 +249,13 @@ namespace new_type_renderer
         for (unsigned int i = 0; i < scene.lights.size(); i++)
         {
             Object* light = scene.lights[i];
-            Vector3 sw = light->getCentriod() - hit;
+            Vector3 sw = light->GetCentriod() - hit;
             Vector3 su = ((fabs(sw.x) > .1 ? Vector3(0, 1, 0) : Vector3(1, 0, 0)).Cross(sw)).Normalize();
             Vector3 sv = sw.Cross(su);
 
             // Sphere light
             auto s = static_cast<Sphere*>(light);
-            double cos_a_max = sqrt(1 - s->rad * s->rad / (hit - s->getCentriod()).Dot(hit - s->getCentriod()));
+            double cos_a_max = sqrt(1 - s->rad * s->rad / (hit - s->GetCentriod()).Dot(hit - s->GetCentriod()));
             double eps1 = Random01(), eps2 = Random01();
             double cos_a = 1 - eps1 + eps1 * cos_a_max;
             double sin_a = sqrt(1 - cos_a * cos_a);
@@ -264,291 +264,22 @@ namespace new_type_renderer
             l.Normalize();
 
             Ray shadowRay(hit, l);
-            Intersection shadow = bvh.Intersect(shadowRay);
+            Intersection shadow = scene.Intersect(shadowRay);
             // Intersection shadow = scene.Intersect(shadowRay);
 
             if (shadow.object && shadow.object == light)
             {
                 double omega = 2 * M_PI * (1 - cos_a_max);
-                e = e + albedo * M_1_PI * (light->getMaterial()->getEmission() * l.Dot(nl) * omega); // 1/pi for brdf
+                e = e + albedo * M_1_PI * (light->GetMaterial()->getEmission() * l.Dot(nl) * omega); // 1/pi for brdf
             }
         }
 
-        return obj->getMaterial()->getEmission() * E + e + albedo * (tracing(reflRay, depth, 0));
+        return obj->GetMaterial()->getEmission() * E + e + albedo * (Tracing(reflRay, depth, 0));
 #else
 
-            return obj->getMaterial()->getEmission() + albedo * (tracing(reflRay, depth));
+            return obj->GetMaterial()->getEmission() + albedo * (Tracing(reflRay, depth));
 
 #endif
-    }
-
-    void Raytracer::unloadScene()
-    {
-        scene.destroyScene();
-        bvh.Destroy();
-    }
-
-    void Raytracer::setupScene(const std::string& in_scene_path)
-    {
-        scenePath = in_scene_path;
-        ObjLoader loader;
-        std::ifstream t(scenePath);
-        std::string json((std::istreambuf_iterator<char>(t)),
-                         std::istreambuf_iterator<char>());
-
-
-        rapidjson::Document document;
-        if (document.Parse(json.c_str()).HasParseError())
-        {
-            LOG_ERR("can't parse the scene");
-            return;
-        }
-
-        scene.root = new SceneNode();
-        if (document.HasMember("camera"))
-        {
-            rapidjson::Value& camera = document["camera"];
-            scene.fov = camera["fov"].GetFloat() * M_PI / 180;
-            scene.near = 1.0f / tan(scene.fov * 0.5f);
-            const rapidjson::Value& position = document["camera"]["transform"]["position"];
-            const rapidjson::Value& target = document["camera"]["transform"]["target"];
-            const rapidjson::Value& up = document["camera"]["transform"]["up"];
-            scene.ro = Vector3(position[0].GetFloat(), position[1].GetFloat(), position[2].GetFloat());
-            scene.ta = Vector3(target[0].GetFloat(), target[1].GetFloat(), target[2].GetFloat());
-            scene.up = Vector3(up[0].GetFloat(), up[1].GetFloat(), up[2].GetFloat());
-            scene.ca = setCamera(scene.ro, scene.ta, scene.up);
-
-            if (camera.HasMember("focusOn"))
-            {
-                scene.focusOn = camera["focusOn"].GetBool();
-            }
-            else
-            {
-                scene.focusOn = false;
-            }
-            if (camera.HasMember("focalLength"))
-            {
-                scene.focalLength = camera["focalLength"].GetFloat();
-                // qDebug() << "focal length" << scene.focalLength;
-            }
-
-            if (camera.HasMember("aperture"))
-            {
-                scene.aperture = camera["aperture"].GetFloat();
-            }
-            else
-            {
-                scene.aperture = 1;
-            }
-        }
-
-        if (document.HasMember("envlight"))
-        {
-            rapidjson::Value& envLight = document["envlight"];
-            scene.LoadHdri(envLight["hdri"].GetString());
-            scene.envLightIntense = envLight["intense"].GetFloat();
-            scene.envLightExp = envLight["exp"].GetFloat();
-            if (envLight.HasMember("rotate"))
-            {
-                scene.envRotate = envLight["rotate"].GetFloat() / 180.0 * M_PI;
-            }
-        }
-        if (document.HasMember("primitives"))
-        {
-            rapidjson::Value& primitives = document["primitives"];
-            rapidjson::Value& materials = document["materials"];
-
-            for (rapidjson::SizeType i = 0; i < primitives.Size(); ++i)
-            {
-                rapidjson::Value& pos = primitives[i]["transform"]["position"];
-                rapidjson::Value& scl = primitives[i]["transform"]["scale"];
-                rapidjson::Value& rot = primitives[i]["transform"]["rotation"];
-
-                std::string materialName = primitives[i]["material"].GetString();
-
-                Log::Print(Info, materialName.c_str());
-                auto material = new Material();
-                if (materials.HasMember(materialName.c_str()))
-                {
-                    rapidjson::Value& mat = materials[materialName.c_str()];
-                    if (mat.HasMember("diffuse"))
-                    {
-                        material->diffuse = mat["diffuse"].GetFloat();
-                    }
-
-                    if (mat.HasMember("specular"))
-                    {
-                        material->specular = mat["specular"].GetFloat();
-                    }
-
-                    if (mat.HasMember("reflection"))
-                    {
-                        material->reflection = mat["reflection"].GetFloat();
-                    }
-
-                    if (mat.HasMember("roughness"))
-                    {
-                        material->roughness = mat["roughness"].GetFloat();
-                    }
-
-                    if (mat.HasMember("glossy"))
-                    {
-                        material->glossy = mat["glossy"].GetFloat();
-                    }
-
-                    if (mat.HasMember("useBackground"))
-                    {
-                        material->useBackground = mat["useBackground"].GetBool();
-                    }
-
-
-                    if (mat.HasMember("metallic"))
-                    {
-                        material->metallic = mat["metallic"].GetFloat();
-                    }
-
-                    if (mat.HasMember("diffuseRoughness"))
-                    {
-                        material->diffuseRoughness = mat["diffuseRoughness"].GetFloat();
-                    }
-
-                    if (mat.HasMember("emission"))
-                    {
-                        material->emission = mat["emission"].GetFloat();
-                    }
-
-                    if (mat.HasMember("ior"))
-                    {
-                        material->ior = mat["ior"].GetFloat();
-                    }
-
-                    if (mat.HasMember("refract"))
-                    {
-                        material->refract = mat["refract"].GetFloat();
-                    }
-
-                    if (mat.HasMember("diffuseColor"))
-                    {
-                        material->diffuseColor = Color(mat["diffuseColor"][0].GetFloat(),
-                                                         mat["diffuseColor"][1].GetFloat(),
-                                                         mat["diffuseColor"][2].GetFloat());
-                    }
-
-                    if (mat.HasMember("reflectColor"))
-                    {
-                        material->reflectColor = Color(mat["reflectColor"][0].GetFloat(),
-                                                         mat["reflectColor"][1].GetFloat(),
-                                                         mat["reflectColor"][2].GetFloat());
-                    }
-
-                    if (mat.HasMember("refractColor"))
-                    {
-                        material->refractColor = Color(mat["refractColor"][0].GetFloat(),
-                                                         mat["refractColor"][1].GetFloat(),
-                                                         mat["refractColor"][2].GetFloat());
-                    }
-
-                    if (mat.HasMember("emissionColor"))
-                    {
-                        material->setEmission(Color(mat["emissionColor"][0].GetFloat(),
-                                                      mat["emissionColor"][1].GetFloat(),
-                                                      mat["emissionColor"][2].GetFloat()));
-                    }
-
-                    if (mat.HasMember("diffuseTexture"))
-                    {
-                        material->setDiffuseTexture(mat["diffuseTexture"].GetString());
-                    }
-                }
-                else
-                {
-                    LOG_ERR("can't find material ", materialName.c_str());
-                }
-
-                shared_ptr<Object> obj;
-                std::string ptype = primitives[i]["type"].GetString();
-
-                if (ptype == "box")
-                {
-                    obj = make_shared<Box>(Vector3{ 1.0f, 1.0f, 1.0f });
-                }
-                else if (ptype == "sphere")
-                {
-                    obj = make_shared<Sphere>(1.0f);
-                }
-                else if (ptype == "mesh")
-                {
-                    auto mesh = make_shared<Mesh>();
-                    mesh->name = "mesh";
-                    std::string modelName = primitives[i]["path"].GetString();
-                    loader.LoadModel(modelName, mesh.get(), material);
-                    obj = mesh;
-                }
-                else
-                {
-                    LOG_ERR("error");
-                    obj = make_shared<Object>();
-                }
-
-                obj->setMaterial(material);
-
-
-                auto node = make_shared<SceneNode>();
-                node->AddObject(obj);
-
-                node->transform.SetLocation(Vector3{ pos[0].GetFloat(), pos[1].GetFloat(), pos[2].GetFloat() });
-                node->transform.SetScale(Vector3{ scl[0].GetFloat(), scl[1].GetFloat(), scl[2].GetFloat() });
-                auto orientation = Quaternion(rot[0].GetFloat() * M_PI / 180, rot[1].GetFloat() * M_PI / 180,
-                                              rot[2].GetFloat() * M_PI / 180);
-                node->transform.SetOrientation(orientation);
-                obj->name = primitives[i]["name"].GetString();
-                scene.root->AddChild(node);
-                LOG_INFO("add ", obj->name.c_str(), " to the scene");
-            }
-        }
-        // brdf test
-        // float r = 16;
-        // int NUM_BALL_ROWS = 8;
-        // int NUM_BALLS_PER_ROW = 5;
-        // for (int i = 0; i < NUM_BALL_ROWS; ++i){
-        //     // float xoff = float(NUM_BALL_ROWS) * 2.1 * r * (float(j)/float(NUM_BALL_ROWS-1) - .5);
-        //     for (int j = 0; j < NUM_BALLS_PER_ROW; ++j){
-        //         Material *material = new Material();
-
-        //         // material->roughness = saturate(pow( (i*1.0/NUM_BALL_ROWS), 2));
-        //         material->roughness = saturate(pow( (i*1.0/NUM_BALL_ROWS), 1));
-
-        //         material->metallic = saturate(j*1.0/NUM_BALLS_PER_ROW);
-        //         // material->reflection = material->metallic;
-        //         // material->diffuse = 1 - material->reflection;
-        //         material->reflection = 1;
-        //         // material->diffuse = 1 - material->F0;
-        //         material->refract = 0;
-        //         // qDebug() << "diffuse" << material->diffuse;
-        //         // material->metallic = 0;
-        //         material->ior = 1.4;
-        //         // material->reflectColor = Vector3(1,1,1);
-        //         material->reflectColor = Vector3(1,1,1);
-        //         // material->reflectColor = Vector3(1., 0.35, 0.5);
-        //         // material->diffuseColor = Vector3(1., 0.35, 0.5);
-        //         material->diffuseColor = Vector3(1,1,1);
-
-
-        //         Object *obj = (Object*)new Sphere(1.0);
-        //         obj->setMaterial(material);
-        //         // obj->name = "ball_" + std::to_string(i) + '_' + std::to_string(j);
-
-
-        //         qDebug() << obj->name.c_str() << material->F0;
-        //         SceneNode *xform = new SceneNode(obj);
-        //         xform->setTranslate((r + 25) * i, 17, (r + 25) * j);
-        //         xform->setScale(r,r,r);
-        //         scene.root->addChild(xform);
-        //     }
-        // }
-
-        scene.updateTransform(scene.root, Matrix4x4());
-        bvh.Setup(scene);
     }
 
     Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples)
@@ -564,10 +295,10 @@ namespace new_type_renderer
         std::string name = "/scene/cornellbox.json";
         // std::string name = "/scene/sponza.json";
         std::string fullpath = base_path + name;
-        setupScene(fullpath);
+        scene.LoadFromJson(fullpath);
     }
 
-    void Raytracer::scaleCamera(float scl)
+    void Raytracer::ScaleCamera(float scl)
     {
         scl = fmax(-0.99, scl);
         scl = -scl;
@@ -588,7 +319,7 @@ namespace new_type_renderer
         scene.ca = setCamera(scene.ro, scene.ta, scene.up);
     }
 
-    void Raytracer::rotateCamera(float x, float y, float z)
+    void Raytracer::RotateCamera(float x, float y, float z)
     {
         Quaternion rot(x, y, z);
         Matrix4x4 m = rot.ToMatrix();
@@ -601,7 +332,7 @@ namespace new_type_renderer
         scene.ca = setCamera(scene.ro, scene.ta, scene.up);
     }
 
-    void Raytracer::moveCamera(float x, float y)
+    void Raytracer::MoveCamera(float x, float y)
     {
         // Matrix4x4 m = Matrix4x4();
         Vector3 move(-x, y, 0);
@@ -618,7 +349,7 @@ namespace new_type_renderer
         scene.ca = setCamera(scene.ro, scene.ta, scene.up);
     }
 
-    Color Raytracer::getEnvColor(const Vector3& dir) const
+    Color Raytracer::GetEnvColor(const Vector3& dir) const
     {
         Color ambColor(0, 0, 0);
         if (scene.hasHdri)
@@ -648,36 +379,28 @@ namespace new_type_renderer
         return ambColor;
     }
 
-    void Raytracer::testPixel(int x, int y)
+    void Raytracer::TestPixel(int x, int y)
     {
-        float near = scene.near;
         Matrix3x3 ca = scene.ca;
         Vector3 ro = scene.ro;
         double u = x * 1.0 / width;
         double v = (height - y) * 1.0 / height;
         u = (u * 2.0 - 1.0);
         v = (v * 2.0 - 1.0);
-        // u = u * width/height;
         v = v * height / width;
-        Vector3 rd = ca * (Vector3(u, v, near)).Normalize();
+        Vector3 rd = ca * (Vector3(u, v, scene.camera.near)).Normalize();
         Ray ray(ro, rd);
-
-
-        testRaytracing(ray, 0);
-
-        // ambColor = getEnvColor(ray.dir);
-        // if (intersection.object) {
-        // }
+        TestRaytracing(ray, 0);
     }
 
-    void Raytracer::testRaytracing(Ray& ray, int depth)
+    void Raytracer::TestRaytracing(Ray& ray, int depth)
     {
         if (++depth > 2)
         {
             return;
         }
 
-        Intersection intersection = bvh.Intersect(ray);
+        Intersection intersection = scene.Intersect(ray);
 
         if (!intersection.object)
         {
@@ -686,7 +409,7 @@ namespace new_type_renderer
         Object* obj = intersection.object;
         LOG_INFO("  hit:", obj->name.c_str());
         Vector3 hit = ray.origin + ray.dir * intersection.t;
-        Vector3 N = obj->getNormal(hit);
+        Vector3 N = obj->GetNormal(hit);
         Vector3 nl = N.Dot(ray.dir) < 0 ? N : N * -1;
 
         double r1 = 2 * M_PI * Random01();
@@ -698,12 +421,11 @@ namespace new_type_renderer
         Vector3 d = (u * cos(r1) * rad + v * sin(r1) * rad + w * sqrt(1 - r2)).Normalize();
 
         Ray reflRay(hit, d);
-        testRaytracing(reflRay, depth);
+        TestRaytracing(reflRay, depth);
     }
 
-    void Raytracer::renderDirect(double& time, Image& directImage, Image& normalImage, Image& boundingBoxImage)
+    void Raytracer::RenderDirect(double& time, Image& directImage, Image& normalImage, Image& boundingBoxImage)
     {
-        float near = scene.near;
         Matrix3x3 ca = scene.ca;
         Vector3 ro = scene.ro;
         Color normalColor;
@@ -718,7 +440,7 @@ namespace new_type_renderer
         for (unsigned int i = 0; i < scene.lights.size(); i++)
         {
             Object* light = scene.lights[i];
-            pointLig = light->getCentriod();
+            pointLig = light->GetCentriod();
             break;
         }
 
@@ -734,7 +456,7 @@ namespace new_type_renderer
                 v = (v * 2.0 - 1.0);
                 // u = u * width/height;
                 v = v * height / width;
-                Vector3 rd = ca * (Vector3(u, v, near)).Normalize();
+                Vector3 rd = ca * (Vector3(u, v, scene.camera.near)).Normalize();
                 normalColor = Color(0, 0, 0);
                 directColor = Color(0, 0, 0);
                 boundingBoxColor = Color(0, 0, 0);
@@ -749,16 +471,14 @@ namespace new_type_renderer
                     boundingBoxColor = Vector3(0, 1, 0);
                 }
 #endif
-
-
-                Intersection intersection = bvh.Intersect(ray);
-                ambColor = getEnvColor(ray.dir);
+                Intersection intersection = scene.Intersect(ray);
+                ambColor = GetEnvColor(ray.dir);
                 if (intersection.object)
                 {
                     Object* obj = intersection.object;
-                    // Vector3 f = obj->getMaterial()->getDiffuseColor(ray.uv);
+                    // Vector3 f = obj->GetMaterial()->getDiffuseColor(ray.uv);
                     // Vector3 hit = ro + rd * intersection.t;
-                    // Vector3 N = obj->getNormal(hit);
+                    // Vector3 N = obj->GetNormal(hit);
                     Vector3 N = ray.normal;
                     // N = ray.dir.Dot(N) < 0 ? N : -N;
                     normalColor = Color((N.x + 1) * 0.5, (N.y + 1) * 0.5, (N.z + 1) * 0.25 + 0.5) * 255;
@@ -767,19 +487,19 @@ namespace new_type_renderer
                     // Vector3 ld = (pointLig - hit).Normalize();
 
                     Color albedo;
-                    if (obj->getMaterial()->useBackground)
+                    if (obj->GetMaterial()->useBackground)
                     {
-                        // albedo = getEnvColor(ray.dir)/fmax(ld.Dot(N), 0);
-                        albedo = getEnvColor(ray.dir);
+                        // albedo = GetEnvColor(ray.dir)/fmax(ld.Dot(N), 0);
+                        albedo = GetEnvColor(ray.dir);
                     }
                     else
                     {
-                        albedo = obj->getMaterial()->getDiffuseColor(ray.uv);
+                        albedo = obj->GetMaterial()->getDiffuseColor(ray.uv);
                     }
-                    // Vector3 diffuseColor =  albedo * fmax(ld.Dot(N), 0) * obj->getMaterial()->diffuse;
+                    // Vector3 diffuseColor =  albedo * fmax(ld.Dot(N), 0) * obj->GetMaterial()->diffuse;
 
                     // Vector3 reflect = ray.dir.reflect(N);
-                    // Vector3 specularColor = obj->getMaterial()->getReflectColor(ray.uv) * this->getEnvColor(reflect) * pow(fmax(reflect.Dot(ld), 0), 10) * obj->getMaterial()->reflection;
+                    // Vector3 specularColor = obj->GetMaterial()->getReflectColor(ray.uv) * this->GetEnvColor(reflect) * pow(fmax(reflect.Dot(ld), 0), 10) * obj->GetMaterial()->reflection;
 
                     // Ray shadowRay(hit, ld);
                     // Intersection shadow = bvh.Intersect(shadowRay);
@@ -809,19 +529,20 @@ namespace new_type_renderer
         }
     }
 
-    void Raytracer::renderIndirectProgressive(Color* colorArray, bool& abort, bool& restart, int& samples)
+    void Raytracer::RenderIndirectProgressive(Color* colorArray, bool& abort, bool& restart, int& samples)
     {
         Color color(0, 0, 0);
         Color radiance(0, 0, 0);
 
-        scene.focalLength = (scene.ta - scene.ro).Length();
+        Camera& camera = scene.camera;
+        // camera.focal_length = (camera.ta - camera.ro).Length();
 
         // ratio of original/new aperture (>1: smaller view angle, <1: larger view angle)
-        double aperture = 0.5135 / scene.aperture;
+        double aperture = 0.5135 / camera.aperture;
 
         // Vector3 dir_norm = Vector3(0, -0.042612, -1).Normalize();
         Vector3 dir_norm = (scene.ta - scene.ro).Normalize();
-        double L = scene.near;
+        double L = scene.camera.near;
         double L_new = aperture * L;
         double L_diff = L - L_new;
         Vector3 cam_shift = dir_norm * (L_diff);
@@ -831,7 +552,7 @@ namespace new_type_renderer
         }
 
         L = L_new;
-        auto camera = Ray(scene.ro + cam_shift, dir_norm);
+        auto camera_ray = Ray(scene.ro + cam_shift, dir_norm);
         // Cross product gets the vector perpendicular to cx and the "gaze" direction
         auto cx = Vector3((width * 1.0) / height, 0, 0);
         Vector3 rd = (scene.ta - scene.ro).Normalize();
@@ -842,7 +563,6 @@ namespace new_type_renderer
         for (unsigned short i = 0; i < height; ++i)
         {
             this->progress = 100. * i / (height - 1);
-            // qDebug() << "Rendering " << "spp:" << (samples + 1) * 4 << " " << 100.*i / (height - 1) << '%';
 
             for (unsigned short j = 0; j < width; ++j)
             {
@@ -867,16 +587,16 @@ namespace new_type_renderer
                         }
 
                         // tent filter
-                        double r1 = 2 * Random01(), dx = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
-                        double r2 = 2 * Random01(), dy = r2 < 1 ? sqrt(r2) - 1 : 1 - sqrt(2 - r2);
-                        double u = (j + (sy - 0.5 + dy * 0.5) * 0.5) / width;
-                        double v = (height - (i + (sx - 0.5 + dx * 0.5) * 0.5)) / height;
+                        float r1 = 2 * Random01(), dx = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
+                        float r2 = 2 * Random01(), dy = r2 < 1 ? sqrt(r2) - 1 : 1 - sqrt(2 - r2);
+                        float u = (j + (sy - 0.5 + dy * 0.5) * 0.5) / width;
+                        float v = (height - (i + (sx - 0.5 + dx * 0.5) * 0.5)) / height;
                         u = (u * 2.0 - 1.0);
                         v = (v * 2.0 - 1.0);
                         // u = u * width/height;
                         v = v * height / width;
 
-                        Vector3 rd = scene.ca * Vector3(u, v, scene.near);
+                        Vector3 rd = scene.ca * Vector3(u, v, scene.camera.near);
                         // Vector3 rd = dir.Normalized();
                         // if (i == 0 && j == 0){
                         //     // qDebug() << "dir "<< dir;
@@ -892,15 +612,15 @@ namespace new_type_renderer
                         Ray primiaryRay(scene.ro, rd);
 
                         // If we're actually using depth of field, we need to modify the camera ray to account for that
-                        if (scene.focusOn)
+                        if (camera.focus_on)
                         {
-                            Vector3 fp = (camera.origin + rd * L) + rd.Normalized() * scene.focalLength;
+                            Vector3 fp = (camera_ray.origin + rd * L) + rd.Normalized() * camera.focal_length;
                             // Get a pixel point and new ray rdection to calculate where the rays should Intersect
                             // Vector3 del_x = (cx * dx * L / float(width));
                             // Vector3 del_y = (cy * dy * L / float(height));
                             Vector3 del_x = cx * dx * L;
                             Vector3 del_y = cy * dy * L;
-                            Vector3 point = camera.origin + rd * L;
+                            Vector3 point = camera_ray.origin + rd * L;
                             point = point + del_x + del_y;
                             rd = (fp - point).Normalize();
                             primiaryRay = Ray(point, rd);
@@ -910,7 +630,7 @@ namespace new_type_renderer
                             primiaryRay = Ray(scene.ro, rd.Normalized());
                         }
 
-                        radiance = radiance + tracing(primiaryRay, 0) * 0.25;
+                        radiance = radiance + Tracing(primiaryRay, 0) * 0.25;
                     }
                 }
 
@@ -940,14 +660,14 @@ namespace new_type_renderer
         }
     }
 
-    // Vector3 Raytracer::toneMapping(Vector3 &cradiance)const{
+    // Vector3 Raytracer::ToneMapping(Vector3 &cradiance)const{
 
     // }
 
-    void Raytracer::renderIndirect(double& time, Image& image)
+    void Raytracer::RenderIndirect(double& time, Image& image)
     {
         int samps = samples / 4;
-        isRendering = true;
+        is_rendering = true;
         Color r(0, 0, 0);
         Vector3 raw(0, 0, 0);
 #pragma omp parallel for schedule(dynamic, 1) private(r)       // OpenMP
@@ -975,10 +695,10 @@ namespace new_type_renderer
                             u = (u * 2.0 - 1.0);
                             v = (v * 2.0 - 1.0);
                             u = u * width / height;
-                            Vector3 rd = scene.ca * (Vector3(u, v, scene.near)).Normalize();
+                            Vector3 rd = scene.ca * (Vector3(u, v, scene.camera.near)).Normalize();
 
                             Ray primiaryRay(scene.ro, rd);
-                            r = r + tracing(primiaryRay, 0) * (1.0f / samps);
+                            r = r + Tracing(primiaryRay, 0) * (1.0f / samps);
                         }
                         color = color + Vector3(Clamp01(r.x), Clamp01(r.y), Clamp01(r.z)) * .25;
                     }
@@ -989,10 +709,10 @@ namespace new_type_renderer
             }
         }
 
-        isRendering = false;
+        is_rendering = false;
     }
 
-    void Raytracer::setResolution(const int& in_width, const int& in_height)
+    void Raytracer::SetResolution(const int& in_width, const int& in_height)
     {
         width = in_width;
         height = in_height;

@@ -280,6 +280,22 @@ namespace new_type_renderer
             return stream;
         }
 
+        static Matrix4x4 CalculateViewMatrix(const Vector3& location, const Vector3& look_at)
+        {
+            Vector3 forward = (location - look_at).Normalized();
+            Vector3 right = Vector3(0.0f, 1.0f, 0.0f).Cross(forward).Normalized();
+            Vector3 up = forward.Cross(right).Normalized();
+            const Matrix4x4 orientation{
+                right.x,   up.x,    forward.x,    0.0f,
+                right.y,   up.y,    forward.z,    0.0f,
+                right.z,   up.z,    forward.z,    0.0f,
+                0.0f,      0.0f,    0.0f,         1.0f
+            };
+
+            const Matrix4x4 translate = FromTranslate(-location.x, -location.y, -location.z);
+            return orientation * translate;
+        }
+
     private:
         // Store the matrix in row based
         float cols[4][4]{};

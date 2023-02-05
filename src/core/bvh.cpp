@@ -1,6 +1,6 @@
 #include "BVH.h"
 #include "OctreeNode.h"
-#include "Scene.h"
+#include "basic/Scene.h"
 
 namespace new_type_renderer
 {
@@ -14,8 +14,8 @@ namespace new_type_renderer
         Extents sceneExtents;
         for (uint32_t i = 0; i < scene.objects.size(); ++i)
         {
-            scene.objects[i]->computebounds();
-            Extents e = scene.objects[i]->getBounds();
+            scene.objects[i]->ComputeBounds();
+            Extents e = scene.objects[i]->GetBounds();
             sceneExtents.ExtendBy(e);
         }
 
@@ -53,7 +53,7 @@ namespace new_type_renderer
         Intersection closestIntersection;
         for (uint8_t i = 0; i < scene->objects.size(); ++i)
         {
-            float t = scene->objects[i]->getBounds().IntersectWireframe(ray);
+            float t = scene->objects[i]->GetBounds().IntersectWireframe(ray);
             if (t > FLT_EPSILON && t < closestIntersection.t)
             {
                 closestIntersection.t = t;
@@ -73,17 +73,17 @@ namespace new_type_renderer
 
 
     void BVH::IntersectNode(Ray& r, const OctreeNode* node, Intersection& intersection,
-                            std::priority_queue<HitNode>& hitNodes)
+                            std::priority_queue<HitNode>& hitNodes) const
     {
         if (node->isLeaf)
         {
             for (unsigned int i = 0; i < node->objects.size(); ++i)
             {
-                double t = node->objects[i]->intersect(r);
+                double t = node->objects[i]->Intersect(r);
 
                 if (t > FLT_EPSILON && t < intersection.t)
                 {
-                    t = node->objects[i]->intersect(r);
+                    t = node->objects[i]->Intersect(r);
                     intersection.object = node->objects[i];
                     intersection.t = t;
                 }
@@ -121,7 +121,7 @@ namespace new_type_renderer
         IntersectNode(r, nearstNode, intersection, hitNodes);
     }
 
-    Intersection BVH::Intersect(Ray& ray)
+    Intersection BVH::Intersect(Ray& ray) const
     {
         std::priority_queue<HitNode> hitNodes;
         Intersection closestIntersection;
@@ -130,7 +130,7 @@ namespace new_type_renderer
         double test = octree->extents.IntersectNear(ray);
         if (test > FLT_EPSILON)
         {
-            this->IntersectNode(ray, octree, closestIntersection, hitNodes);
+            IntersectNode(ray, octree, closestIntersection, hitNodes);
         }
 
 

@@ -131,12 +131,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\basic\Camera.cpp" />
     <ClCompile Include="src\basic\SceneNode.cpp" />
     <ClCompile Include="src\basic\Transform.cpp" />
     <ClCompile Include="src\core\BVH.cpp" />
     <ClCompile Include="src\core\Extents.cpp" />
     <ClCompile Include="src\core\OctreeNode.cpp" />
     <ClCompile Include="src\core\Raytracer.cpp" />
+    <ClCompile Include="src\basic\Scene.cpp" />
     <ClCompile Include="src\Object.cpp" />
     <ClCompile Include="src\thirdparty\tiny_obj_loader\tiny_obj_loader.cc" />
     <ClCompile Include="src\main.cpp" />
@@ -144,6 +146,7 @@
     <ClCompile Include="src\thirdparty\loadpng\lodepng.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\basic\Camera.h" />
     <ClInclude Include="src\basic\Material.h" />
     <ClInclude Include="src\basic\Object.h" />
     <ClInclude Include="src\basic\Primitive.h" />
@@ -157,7 +160,7 @@
     <ClInclude Include="src\core\BVH.h" />
     <ClInclude Include="src\core\Extents.h" />
     <ClInclude Include="src\core\Raytracer.h" />
-    <ClInclude Include="src\core\Scene.h" />
+    <ClInclude Include="src\basic\Scene.h" />
     <ClInclude Include="src\math\Common.h" />
     <ClInclude Include="src\math\Quaternion.h" />
     <ClInclude Include="src\math\Vector.h" />
