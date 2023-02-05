@@ -33,7 +33,6 @@ bool HDRLoader::load(const char *fileName, HDRImage &res)
     FILE *file;
     file = fopen(fileName, "rb");
     if (!file){
-        qDebug() << "hdri" << fileName << "not exists.";
         return false;
     }
 
@@ -92,7 +91,6 @@ bool HDRLoader::load(const char *fileName, HDRImage &res)
         cols += w * 3;
     }
 
-    qDebug() << "hdri" << fileName << "loaded.";
     delete[] scanline;
     fclose(file);
 
@@ -114,7 +112,6 @@ void workOnRGBE(RGBE *scan, int len, float *cols)
         cols[0] = convertComponent(expo, scan[0][R]);
         cols[1] = convertComponent(expo, scan[0][G]);
         cols[2] = convertComponent(expo, scan[0][B]);
-        // qDebug() << cols[0] << cols[1] << cols[2];
         cols += 3;
         scan++;
     }
