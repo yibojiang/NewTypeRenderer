@@ -37,20 +37,20 @@ namespace new_type_renderer
             {
                 std::string texture_path = "/textures/";
                 auto material = new Material();
-                material->diffuseColor = Vector3(rawMaterial[i].diffuse[0], rawMaterial[i].diffuse[1],
+                material->diffuseColor = Color(rawMaterial[i].diffuse[0], rawMaterial[i].diffuse[1],
                                                  rawMaterial[i].diffuse[2]);
 
                 material->glossy = rawMaterial[i].shininess;
                 material->roughness = sqrt(2.0 / (2.0 + rawMaterial[i].shininess));
 
                 material->ior = rawMaterial[i].ior;
-                material->emissionColor = Vector3(rawMaterial[i].emission[0], rawMaterial[i].emission[1],
+                material->emissionColor = Color(rawMaterial[i].emission[0], rawMaterial[i].emission[1],
                                                   rawMaterial[i].emission[2]);
                 if (material->emissionColor.Length() > 0)
                 {
                     material->emission = 100;
                 }
-                material->reflectColor = Vector3(rawMaterial[i].specular[0], rawMaterial[i].specular[1],
+                material->reflectColor = Color(rawMaterial[i].specular[0], rawMaterial[i].specular[1],
                                                  rawMaterial[i].specular[2]);
                 material->refract = 1 - rawMaterial[i].dissolve;
                 material->metallic = material->reflectColor.Length() / sqrt(3.0);

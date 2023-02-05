@@ -30,7 +30,7 @@ namespace new_type_renderer
         {
         }
 
-        Intersection(double d, Object* obj) : t(d), object(obj)
+        Intersection(float d, Object* obj) : t(d), object(obj)
         {
         }
 

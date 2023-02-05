@@ -30,9 +30,9 @@ namespace new_type_renderer
 
         ~Raytracer();
 
-        Vector3 tracing(Ray& ray, int depth, int E);
+        Color tracing(Ray& ray, int depth, int E);
         
-        void renderIndirectProgressive(Vector3* colorArray, bool& abort, bool& restart, int& samples);
+        void renderIndirectProgressive(Color* colorArray, bool& abort, bool& restart, int& samples);
 
         void renderIndirect(double& time, Image& image);
 
@@ -54,7 +54,7 @@ namespace new_type_renderer
 
         void unloadScene();
 
-        Vector3 getEnvColor(const Vector3& dir) const;
+        Color getEnvColor(const Vector3& dir) const;
 
         // Vector3 toneMapping(const Vector3 &radiance) const;
     public:

@@ -132,10 +132,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\basic\SceneNode.cpp" />
+    <ClCompile Include="src\basic\Transform.cpp" />
     <ClCompile Include="src\core\BVH.cpp" />
     <ClCompile Include="src\core\Extents.cpp" />
     <ClCompile Include="src\core\OctreeNode.cpp" />
     <ClCompile Include="src\core\Raytracer.cpp" />
+    <ClCompile Include="src\Object.cpp" />
     <ClCompile Include="src\thirdparty\tiny_obj_loader\tiny_obj_loader.cc" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\thirdparty\HDRLoader\HDRloader.cpp" />

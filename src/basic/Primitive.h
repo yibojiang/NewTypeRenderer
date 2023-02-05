@@ -1,10 +1,9 @@
 #pragma once
 
 #include "material.h"
-#include "ray.h"
 #include "Object.h"
-#include "SceneNode.h"
 #include "core/bvh.h"
+#include "math/Matrix.h"
 
 namespace new_type_renderer
 {

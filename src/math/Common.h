@@ -52,7 +52,9 @@ namespace new_type_renderer
     template<typename T>
     T Clamp01(T v)
     {
-        return Clamp(v, 0, 1);
+        if (v < 0) return 0;
+        if (v > 1) return 1;
+        return v;
     }
 
     inline int ChiGGX(float v)

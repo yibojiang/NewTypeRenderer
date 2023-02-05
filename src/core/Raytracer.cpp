@@ -4,6 +4,7 @@
 #include "utility/Random.h"
 
 #include "BVH.h"
+#include "math/Quaternion.h"
 
 namespace new_type_renderer
 {
@@ -79,12 +80,12 @@ namespace new_type_renderer
         return Vector3(pow(v.x, 1 / 2.2), pow(v.y, 1 / 2.2), pow(v.z, 1 / 2.2));
     }
 
-    Vector3 Raytracer::tracing(Ray& ray, int depth, int E = 1)
+    Color Raytracer::tracing(Ray& ray, int depth, int E = 1)
     {
         // Intersection intersection = scene.Intersect(ray);
         Intersection intersection = bvh.Intersect(ray);
 
-        Vector3 ambColor(0, 0, 0);
+        Color ambColor(0, 0, 0);
         if (!intersection.object)
         {
             ambColor = getEnvColor(ray.dir);
@@ -98,10 +99,10 @@ namespace new_type_renderer
         Vector3 nl = N.Dot(ray.dir) < 0 ? N : N * -1;
 
 
-        Vector3 albedo = obj->getMaterial()->getDiffuseColor(ray.uv);
+        Color albedo = obj->getMaterial()->getDiffuseColor(ray.uv);
 
-        Vector3 refractColor = obj->getMaterial()->getRefractColor(ray.uv);
-        Vector3 reflectColor = obj->getMaterial()->getReflectColor(ray.uv);
+        Color refractColor = obj->getMaterial()->getRefractColor(ray.uv);
+        Color reflectColor = obj->getMaterial()->getReflectColor(ray.uv);
 
 #ifdef RUSSIAN_ROULETTE_TERMINATION
         // Russian roulette termination.
@@ -209,7 +210,7 @@ namespace new_type_renderer
 
             // Calculate the Cook-Torrance denominator
             float denominator = 4 * NdotV;
-            Vector3 specularColor = reflectColor * Saturate(fresnel * geometry / denominator);
+            Color specularColor = reflectColor * Saturate(fresnel * geometry / denominator);
 
             return obj->getMaterial()->getEmission() + specularColor * tracing(reflRay, depth);
 
@@ -244,7 +245,7 @@ namespace new_type_renderer
         // Sphere Area light sample
         // Explicit light sample. Only support for sphere light
 #ifdef EXPLICIT_LIGHT_SAMPLE
-        Vector3 e;
+        Color e;
         for (unsigned int i = 0; i < scene.lights.size(); i++)
         {
             Object* light = scene.lights[i];
@@ -287,9 +288,9 @@ namespace new_type_renderer
         bvh.Destroy();
     }
 
-    void Raytracer::setupScene(const std::string& scenePath)
+    void Raytracer::setupScene(const std::string& in_scene_path)
     {
-        this->scenePath = scenePath;
+        scenePath = in_scene_path;
         ObjLoader loader;
         std::ifstream t(scenePath);
         std::string json((std::istreambuf_iterator<char>(t)),
@@ -428,28 +429,28 @@ namespace new_type_renderer
 
                     if (mat.HasMember("diffuseColor"))
                     {
-                        material->diffuseColor = Vector3(mat["diffuseColor"][0].GetFloat(),
+                        material->diffuseColor = Color(mat["diffuseColor"][0].GetFloat(),
                                                          mat["diffuseColor"][1].GetFloat(),
                                                          mat["diffuseColor"][2].GetFloat());
                     }
 
                     if (mat.HasMember("reflectColor"))
                     {
-                        material->reflectColor = Vector3(mat["reflectColor"][0].GetFloat(),
+                        material->reflectColor = Color(mat["reflectColor"][0].GetFloat(),
                                                          mat["reflectColor"][1].GetFloat(),
                                                          mat["reflectColor"][2].GetFloat());
                     }
 
                     if (mat.HasMember("refractColor"))
                     {
-                        material->refractColor = Vector3(mat["refractColor"][0].GetFloat(),
+                        material->refractColor = Color(mat["refractColor"][0].GetFloat(),
                                                          mat["refractColor"][1].GetFloat(),
                                                          mat["refractColor"][2].GetFloat());
                     }
 
                     if (mat.HasMember("emissionColor"))
                     {
-                        material->setEmission(Vector3(mat["emissionColor"][0].GetFloat(),
+                        material->setEmission(Color(mat["emissionColor"][0].GetFloat(),
                                                       mat["emissionColor"][1].GetFloat(),
                                                       mat["emissionColor"][2].GetFloat()));
                     }
@@ -492,7 +493,8 @@ namespace new_type_renderer
                 obj->setMaterial(material);
 
 
-                auto node = make_shared<SceneNode>(obj);
+                auto node = make_shared<SceneNode>();
+                node->AddObject(obj);
 
                 node->transform.SetLocation(Vector3{ pos[0].GetFloat(), pos[1].GetFloat(), pos[2].GetFloat() });
                 node->transform.SetScale(Vector3{ scl[0].GetFloat(), scl[1].GetFloat(), scl[2].GetFloat() });
@@ -616,9 +618,9 @@ namespace new_type_renderer
         scene.ca = setCamera(scene.ro, scene.ta, scene.up);
     }
 
-    Vector3 Raytracer::getEnvColor(const Vector3& dir) const
+    Color Raytracer::getEnvColor(const Vector3& dir) const
     {
-        Vector3 ambColor(0, 0, 0);
+        Color ambColor(0, 0, 0);
         if (scene.hasHdri)
         {
             Matrix3x3 m(cos(scene.envRotate), 0, sin(scene.envRotate),
@@ -641,7 +643,7 @@ namespace new_type_renderer
             g = scene.envLightIntense * pow(g, scene.envLightExp);
             b = scene.envLightIntense * pow(b, scene.envLightExp);
             // return Vector3(r,g,b);
-            ambColor = Vector3(r, g, b);
+            ambColor = Color(r, g, b);
         }
         return ambColor;
     }
@@ -704,10 +706,10 @@ namespace new_type_renderer
         float near = scene.near;
         Matrix3x3 ca = scene.ca;
         Vector3 ro = scene.ro;
-        Vector3 normalColor;
-        Vector3 directColor;
-        Vector3 boundingBoxColor;
-        Vector3 ambColor(0.15, 0.15, 0.15);
+        Color normalColor;
+        Color directColor;
+        Color boundingBoxColor;
+        Color ambColor(0.15, 0.15, 0.15);
 
         // Vector3 ambColor(0,0,0);
         // Vector3 lig = Vector3(-1, -3, -1.5).Normalize();
@@ -733,9 +735,9 @@ namespace new_type_renderer
                 // u = u * width/height;
                 v = v * height / width;
                 Vector3 rd = ca * (Vector3(u, v, near)).Normalize();
-                normalColor = Vector3(0, 0, 0);
-                directColor = Vector3(0, 0, 0);
-                boundingBoxColor = Vector3(0, 0, 0);
+                normalColor = Color(0, 0, 0);
+                directColor = Color(0, 0, 0);
+                boundingBoxColor = Color(0, 0, 0);
 
                 Ray ray(ro, rd);
                 // 
@@ -759,12 +761,12 @@ namespace new_type_renderer
                     // Vector3 N = obj->getNormal(hit);
                     Vector3 N = ray.normal;
                     // N = ray.dir.Dot(N) < 0 ? N : -N;
-                    normalColor = Vector3((N.x + 1) * 0.5, (N.y + 1) * 0.5, (N.z + 1) * 0.25 + 0.5) * 255;
+                    normalColor = Color((N.x + 1) * 0.5, (N.y + 1) * 0.5, (N.z + 1) * 0.25 + 0.5) * 255;
                     // normalColor = obj->c * 255;
 
                     // Vector3 ld = (pointLig - hit).Normalize();
 
-                    Vector3 albedo;
+                    Color albedo;
                     if (obj->getMaterial()->useBackground)
                     {
                         // albedo = getEnvColor(ray.dir)/fmax(ld.Dot(N), 0);
@@ -797,9 +799,9 @@ namespace new_type_renderer
 
                 boundingBoxColor = boundingBoxColor * 255;
                 directColor = directColor * 255;
-                directColor = Clamp(directColor, Vector3(0, 0, 0), Vector3(255, 255, 255));
+                directColor = Clamp(directColor, Color(0, 0, 0), Color(255, 255, 255));
                 boundingBoxColor = (directColor + boundingBoxColor);
-                boundingBoxColor = Clamp(boundingBoxColor, Vector3(0, 0, 0), Vector3(255, 255, 255));
+                boundingBoxColor = Clamp(boundingBoxColor, Color(0, 0, 0), Color(255, 255, 255));
                 boundingBoxImage.SetPixel(j, i, Color(boundingBoxColor.x, boundingBoxColor.y, boundingBoxColor.z));
                 normalImage.SetPixel(j, i, Color(normalColor.x, normalColor.y, normalColor.z));
                 directImage.SetPixel(j, i, Color(directColor.x, directColor.y, directColor.z));
@@ -807,10 +809,10 @@ namespace new_type_renderer
         }
     }
 
-    void Raytracer::renderIndirectProgressive(Vector3* colorArray, bool& abort, bool& restart, int& samples)
+    void Raytracer::renderIndirectProgressive(Color* colorArray, bool& abort, bool& restart, int& samples)
     {
-        Vector3 color(0, 0, 0);
-        Vector3 radiance(0, 0, 0);
+        Color color(0, 0, 0);
+        Color radiance(0, 0, 0);
 
         scene.focalLength = (scene.ta - scene.ro).Length();
 
@@ -845,7 +847,7 @@ namespace new_type_renderer
             for (unsigned short j = 0; j < width; ++j)
             {
                 color = colorArray[i * width + j];
-                radiance = Vector3();
+                radiance = Color();
 
                 // super samples
                 for (int sy = 0; sy < 2; ++sy)
@@ -931,7 +933,7 @@ namespace new_type_renderer
                 // color = pow(color, Vector3(1.0 / gamma));
 
                 // clamp
-                color = (color * samples + Vector3(Clamp01(radiance.x), Clamp01(radiance.y), Clamp01(radiance.z))) * (1.0 / (
+                color = (color * samples + Color(Clamp01(radiance.x), Clamp01(radiance.y), Clamp01(radiance.z))) * (1.0 / (
                     samples + 1));
                 colorArray[i * width + j] = color;
             }
@@ -946,7 +948,7 @@ namespace new_type_renderer
     {
         int samps = samples / 4;
         isRendering = true;
-        Vector3 r(0, 0, 0);
+        Color r(0, 0, 0);
         Vector3 raw(0, 0, 0);
 #pragma omp parallel for schedule(dynamic, 1) private(r)       // OpenMP
         for (unsigned short i = 0; i < height; ++i)
@@ -963,7 +965,7 @@ namespace new_type_renderer
                     for (int sx = 0; sx < 2; ++sx)
                     {
                         // 2x2 subpixel cols
-                        r = Vector3();
+                        r = Color();
                         for (int s = 0; s < samps; ++s)
                         {
                             double r1 = 2 * Random01(), dx = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
@@ -990,10 +992,10 @@ namespace new_type_renderer
         isRendering = false;
     }
 
-    void Raytracer::setResolution(const int& width, const int& height)
+    void Raytracer::setResolution(const int& in_width, const int& in_height)
     {
-        this->width = width;
-        this->height = height;
+        width = in_width;
+        height = in_height;
     }
 
     Raytracer::~Raytracer()

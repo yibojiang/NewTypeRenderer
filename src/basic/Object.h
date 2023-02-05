@@ -1,10 +1,14 @@
 #pragma once
-#include "material.h"
+
 #include "core/Extents.h"
-#include "math/Common.h"
+#include "core/ray.h"
+#include "basic/Material.h"
 
 namespace new_type_renderer
 {
+    struct Matrix4x4;
+    struct Material;
+
     class Object
     {
     public:
@@ -20,6 +24,7 @@ namespace new_type_renderer
         }
 
         virtual Vector3 getNormal(const Vector3&) const { return Vector3(1); }
+
         virtual double intersect(Ray&) { return 0; }
 
         virtual double getProjectAngleToSphere()
@@ -28,10 +33,9 @@ namespace new_type_renderer
         }
 
 
-        virtual void setMaterial(Material* material)
+        void setMaterial(Material* in_material)
         {
-            this->material = material;
-            this->material->init();
+            material = in_material;
         }
 
         Material* getMaterial()
@@ -57,6 +61,9 @@ namespace new_type_renderer
 
     protected:
         Extents bounds{};
+
         Material* material;
     };
+
+    
 }

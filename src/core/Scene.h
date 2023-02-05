@@ -2,15 +2,15 @@
 #include "basic/Primitive.h"
 #include "HDRLoader/HDRloader.h"
 #include "math/Vector.h"
+#include "basic/SceneNode.h"
 
 namespace new_type_renderer
 {
-    class Scene
+    struct Scene
     {
     public:
         Scene()
         {
-            // root = new SceneNode();
             envLightIntense = 1.0;
             envLightExp = 1.0;
             hasHdri = false;
@@ -77,7 +77,7 @@ namespace new_type_renderer
 
         void destroyScene()
         {
-            root->removeAllChildren();
+            root->RemoveAllChildren();
             for (uint32_t i = 0; i < objects.size(); ++i)
             {
                 delete objects[i];

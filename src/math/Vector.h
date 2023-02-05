@@ -4,7 +4,6 @@
 
 #include <sstream>
 #include "Common.h"
-#include "Matrix.h"
 
 namespace new_type_renderer
 {
@@ -106,22 +105,12 @@ namespace new_type_renderer
 
         Vector3& Lerp(Vector3& v, float t)
         {
-            this->x = this->x * (1 - t) + (v.x - this->x) * t;
-            this->y = this->y * (1 - t) + (v.y - this->y) * t;
-            this->z = this->z * (1 - t) + (v.z - this->z) * t;
+            x = x * (1 - t) + (v.x - x) * t;
+            y = y * (1 - t) + (v.y - y) * t;
+            z = z * (1 - t) + (v.z - z) * t;
             return *this;
         }
     };
-
-    inline Vector3 Clamp(Vector3& v, Vector3& a, Vector3& b)
-    {
-        return Vector3(Clamp(v.x, a.x, b.x), Clamp(v.y, a.y, b.y), Clamp(v.z, a.z, b.z));
-    }
-
-    inline Vector3 Clamp(Vector3& v, Vector3 a, Vector3 b)
-    {
-        return Vector3(Clamp(v.x, a.x, b.x), Clamp(v.y, a.y, b.y), Clamp(v.z, a.z, b.z));
-    }
 
     struct Vector4
     {
@@ -155,7 +144,9 @@ namespace new_type_renderer
 
         Vector4 operator-(const Vector4& b) const { return Vector4{ x - b.x, y - b.y, z - b.z }; }
 
-        Vector4 operator*(const float b) const { return Vector4{ x * b, y * b, z * b }; }
+        Vector4 operator*(const float b) const { return Vector4{ x * b, y * b, z * b, w * b }; }
+
+        Vector4 operator*(const Vector4 b) const { return Vector4{ x * b.x, y * b.y, z * b.z, w * b.w }; }
 
         Vector4 operator/(const float b) const { return Vector4{ x / b, y / b, z / b }; }
 
@@ -184,4 +175,19 @@ namespace new_type_renderer
             return ss.str();
         }
     };
+
+    inline Vector3 Clamp(Vector3& v, Vector3& a, Vector3& b)
+    {
+        return Vector3(Clamp(v.x, a.x, b.x), Clamp(v.y, a.y, b.y), Clamp(v.z, a.z, b.z));
+    }
+
+    inline Vector3 Clamp(Vector3& v, Vector3 a, Vector3 b)
+    {
+        return Vector3(Clamp(v.x, a.x, b.x), Clamp(v.y, a.y, b.y), Clamp(v.z, a.z, b.z));
+    }
+
+    inline Vector4 Clamp(Vector4& v, Vector4 a, Vector4 b)
+    {
+        return Vector4(Clamp(v.x, a.x, b.x), Clamp(v.y, a.y, b.y), Clamp(v.z, a.z, b.z), Clamp(v.w, a.w, b.w));
+    }
 }
