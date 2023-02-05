@@ -10,19 +10,19 @@ namespace new_type_renderer
 
     SceneNode::SceneNode(weak_ptr<Object> obj)
     {
-        parent = nullptr;
         object = std::move(obj);
     }
 
-    unique_ptr<SceneNode> SceneNode::AddChild(const Vector3& location)
+    shared_ptr<SceneNode> SceneNode::AddChild(const Vector3& location)
     {
         auto child = make_unique<SceneNode>();
         child->transform.SetLocation(location);
         children.push_back(child);
+        child->parent = make_shared<SceneNode>(*this);
         return child;
     }
 
-    unique_ptr<SceneNode> SceneNode::AddChild(unique_ptr<SceneNode> child)
+    shared_ptr<SceneNode> SceneNode::AddChild(shared_ptr<SceneNode> child)
     {
         children.push_back(child);
         return child;
@@ -44,7 +44,7 @@ namespace new_type_renderer
         delete this;
     }
 
-    void SceneNode::RemoveChild(unique_ptr<SceneNode> child)
+    void SceneNode::RemoveChild(shared_ptr<SceneNode> child)
     {
         children.erase(std::remove(children.begin(), children.end(), child), children.end());
     }

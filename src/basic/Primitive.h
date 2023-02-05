@@ -205,7 +205,7 @@ namespace new_type_renderer
         }
 
         // AABB
-        // double intersect(const Ray &r) { // returns distance, 0 if nohit
+        // double Intersect(const Ray &r) { // returns distance, 0 if nohit
         //     Vector3 invdir(1.0 / r.dir.x, 1.0 / r.dir.y, 1.0 / r.dir.z);
 
         //     // lb is the corner of AABB with minimal coordinates - left bottom, rt is maximal corner
@@ -225,7 +225,7 @@ namespace new_type_renderer
         //         return 0;
         //     }
 
-        //     // if tmin > tmax, ray doesn't intersect AABB
+        //     // if tmin > tmax, ray doesn't Intersect AABB
         //     if (tmin > tmax){
         //         return 0;
         //     }
@@ -250,7 +250,7 @@ namespace new_type_renderer
                 return 0;
             }
 
-            // if tmin > tmax, ray doesn't intersect AABB
+            // if tmin > tmax, ray doesn't Intersect AABB
             if (tmin > tmax)
             {
                 return 0;

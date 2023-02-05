@@ -1,6 +1,4 @@
 #pragma once
-#include <iostream>
-
 #include "Vector.h"
 
 namespace new_type_renderer
@@ -45,16 +43,6 @@ namespace new_type_renderer
             cols[2][2] = ww.z;
         }
 
-        friend Vector3 operator*(Matrix3x3 a, const Vector3& b)
-        {
-            Vector3 c;
-            c.x = b.x * a.cols[0][0] + b.y * a.cols[0][1] + b.z * a.cols[0][2];
-            c.y = b.x * a.cols[1][0] + b.y * a.cols[1][1] + b.z * a.cols[1][2];
-            c.z = b.x * a.cols[2][0] + b.y * a.cols[2][1] + b.z * a.cols[2][2];
-
-            return c;
-        }
-
         Matrix3x3 operator*(Matrix3x3& b) const
         {
             Matrix3x3 c;
@@ -71,6 +59,16 @@ namespace new_type_renderer
                     c.cols[i][j] = sum;
                 }
             }
+            return c;
+        }
+
+        friend Vector3 operator*(Matrix3x3 a, const Vector3& b)
+        {
+            Vector3 c;
+            c.x = b.x * a.cols[0][0] + b.y * a.cols[0][1] + b.z * a.cols[0][2];
+            c.y = b.x * a.cols[1][0] + b.y * a.cols[1][1] + b.z * a.cols[1][2];
+            c.z = b.x * a.cols[2][0] + b.y * a.cols[2][1] + b.z * a.cols[2][2];
+
             return c;
         }
 
@@ -284,7 +282,7 @@ namespace new_type_renderer
 
     private:
         // Store the matrix in row based
-        float cols[4][4];
+        float cols[4][4]{};
     };
 
 }

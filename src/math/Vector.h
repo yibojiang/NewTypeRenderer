@@ -74,6 +74,11 @@ namespace new_type_renderer
 
         Vector3 operator-() const { return Vector3(-x, -y, -z); }
 
+        static Vector3 Abs(const Vector3& v)
+        {
+            return Vector3(fabs(v.x), fabs(v.y), fabs(v.z));
+        }
+
         float Dot(const Vector3& b) const { return x * b.x + y * b.y + z * b.z; }
 
         float Length() const { return sqrt(x * x + y * y + z * z); }
@@ -107,6 +112,16 @@ namespace new_type_renderer
             return *this;
         }
     };
+
+    inline Vector3 Clamp(Vector3& v, Vector3& a, Vector3& b)
+    {
+        return Vector3(Clamp(v.x, a.x, b.x), Clamp(v.y, a.y, b.y), Clamp(v.z, a.z, b.z));
+    }
+
+    inline Vector3 Clamp(Vector3& v, Vector3 a, Vector3 b)
+    {
+        return Vector3(Clamp(v.x, a.x, b.x), Clamp(v.y, a.y, b.y), Clamp(v.z, a.z, b.z));
+    }
 
     struct Vector4
     {

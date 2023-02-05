@@ -3,7 +3,7 @@
 #define SLABCOUNT 3
 #include "math/Vector.h"
 
-struct Ray;
+#include "Ray.h"
 
 namespace new_type_renderer
 {
@@ -13,23 +13,23 @@ namespace new_type_renderer
         
         Extents();
 
-        Vector3 getCentriod() const;
+        Vector3 GetCentriod() const;
 
-        Vector3 getBoundMin() const;
+        Vector3 GetBoundMin() const;
 
-        Vector3 getBoundMax() const;
+        Vector3 GetBoundMax() const;
 
-        void extendBy(Extents&);
+        void ExtendBy(Extents&);
 
         float Intersect(const Ray& r) const;
 
-        float intersectNear(const Ray& r) const;
+        float IntersectNear(const Ray& r) const;
 
-        float intersectWireframe(const Ray& r) const;
+        float IntersectWireframe(const Ray& r) const;
 
         friend bool operator==(Extents a, const Extents& b)
         {
-            if (a.getCentriod() == b.getCentriod())
+            if (a.GetCentriod() == b.GetCentriod())
             {
                 return true;
             }
@@ -38,6 +38,7 @@ namespace new_type_renderer
 
     public:
         float dnear[SLABCOUNT]{};
+
         float dfar[SLABCOUNT]{};
     };
 }

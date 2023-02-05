@@ -1,9 +1,9 @@
 #include "raytracer.h"
 #include "utility/Log.h"
-
-#include "BVH.h"
 #include "utility/ModelLoader.h"
 #include "utility/Random.h"
+
+#include "BVH.h"
 
 namespace new_type_renderer
 {
@@ -17,39 +17,6 @@ namespace new_type_renderer
         return Matrix3x3(cu, cv, cw);
     }
 
-    inline Vector3 abs(Vector3& v)
-    {
-        return Vector3(fabs(v.x), fabs(v.y), fabs(v.z));
-    }
-
-    inline double clamp(double v, double a, double b)
-    {
-        if (v < a) return a;
-        if (v > b) return b;
-        return v;
-    }
-
-    inline Vector3 clamp(Vector3& v, Vector3& a, Vector3& b)
-    {
-        return Vector3(clamp(v.x, a.x, b.x), clamp(v.y, a.y, b.y), clamp(v.z, a.z, b.z));
-    }
-
-    inline Vector3 clamp(Vector3& v, Vector3 a, Vector3 b)
-    {
-        return Vector3(clamp(v.x, a.x, b.x), clamp(v.y, a.y, b.y), clamp(v.z, a.z, b.z));
-    }
-
-
-    inline int chiGGX(float v)
-    {
-        return v > 0 ? 1 : 0;
-    }
-
-    inline float saturate(float v)
-    {
-        return clamp(v, 0.0, 1.0);
-    }
-
     // inline float GGX_Distribution(Vector3 n, Vector3 h, float alpha){
     //     float NoH = n.Dot(h);
     //     float alpha2 = alpha * alpha;
@@ -60,8 +27,8 @@ namespace new_type_renderer
 
     inline float GGX_PartialGeometryTerm(Vector3 v, Vector3 n, Vector3 h, float alpha)
     {
-        float VoH2 = saturate(v.Dot(h));
-        float chi = chiGGX(saturate(VoH2 / v.Dot(n)));
+        float VoH2 = Saturate(v.Dot(h));
+        float chi = ChiGGX(Saturate(VoH2 / v.Dot(n)));
         VoH2 = VoH2 * VoH2;
         float tan2 = (1 - VoH2) / VoH2;
         return (chi * 2) / (1 + sqrt(1 + alpha * alpha * tan2));
@@ -112,13 +79,10 @@ namespace new_type_renderer
         return Vector3(pow(v.x, 1 / 2.2), pow(v.y, 1 / 2.2), pow(v.z, 1 / 2.2));
     }
 
-    inline double clamp(double x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
-
-
     Vector3 Raytracer::tracing(Ray& ray, int depth, int E = 1)
     {
-        // Intersection intersection = scene.intersect(ray);
-        Intersection intersection = bvh.intersect(ray);
+        // Intersection intersection = scene.Intersect(ray);
+        Intersection intersection = bvh.Intersect(ray);
 
         Vector3 ambColor(0, 0, 0);
         if (!intersection.object)
@@ -245,7 +209,7 @@ namespace new_type_renderer
 
             // Calculate the Cook-Torrance denominator
             float denominator = 4 * NdotV;
-            Vector3 specularColor = reflectColor * saturate(fresnel * geometry / denominator);
+            Vector3 specularColor = reflectColor * Saturate(fresnel * geometry / denominator);
 
             return obj->getMaterial()->getEmission() + specularColor * tracing(reflRay, depth);
 
@@ -268,8 +232,8 @@ namespace new_type_renderer
 #endif
         }
         // cos weighted sample
-        double r1 = 2 * M_PI * drand48();
-        double r2 = drand48();
+        double r1 = 2 * M_PI * Random01();
+        double r2 = Random01();
         double rad = sqrt(r2);
         Vector3 w = nl;
         Vector3 u = ((fabs(w.x) > 0.1 ? Vector3(0, 1, 0) : Vector3(1, 0, 0)).Cross(w)).Normalize();
@@ -291,7 +255,7 @@ namespace new_type_renderer
             // Sphere light
             auto s = static_cast<Sphere*>(light);
             double cos_a_max = sqrt(1 - s->rad * s->rad / (hit - s->getCentriod()).Dot(hit - s->getCentriod()));
-            double eps1 = drand48(), eps2 = drand48();
+            double eps1 = Random01(), eps2 = Random01();
             double cos_a = 1 - eps1 + eps1 * cos_a_max;
             double sin_a = sqrt(1 - cos_a * cos_a);
             double phi = 2 * M_PI * eps2;
@@ -299,8 +263,8 @@ namespace new_type_renderer
             l.Normalize();
 
             Ray shadowRay(hit, l);
-            Intersection shadow = bvh.intersect(shadowRay);
-            // Intersection shadow = scene.intersect(shadowRay);
+            Intersection shadow = bvh.Intersect(shadowRay);
+            // Intersection shadow = scene.Intersect(shadowRay);
 
             if (shadow.object && shadow.object == light)
             {
@@ -320,7 +284,7 @@ namespace new_type_renderer
     void Raytracer::unloadScene()
     {
         scene.destroyScene();
-        bvh.destroy();
+        bvh.Destroy();
     }
 
     void Raytracer::setupScene(const std::string& scenePath)
@@ -405,7 +369,6 @@ namespace new_type_renderer
                 auto material = new Material();
                 if (materials.HasMember(materialName.c_str()))
                 {
-                    // qDebug() << materialName.c_str() << "found";
                     rapidjson::Value& mat = materials[materialName.c_str()];
                     if (mat.HasMember("diffuse"))
                     {
@@ -501,42 +464,43 @@ namespace new_type_renderer
                     LOG_ERR("can't find material ", materialName.c_str());
                 }
 
-                Object* obj;
+                shared_ptr<Object> obj;
                 std::string ptype = primitives[i]["type"].GetString();
 
                 if (ptype == "box")
                 {
-                    obj = static_cast<Object*>(new Box(Vector3(1, 1, 1)));
+                    obj = make_shared<Box>(Vector3{ 1.0f, 1.0f, 1.0f });
                 }
                 else if (ptype == "sphere")
                 {
-                    obj = static_cast<Object*>(new Sphere(1.0));
+                    obj = make_shared<Sphere>(1.0f);
                 }
                 else if (ptype == "mesh")
                 {
-                    auto mesh = new Mesh();
+                    auto mesh = make_shared<Mesh>();
                     mesh->name = "mesh";
                     std::string modelName = primitives[i]["path"].GetString();
-                    loader.LoadModel(modelName, mesh, material);
-                    obj = static_cast<Object*>(mesh);
+                    loader.LoadModel(modelName, mesh.get(), material);
+                    obj = mesh;
                 }
                 else
                 {
                     LOG_ERR("error");
-                    obj = new Object();
+                    obj = make_shared<Object>();
                 }
 
                 obj->setMaterial(material);
 
 
-                auto xform = new SceneNode(obj);
-                xform->setTranslate(pos[0].GetFloat(), pos[1].GetFloat(), pos[2].GetFloat());
-                xform->setScale(scl[0].GetFloat(), scl[1].GetFloat(), scl[2].GetFloat());
+                auto node = make_shared<SceneNode>(obj);
+
+                node->transform.SetLocation(Vector3{ pos[0].GetFloat(), pos[1].GetFloat(), pos[2].GetFloat() });
+                node->transform.SetScale(Vector3{ scl[0].GetFloat(), scl[1].GetFloat(), scl[2].GetFloat() });
                 auto orientation = Quaternion(rot[0].GetFloat() * M_PI / 180, rot[1].GetFloat() * M_PI / 180,
                                               rot[2].GetFloat() * M_PI / 180);
-                xform->setRotation(orientation);
+                node->transform.SetOrientation(orientation);
                 obj->name = primitives[i]["name"].GetString();
-                scene.root->addChild(xform);
+                scene.root->AddChild(node);
                 LOG_INFO("add ", obj->name.c_str(), " to the scene");
             }
         }
@@ -582,7 +546,7 @@ namespace new_type_renderer
         // }
 
         scene.updateTransform(scene.root, Matrix4x4());
-        bvh.setup(scene);
+        bvh.Setup(scene);
     }
 
     Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples)
@@ -711,9 +675,7 @@ namespace new_type_renderer
             return;
         }
 
-        bvh.logOn = true;
-        Intersection intersection = bvh.intersect(ray);
-        bvh.logOn = false;
+        Intersection intersection = bvh.Intersect(ray);
 
         if (!intersection.object)
         {
@@ -779,15 +741,15 @@ namespace new_type_renderer
                 // 
 
 #ifdef WIREFRAME_ON
-// Intersection intersectionBox = bvh.intersectBoundingBox(Ray(ro, rd));
-                Intersection intersectionBox = bvh.intersectBVH(ray);
+// Intersection intersectionBox = bvh.IntersectBoundingBox(Ray(ro, rd));
+                Intersection intersectionBox = bvh.IntersectBVH(ray);
                 if (intersectionBox.t > eps && intersectionBox.t < inf) {
                     boundingBoxColor = Vector3(0, 1, 0);
                 }
 #endif
 
 
-                Intersection intersection = bvh.intersect(ray);
+                Intersection intersection = bvh.Intersect(ray);
                 ambColor = getEnvColor(ray.dir);
                 if (intersection.object)
                 {
@@ -818,7 +780,7 @@ namespace new_type_renderer
                     // Vector3 specularColor = obj->getMaterial()->getReflectColor(ray.uv) * this->getEnvColor(reflect) * pow(fmax(reflect.Dot(ld), 0), 10) * obj->getMaterial()->reflection;
 
                     // Ray shadowRay(hit, ld);
-                    // Intersection shadow = bvh.intersect(shadowRay);
+                    // Intersection shadow = bvh.Intersect(shadowRay);
                     // double distToLight = (pointLig - hit).Length();
                     // if (shadow.object && shadow.t <= distToLight){
                     //     directColor = directColor * clamp(3.8 * shadow.t/(distToLight), 0.0, 1.0); 
@@ -835,9 +797,9 @@ namespace new_type_renderer
 
                 boundingBoxColor = boundingBoxColor * 255;
                 directColor = directColor * 255;
-                directColor = clamp(directColor, Vector3(0, 0, 0), Vector3(255, 255, 255));
+                directColor = Clamp(directColor, Vector3(0, 0, 0), Vector3(255, 255, 255));
                 boundingBoxColor = (directColor + boundingBoxColor);
-                boundingBoxColor = clamp(boundingBoxColor, Vector3(0, 0, 0), Vector3(255, 255, 255));
+                boundingBoxColor = Clamp(boundingBoxColor, Vector3(0, 0, 0), Vector3(255, 255, 255));
                 boundingBoxImage.SetPixel(j, i, Color(boundingBoxColor.x, boundingBoxColor.y, boundingBoxColor.z));
                 normalImage.SetPixel(j, i, Color(normalColor.x, normalColor.y, normalColor.z));
                 directImage.SetPixel(j, i, Color(directColor.x, directColor.y, directColor.z));
@@ -931,7 +893,7 @@ namespace new_type_renderer
                         if (scene.focusOn)
                         {
                             Vector3 fp = (camera.origin + rd * L) + rd.Normalized() * scene.focalLength;
-                            // Get a pixel point and new ray rdection to calculate where the rays should intersect
+                            // Get a pixel point and new ray rdection to calculate where the rays should Intersect
                             // Vector3 del_x = (cx * dx * L / float(width));
                             // Vector3 del_y = (cy * dy * L / float(height));
                             Vector3 del_x = cx * dx * L;
@@ -969,7 +931,7 @@ namespace new_type_renderer
                 // color = pow(color, Vector3(1.0 / gamma));
 
                 // clamp
-                color = (color * samples + Vector3(clamp(radiance.x), clamp(radiance.y), clamp(radiance.z))) * (1.0 / (
+                color = (color * samples + Vector3(Clamp01(radiance.x), Clamp01(radiance.y), Clamp01(radiance.z))) * (1.0 / (
                     samples + 1));
                 colorArray[i * width + j] = color;
             }
@@ -1014,9 +976,9 @@ namespace new_type_renderer
                             Vector3 rd = scene.ca * (Vector3(u, v, scene.near)).Normalize();
 
                             Ray primiaryRay(scene.ro, rd);
-                            r = r + tracing(primiaryRay, 0) * (1.0 / samps);
+                            r = r + tracing(primiaryRay, 0) * (1.0f / samps);
                         }
-                        color = color + Vector3(clamp(r.x), clamp(r.y), clamp(r.z)) * .25;
+                        color = color + Vector3(Clamp01(r.x), Clamp01(r.y), Clamp01(r.z)) * .25;
                     }
                 }
 

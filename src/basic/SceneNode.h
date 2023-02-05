@@ -15,33 +15,32 @@ namespace new_type_renderer
     public:
         void removeAllChildren();
 
-        unique_ptr<SceneNode> AddChild(const Vector3& location);
+        shared_ptr<SceneNode> AddChild(const Vector3& location);
 
-        unique_ptr<SceneNode> AddChild(unique_ptr<SceneNode> child);
+        shared_ptr<SceneNode> AddChild(shared_ptr<SceneNode> child);
 
         void AddObject(weak_ptr<Object> obj);
 
         weak_ptr<Object> GetObject() const { return object; }
 
-        std::vector<unique_ptr<SceneNode>>& GetChildren() { return children; }
+        std::vector<shared_ptr<SceneNode>>& GetChildren() { return children; }
 
         void RemoveAllChildren();
 
-        void RemoveChild(unique_ptr<SceneNode> child);
+        void RemoveChild(shared_ptr<SceneNode> child);
 
         SceneNode();
 
         SceneNode(weak_ptr<Object> object);
 
-        ~SceneNode();
+    public:
+        Transform transform{};
 
     private:
-        std::vector<unique_ptr<SceneNode>> children{};
+        std::vector<shared_ptr<SceneNode>> children{};
 
-        SceneNode* parent{ nullptr };
+        weak_ptr<SceneNode> parent{};
 
         weak_ptr<Object> object{};
-
-        Transform transform{};
     };
 }

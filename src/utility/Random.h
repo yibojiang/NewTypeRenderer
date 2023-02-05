@@ -3,9 +3,9 @@
 
 namespace new_type_renderer
 {
-    float Random01()
+    inline float Random01()
     {
-        return rand() / RAND_MAX;
+        return rand() / static_cast<float>(RAND_MAX);
     }
 }
 

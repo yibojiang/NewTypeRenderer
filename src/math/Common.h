@@ -40,4 +40,28 @@ namespace new_type_renderer
     {
         return (b - a) > ((fabs(a) < fabs(b) ? fabs(b) : fabs(a)) * epsilon);
     }
+
+    template<typename T>
+    T Clamp(T v, T a, T b)
+    {
+        if (v < a) return a;
+        if (v > b) return b;
+        return v;
+    }
+
+    template<typename T>
+    T Clamp01(T v)
+    {
+        return Clamp(v, 0, 1);
+    }
+
+    inline int ChiGGX(float v)
+    {
+        return v > 0.0f ? 1 : 0;
+    }
+
+    inline float Saturate(float v)
+    {
+        return Clamp(v, 0.0f, 1.0f);
+    }
 }

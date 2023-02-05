@@ -1437,7 +1437,7 @@ public:
         if (data_.o.size > 1 && m != last)
             *m = *last; // Move the last one to this place
         else
-            m->~Member(); // Only one left, just destroy
+            m->~Member(); // Only one left, just Destroy
         --data_.o.size;
         return m;
     }

@@ -13,7 +13,7 @@ namespace new_type_renderer
         }
     }
 
-    Vector3 Extents::getCentriod() const
+    Vector3 Extents::GetCentriod() const
     {
 #if SLABCOUNT == 3
         return Vector3(-(dnear[0] + dfar[0]) * 0.5, -(dnear[1] + dfar[1]) * 0.5, -(dnear[2] + dfar[2]) * 0.5);
@@ -26,17 +26,17 @@ namespace new_type_renderer
 #endif
     }
 
-    Vector3 Extents::getBoundMin() const
+    Vector3 Extents::GetBoundMin() const
     {
         return Vector3(-dfar[0], -dfar[1], -dfar[2]);
     }
 
-    Vector3 Extents::getBoundMax() const
+    Vector3 Extents::GetBoundMax() const
     {
         return Vector3(-dnear[0], -dnear[1], -dnear[2]);
     }
 
-    void Extents::extendBy(Extents& extents)
+    void Extents::ExtendBy(Extents& extents)
     {
         for (int i = 0; i < SLABCOUNT; ++i)
         {
@@ -47,8 +47,7 @@ namespace new_type_renderer
 
     float Extents::Intersect(const Ray& r) const
     {
-        // returns distance, 0 if nohit    
-
+        // returns distance, 0 if no hit
         float tmin = -FLT_MAX;
         float tmax = FLT_MAX;
         for (uint8_t i = 0; i < SLABCOUNT; ++i)
@@ -91,10 +90,9 @@ namespace new_type_renderer
         return tmin;
     }
 
-    float Extents::intersectNear(const Ray& r) const
+    float Extents::IntersectNear(const Ray& r) const
     {
         // returns distance, 0 if nohit    
-
         float tmin = -FLT_MAX;
         float tmax = FLT_MAX;
         for (uint8_t i = 0; i < SLABCOUNT; ++i)
@@ -141,10 +139,10 @@ namespace new_type_renderer
         // }
 
         // inside the boundingbox
-        if (tmin < eps)
+        if (tmin < FLT_EPSILON)
         {
             // tmin = 1000;
-            tmin = eps * 2;
+            tmin = FLT_EPSILON * 2;
             // tmin = -1;
         }
         //     return fmax(fmin(fabs(tmin), tmax), eps * 2);
@@ -153,12 +151,12 @@ namespace new_type_renderer
         return tmin;
     }
 
-    double Extents::intersectWireframe(const Ray& r) const
+    float Extents::IntersectWireframe(const Ray& r) const
     {
         // returns distance, 0 if nohit    
 
-        double tmin = -inf;
-        double tmax = inf;
+        double tmin = -FLT_EPSILON;
+        double tmax = FLT_EPSILON;
         for (uint8_t i = 0; i < SLABCOUNT; ++i)
         {
             double tNear = (-dnear[i] - r.origin.Dot(BVH::normals[i])) / r.dir.Dot(BVH::normals[i]);

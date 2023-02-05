@@ -63,6 +63,11 @@ namespace new_type_renderer
             return orientation;
         }
 
+        void SetOrientation(const Quaternion& o)
+        {
+            orientation = o;
+        }
+
         EulerRotation GetRotation() const
         {
             EulerRotation rot;
