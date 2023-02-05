@@ -8,9 +8,9 @@ namespace new_type_renderer
 {
     Scene::Scene()
     {
-        envLightIntense = 1.0f;
-        envLightExp = 1.0f;
-        hasHdri = false;
+        m_EnvLightIntense = 1.0f;
+        m_EnvLightExp = 1.0f;
+        m_HasHdri = false;
     }
 
     Scene::~Scene()
@@ -18,13 +18,12 @@ namespace new_type_renderer
         DestroyScene();
     }
 
-    bool Scene::LoadFromJson(std::string json_file_name)
+    bool Scene::LoadFromJson(const std::string& fullPath)
     {
-        scene_path = json_file_name;
         ObjLoader loader;
-        std::ifstream t(scene_path);
+        std::ifstream t(fullPath);
         std::string json((std::istreambuf_iterator<char>(t)),
-            std::istreambuf_iterator<char>());
+                         std::istreambuf_iterator<char>());
 
 
         rapidjson::Document document;
@@ -34,52 +33,53 @@ namespace new_type_renderer
             return false;
         }
 
-        root = new SceneNode();
+        m_Root = new SceneNode();
         if (document.HasMember("camera"))
         {
             rapidjson::Value& camera_data = document["camera"];
 
-            camera.fov = camera_data["fov"].GetFloat() * M_PI / 180;
-            camera.near = 1.0f / tan(camera.fov * 0.5f);
+            camera.m_FOV = camera_data["fov"].GetFloat() * M_PI / 180;
+            camera.m_Near = 1.0f / tan(camera.m_FOV * 0.5f);
             const rapidjson::Value& position = camera_data["transform"]["position"];
             const rapidjson::Value& target = camera_data["transform"]["target"];
             const rapidjson::Value& up = camera_data["transform"]["up"];
-            Vector3 camera_position = Vector3(position[0].GetFloat(), position[1].GetFloat(), position[2].GetFloat());
-            Vector3 camera_look_at = Vector3(target[0].GetFloat(), target[1].GetFloat(), target[2].GetFloat());
-            Matrix4x4 camera_matrix = Matrix4x4::CalculateViewMatrix(camera_position, camera_look_at);
+            auto camPos = Vector3(position[0].GetFloat(), position[1].GetFloat(), position[2].GetFloat());
+            auto camLookAt = Vector3(target[0].GetFloat(), target[1].GetFloat(), target[2].GetFloat());
+            Matrix4x4 camMatrix = Matrix4x4::CreateViewMatrix(camPos, camLookAt);
+            camera.m_CameraMatrix = camMatrix;
 
             if (camera_data.HasMember("focusOn"))
             {
-                camera.focus_on = camera_data["focusOn"].GetBool();
+                camera.m_FocusOn = camera_data["focusOn"].GetBool();
             }
             else
             {
-                camera.focus_on = false;
+                camera.m_FocusOn = false;
             }
             if (camera_data.HasMember("focalLength"))
             {
-                camera.focal_length = camera_data["focalLength"].GetFloat();
+                camera.m_FocalLength = camera_data["focalLength"].GetFloat();
             }
 
-            if (camera_data.HasMember("aperture"))
+            if (camera_data.HasMember("m_Aperture"))
             {
-                camera.aperture = camera_data["aperture"].GetFloat();
+                camera.m_Aperture = camera_data["m_Aperture"].GetFloat();
             }
             else
             {
-                camera.aperture = 1.0f;
+                camera.m_Aperture = 1.0f;
             }
         }
 
         if (document.HasMember("envlight"))
         {
             rapidjson::Value& envLight = document["envlight"];
-            LoadHdri(envLight["hdri"].GetString());
-            envLightIntense = envLight["intense"].GetFloat();
-            envLightExp = envLight["exp"].GetFloat();
+            LoadHdri(envLight["m_HDRI"].GetString());
+            m_EnvLightIntense = envLight["intense"].GetFloat();
+            m_EnvLightExp = envLight["exp"].GetFloat();
             if (envLight.HasMember("rotate"))
             {
-                envRotate = envLight["rotate"].GetFloat() / 180.0 * M_PI;
+                m_EnvRotate = envLight["rotate"].GetFloat() / 180.0 * M_PI;
             }
         }
         if (document.HasMember("primitives"))
@@ -159,29 +159,29 @@ namespace new_type_renderer
                     if (mat.HasMember("diffuseColor"))
                     {
                         material->diffuseColor = Color(mat["diffuseColor"][0].GetFloat(),
-                            mat["diffuseColor"][1].GetFloat(),
-                            mat["diffuseColor"][2].GetFloat());
+                                                       mat["diffuseColor"][1].GetFloat(),
+                                                       mat["diffuseColor"][2].GetFloat());
                     }
 
                     if (mat.HasMember("reflectColor"))
                     {
                         material->reflectColor = Color(mat["reflectColor"][0].GetFloat(),
-                            mat["reflectColor"][1].GetFloat(),
-                            mat["reflectColor"][2].GetFloat());
+                                                       mat["reflectColor"][1].GetFloat(),
+                                                       mat["reflectColor"][2].GetFloat());
                     }
 
                     if (mat.HasMember("refractColor"))
                     {
                         material->refractColor = Color(mat["refractColor"][0].GetFloat(),
-                            mat["refractColor"][1].GetFloat(),
-                            mat["refractColor"][2].GetFloat());
+                                                       mat["refractColor"][1].GetFloat(),
+                                                       mat["refractColor"][2].GetFloat());
                     }
 
                     if (mat.HasMember("emissionColor"))
                     {
                         material->setEmission(Color(mat["emissionColor"][0].GetFloat(),
-                            mat["emissionColor"][1].GetFloat(),
-                            mat["emissionColor"][2].GetFloat()));
+                                                    mat["emissionColor"][1].GetFloat(),
+                                                    mat["emissionColor"][2].GetFloat()));
                     }
 
                     if (mat.HasMember("diffuseTexture"))
@@ -199,7 +199,7 @@ namespace new_type_renderer
 
                 if (ptype == "box")
                 {
-                    obj = make_shared<Box>(Vector3{ 1.0f, 1.0f, 1.0f });
+                    obj = make_shared<Box>(Vector3{1.0f, 1.0f, 1.0f});
                 }
                 else if (ptype == "sphere")
                 {
@@ -225,34 +225,34 @@ namespace new_type_renderer
                 auto node = make_shared<SceneNode>();
                 node->AddObject(obj);
 
-                node->transform.SetLocation(Vector3{ pos[0].GetFloat(), pos[1].GetFloat(), pos[2].GetFloat() });
-                node->transform.SetScale(Vector3{ scl[0].GetFloat(), scl[1].GetFloat(), scl[2].GetFloat() });
+                node->m_Transform.SetLocation(Vector3{pos[0].GetFloat(), pos[1].GetFloat(), pos[2].GetFloat()});
+                node->m_Transform.SetScale(Vector3{scl[0].GetFloat(), scl[1].GetFloat(), scl[2].GetFloat()});
                 auto orientation = Quaternion(rot[0].GetFloat() * M_PI / 180, rot[1].GetFloat() * M_PI / 180,
-                    rot[2].GetFloat() * M_PI / 180);
-                node->transform.SetOrientation(orientation);
+                                              rot[2].GetFloat() * M_PI / 180);
+                node->m_Transform.SetOrientation(orientation);
                 obj->name = primitives[i]["name"].GetString();
-                root->AddChild(node);
+                m_Root->AddChild(node);
                 LOG_INFO("add ", obj->name.c_str(), " to the scene");
             }
         }
 
-        UpdateTransform(root, Matrix4x4());
-        bvh.Setup(*this);
+        UpdateTransform(m_Root, Matrix4x4());
+        // bvh.Setup(*this);
 
         return true;
     }
 
-    void Scene::LoadHdri(std::string name)
+    void Scene::LoadHdri(const std::string& name)
     {
         std::string path = "";
         // std::string name = "/textures/env.hdr";
         std::string fullpath = path + name;
-        hasHdri = HDRLoader::load(fullpath.c_str(), hdri);
+        m_HasHdri = HDRLoader::load(fullpath.c_str(), m_HDRI);
     }
 
     void Scene::Add(Object* object)
     {
-        objects.push_back(object);
+        m_Objects.push_back(object);
     }
 
     void Scene::AddMesh(Mesh* mesh)
@@ -282,15 +282,15 @@ namespace new_type_renderer
     {
         return bvh.Intersect(ray);
         Intersection closestIntersection;
-        // Intersect all objects, one after the other
-        // for (std::vector<Object*>::iterator it = objects.begin(); it != objects.end(); ++it){
-        for (uint32_t i = 0; i < objects.size(); ++i)
+        // Intersect all m_Objects, one after the other
+        // for (std::vector<Object*>::iterator it = m_Objects.begin(); it != m_Objects.end(); ++it){
+        for (uint32_t i = 0; i < m_Objects.size(); ++i)
         {
-            double t = objects[i]->Intersect(ray);
+            double t = m_Objects[i]->Intersect(ray);
             if (t > FLT_EPSILON && t < closestIntersection.t)
             {
                 closestIntersection.t = t;
-                closestIntersection.object = objects[i];
+                closestIntersection.object = m_Objects[i];
             }
         }
         return closestIntersection;
@@ -298,20 +298,20 @@ namespace new_type_renderer
 
     void Scene::DestroyScene()
     {
-        root->RemoveAllChildren();
-        for (uint32_t i = 0; i < objects.size(); ++i)
+        m_Root->RemoveAllChildren();
+        for (uint32_t i = 0; i < m_Objects.size(); ++i)
         {
-            delete objects[i];
+            delete m_Objects[i];
         }
 
-        lights.clear();
-        objects.clear();
+        m_Lights.clear();
+        m_Objects.clear();
         bvh.Destroy();
     }
 
     void Scene::UpdateTransform(SceneNode* scene_node, Matrix4x4 matrix)
     {
-        matrix = matrix * scene_node->transform.TransformMatrix();
+        matrix = matrix * scene_node->m_Transform.TransformMatrix();
         auto obj_wekptr = scene_node->GetObject();
 
         if (auto obt_spt = scene_node->GetObject().lock())
@@ -329,7 +329,7 @@ namespace new_type_renderer
 
             if (obt_spt->GetMaterial()->getEmission().Length() > FLT_EPSILON)
             {
-                lights.push_back(obt_spt.get());
+                m_Lights.push_back(obt_spt.get());
             }
         }
 

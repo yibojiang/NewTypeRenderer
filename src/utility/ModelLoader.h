@@ -1,4 +1,6 @@
 #pragma once
+#include <cassert>
+
 #include "basic/material.h"
 #include "basic/primitive.h"
 #include "thirdparty/tiny_obj_loader/tiny_obj_loader.h"
@@ -13,12 +15,14 @@ namespace new_type_renderer
         {
             std::vector<tinyobj::shape_t> rawShape;
             std::vector<tinyobj::material_t> rawMaterial;
-            std::string base_path = "";
-            std::string mtlbasepath = base_path + "/textures/" + name;
-            std::string modelPath = base_path + "/models/" + name;
+            std::string mtlbasepath = "textures/" + name;
+            std::string modelPath = "models/" + name;
 
             LOG_INFO("open %s", modelPath.c_str());
             LoadObj(rawShape, rawMaterial, modelPath.c_str(), mtlbasepath.c_str());
+
+            assert(rawShape.size() > 0);
+
             LOG_INFO(rawShape[0].name.c_str());
 
             tinyobj::mesh_t rawMesh = rawShape[0].mesh;

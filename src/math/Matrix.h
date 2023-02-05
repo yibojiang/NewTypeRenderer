@@ -280,20 +280,37 @@ namespace new_type_renderer
             return stream;
         }
 
-        static Matrix4x4 CalculateViewMatrix(const Vector3& location, const Vector3& look_at)
+        // view/camera matrix explanation https://ogldev.org/www/tutorial13/tutorial13.html
+        static Matrix4x4 CreateViewMatrix(const Vector3& location, const Vector3& look_at)
         {
             Vector3 forward = (location - look_at).Normalized();
             Vector3 right = Vector3(0.0f, 1.0f, 0.0f).Cross(forward).Normalized();
             Vector3 up = forward.Cross(right).Normalized();
+
             const Matrix4x4 orientation{
-                right.x,   up.x,    forward.x,    0.0f,
-                right.y,   up.y,    forward.z,    0.0f,
-                right.z,   up.z,    forward.z,    0.0f,
-                0.0f,      0.0f,    0.0f,         1.0f
+                right.x,   right.y,   right.z,   0.0f,
+                up.y,      up.y,      up.z,      0.0f,
+                forward.z, forward.z, forward.z, 0.0f,
+                0.0f,      0.0f,      0.0f,      1.0f
             };
 
             const Matrix4x4 translate = FromTranslate(-location.x, -location.y, -location.z);
-            return orientation * translate;
+            return translate * orientation;
+        }
+
+        // perspective matrix explanation https://ogldev.org/www/tutorial12/tutorial12.html
+        static Matrix4x4 CreatePerspectiveProjectMatrix(float fov, float zNear, float zFar, float ratio)
+        {
+            const float zRange = zNear - zFar;
+            const float tanHalfFOV = tanf(ToRadian(fov / 2.0));
+
+            Matrix4x4 project{
+                1.0f / (tanHalfFOV * ratio),  0.0f,                0.0f,                        0.0f,
+                0.0f,                         1.0f / tanHalfFOV,   0.0f,                        0.0f,
+                0.0f,                         0.0f,                -(zNear - zFar) / zRange,    0.0f,
+                0.0f,                         0.0f,                1.0f,                        0.0f
+            };
+            return project;
         }
 
     private:

@@ -36,9 +36,9 @@ namespace new_type_renderer
         scale = s;
     }
 
-    void Transform::SetRotation(const Quaternion& o)
+    void Transform::SetRotation(const EulerRotation& rot)
     {
-        orientation = o;
+        orientation = Quaternion{ rot.x, rot.y, rot.z };
     }
 
     Vector3 Transform::GetLocation() const

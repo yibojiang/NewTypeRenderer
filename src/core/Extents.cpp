@@ -8,19 +8,19 @@ namespace new_type_renderer
     {
         for (uint8_t i = 0; i < SLABCOUNT; ++i)
         {
-            dnear[i] = FLT_MAX;
-            dfar[i] = -FLT_MAX;
+            m_DistNear[i] = FLT_MAX;
+            m_DistFar[i] = -FLT_MAX;
         }
     }
 
     Vector3 Extents::GetCentriod() const
     {
 #if SLABCOUNT == 3
-        return Vector3(-(dnear[0] + dfar[0]) * 0.5, -(dnear[1] + dfar[1]) * 0.5, -(dnear[2] + dfar[2]) * 0.5);
+        return Vector3(-(m_DistNear[0] + m_DistFar[0]) * 0.5, -(m_DistNear[1] + m_DistFar[1]) * 0.5, -(m_DistNear[2] + m_DistFar[2]) * 0.5);
 #endif
 #if SLABCOUNT == 7
-        Vector3 c1 = Vector3(-(dnear[0] + dfar[0]) * 0.5, -(dnear[1] + dfar[1]) * 0.5, -(dnear[2] + dfar[2]) * 0.5);
-        Vector3 c2 = Vector3(-(dnear[3] + dfar[3]) * 0.5, -(dnear[4] + dfar[4]) * 0.5, -(dnear[5] + dfar[5]) * 0.5);
+        Vector3 c1 = Vector3(-(m_DistNear[0] + m_DistFar[0]) * 0.5, -(m_DistNear[1] + m_DistFar[1]) * 0.5, -(m_DistNear[2] + m_DistFar[2]) * 0.5);
+        Vector3 c2 = Vector3(-(m_DistNear[3] + m_DistFar[3]) * 0.5, -(m_DistNear[4] + m_DistFar[4]) * 0.5, -(m_DistNear[5] + m_DistFar[5]) * 0.5);
 
         return (c1 + c2) * 0.5;
 #endif
@@ -28,20 +28,20 @@ namespace new_type_renderer
 
     Vector3 Extents::GetBoundMin() const
     {
-        return Vector3(-dfar[0], -dfar[1], -dfar[2]);
+        return Vector3(-m_DistFar[0], -m_DistFar[1], -m_DistFar[2]);
     }
 
     Vector3 Extents::GetBoundMax() const
     {
-        return Vector3(-dnear[0], -dnear[1], -dnear[2]);
+        return Vector3(-m_DistNear[0], -m_DistNear[1], -m_DistNear[2]);
     }
 
     void Extents::ExtendBy(Extents& extents)
     {
         for (int i = 0; i < SLABCOUNT; ++i)
         {
-            dnear[i] = fmin(extents.dnear[i], dnear[i]);
-            dfar[i] = fmax(extents.dfar[i], dfar[i]);
+            m_DistNear[i] = fmin(extents.m_DistNear[i], m_DistNear[i]);
+            m_DistFar[i] = fmax(extents.m_DistFar[i], m_DistFar[i]);
         }
     }
 
@@ -52,8 +52,8 @@ namespace new_type_renderer
         float tmax = FLT_MAX;
         for (uint8_t i = 0; i < SLABCOUNT; ++i)
         {
-            double tNear = (-dnear[i] - r.origin.Dot(BVH::normals[i])) / r.dir.Dot(BVH::normals[i]);
-            double tFar = (-dfar[i] - r.origin.Dot(BVH::normals[i])) / r.dir.Dot(BVH::normals[i]);
+            double tNear = (-m_DistNear[i] - r.origin.Dot(BVH::normals[i])) / r.dir.Dot(BVH::normals[i]);
+            double tFar = (-m_DistFar[i] - r.origin.Dot(BVH::normals[i])) / r.dir.Dot(BVH::normals[i]);
 
             // Swap near and far t.
             if (tNear > tFar)
@@ -97,8 +97,8 @@ namespace new_type_renderer
         float tmax = FLT_MAX;
         for (uint8_t i = 0; i < SLABCOUNT; ++i)
         {
-            double tNear = (-dnear[i] - r.origin.Dot(BVH::normals[i])) / r.dir.Dot(BVH::normals[i]);
-            double tFar = (-dfar[i] - r.origin.Dot(BVH::normals[i])) / r.dir.Dot(BVH::normals[i]);
+            double tNear = (-m_DistNear[i] - r.origin.Dot(BVH::normals[i])) / r.dir.Dot(BVH::normals[i]);
+            double tFar = (-m_DistFar[i] - r.origin.Dot(BVH::normals[i])) / r.dir.Dot(BVH::normals[i]);
 
             // Swap near and far t.
             if (tNear > tFar)
@@ -159,8 +159,8 @@ namespace new_type_renderer
         double tmax = FLT_EPSILON;
         for (uint8_t i = 0; i < SLABCOUNT; ++i)
         {
-            double tNear = (-dnear[i] - r.origin.Dot(BVH::normals[i])) / r.dir.Dot(BVH::normals[i]);
-            double tFar = (-dfar[i] - r.origin.Dot(BVH::normals[i])) / r.dir.Dot(BVH::normals[i]);
+            double tNear = (-m_DistNear[i] - r.origin.Dot(BVH::normals[i])) / r.dir.Dot(BVH::normals[i]);
+            double tFar = (-m_DistFar[i] - r.origin.Dot(BVH::normals[i])) / r.dir.Dot(BVH::normals[i]);
 
             // Swap near and far t.
             if (tNear > tFar)
@@ -198,11 +198,11 @@ namespace new_type_renderer
         Vector3 hit = r.origin + r.dir * t;
         for (int i = 0; i < SLABCOUNT; ++i)
         {
-            if (fabs(-dnear[i] - hit.Dot(BVH::normals[i])) < width)
+            if (fabs(-m_DistNear[i] - hit.Dot(BVH::normals[i])) < width)
             {
                 count++;
             }
-            else if (fabs(-dfar[i] - hit.Dot(BVH::normals[i])) < width)
+            else if (fabs(-m_DistFar[i] - hit.Dot(BVH::normals[i])) < width)
             {
                 count++;
             }
@@ -218,11 +218,11 @@ namespace new_type_renderer
         hit = r.origin + r.dir * t;
         for (int i = 0; i < SLABCOUNT; ++i)
         {
-            if (fabs(-dnear[i] - hit.Dot(BVH::normals[i])) < width)
+            if (fabs(-m_DistNear[i] - hit.Dot(BVH::normals[i])) < width)
             {
                 count++;
             }
-            else if (fabs(-dfar[i] - hit.Dot(BVH::normals[i])) < width)
+            else if (fabs(-m_DistFar[i] - hit.Dot(BVH::normals[i])) < width)
             {
                 count++;
             }

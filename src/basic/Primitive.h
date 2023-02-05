@@ -131,8 +131,8 @@ namespace new_type_renderer
             {
                 Vector3 slabN = BVH::normals[i];
                 double d = center.Dot(slabN);
-                bounds.dnear[i] = -rad - d;
-                bounds.dfar[i] = rad - d;
+                bounds.m_DistNear[i] = -rad - d;
+                bounds.m_DistFar[i] = rad - d;
             }
         }
 
@@ -239,7 +239,7 @@ namespace new_type_renderer
             double t4 = (-dfar[1] - r.origin.Dot(normals[1])) / r.dir.Dot(normals[1]);
             double t5 = (-dnear[2] - r.origin.Dot(normals[2])) / r.dir.Dot(normals[2]);
             double t6 = (-dfar[2] - r.origin.Dot(normals[2])) / r.dir.Dot(normals[2]);
-            double tmin = fmax(fmax(fmin(t1, t2), fmin(t3, t4)), fmin(t5, t6)); // max t near 
+            double tmin = fmax(fmax(fmin(t1, t2), fmin(t3, t4)), fmin(t5, t6)); // max t m_Near 
             double tmax = fmin(fmin(fmax(t1, t2), fmax(t3, t4)), fmax(t5, t6)); // min t far
             // if tmax < 0, ray (line) is intersecting AABB, but whole AABB is behing us
             if (tmax < 0)
@@ -312,19 +312,19 @@ namespace new_type_renderer
         {
             for (uint8_t i = 0; i < SLABCOUNT; ++i)
             {
-                bounds.dnear[i] = FLT_MAX;
-                bounds.dfar[i] = -FLT_MAX;
+                bounds.m_DistNear[i] = FLT_MAX;
+                bounds.m_DistFar[i] = -FLT_MAX;
                 for (int j = 0; j < 8; ++j)
                 {
                     // qDebug()<<p[j];
                     double d = -p[j].Dot(BVH::normals[i]);
-                    if (d < bounds.dnear[i])
+                    if (d < bounds.m_DistNear[i])
                     {
-                        bounds.dnear[i] = d;
+                        bounds.m_DistNear[i] = d;
                     }
-                    if (d > bounds.dfar[i])
+                    if (d > bounds.m_DistFar[i])
                     {
-                        bounds.dfar[i] = d;
+                        bounds.m_DistFar[i] = d;
                     }
                 }
             }
@@ -473,16 +473,16 @@ namespace new_type_renderer
                 double d1 = -p1.Dot(slabN);
                 double d2 = -p2.Dot(slabN);
                 double d3 = -p3.Dot(slabN);
-                bounds.dnear[i] = fmin(d1, fmin(d2, d3));
-                bounds.dfar[i] = fmax(d1, fmax(d2, d3));
+                bounds.m_DistNear[i] = fmin(d1, fmin(d2, d3));
+                bounds.m_DistFar[i] = fmax(d1, fmax(d2, d3));
 
-                // bounds.dnear[i]-=eps;
-                // bounds.dfar[i]+=eps;
-                // qDebug() << this->name.c_str() << "near" << bounds.dnear[i];
-                // qDebug() << this->name.c_str() << "far" << bounds.dfar[i];
-                // if ( fabs(bounds.dfar[i] - bounds.dnear[i]) < eps){
-                //     bounds.dnear[i]-=eps;
-                //     bounds.dfar[i]+=eps;
+                // bounds.m_DistNear[i]-=eps;
+                // bounds.m_DistFar[i]+=eps;
+                // qDebug() << this->name.c_str() << "m_Near" << bounds.m_DistNear[i];
+                // qDebug() << this->name.c_str() << "far" << bounds.m_DistFar[i];
+                // if ( fabs(bounds.m_DistFar[i] - bounds.m_DistNear[i]) < eps){
+                //     bounds.m_DistNear[i]-=eps;
+                //     bounds.m_DistFar[i]+=eps;
                 // }
             }
         }

@@ -26,7 +26,7 @@ namespace new_type_renderer
     class Raytracer
     {
     public:
-        Raytracer(unsigned width, unsigned height, int _samples);
+        Raytracer(unsigned width, unsigned height, int samples);
 
         ~Raytracer();
 
@@ -34,9 +34,9 @@ namespace new_type_renderer
         
         void RenderIndirectProgressive(Color* colorArray, bool& abort, bool& restart, int& samples);
 
-        void RenderIndirect(double& time, Image& image);
+        void RenderIndirect(float& time, Image& image);
 
-        void RenderDirect(double& time, Image& directImage, Image& normalImage, Image& boundingBoxImage);
+        void RenderDirect(float& time, Image& directImage, Image& normalImage, Image& boundingBoxImage);
 
         void TestPixel(int x, int y);
 
@@ -56,20 +56,20 @@ namespace new_type_renderer
 
         // Vector3 ToneMapping(const Vector3 &radiance) const;
     public:
-        Scene scene;
+        Scene m_Scene;
 
-        int curSamples;
+        int m_CurrentSamples;
 
-        int samples;
+        int m_Samples;
 
-        double progress;
+        double m_Progress;
 
         bool is_rendering;
 
-        std::string scene_path;
+        std::string m_ScenePath;
 
-        unsigned short width;
+        unsigned short m_Width;
 
-        unsigned short height;
+        unsigned short m_Height;
     };
 }

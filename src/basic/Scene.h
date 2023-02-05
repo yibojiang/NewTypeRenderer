@@ -16,9 +16,9 @@ namespace new_type_renderer
 
         ~Scene();
 
-        bool LoadFromJson(std::string json_file_name);        
+        bool LoadFromJson(const std::string& fullPath);
 
-        void LoadHdri(std::string name);
+        void LoadHdri(const std::string& name);
 
         void Add(Object* object);
 
@@ -32,21 +32,21 @@ namespace new_type_renderer
 
     public:
 
-        SceneNode* root;
+        SceneNode* m_Root;
 
-        std::vector<Object*> objects;
+        std::vector<Object*> m_Objects;
 
-        std::vector<Object*> lights;
+        std::vector<Object*> m_Lights;
 
-        HDRImage hdri;
+        HDRImage m_HDRI;
 
-        float envLightIntense;
+        float m_EnvLightIntense;
 
-        float envLightExp;
+        float m_EnvLightExp;
 
-        float envRotate;
+        float m_EnvRotate;
 
-        bool hasHdri;
+        bool m_HasHdri;
 
         Matrix3x3 ca;
 
@@ -58,12 +58,8 @@ namespace new_type_renderer
 
         Vector3 up;
 
-        std::string scene_path;
-
         BVH bvh;
 
         Camera camera;
-
-        SceneNode camera_node;
     };
 }

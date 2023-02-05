@@ -34,10 +34,10 @@ namespace new_type_renderer
         void IntersectNode(Ray& ray, const OctreeNode* node, Intersection& intersection, std::priority_queue<HitNode>&) const;
         
     public:
-        Scene* scene;
+        Scene* m_Scene;
 
-        std::vector<Extents*> extents_list;
+        std::vector<Extents*> m_Extents;
 
-        OctreeNode* octree;
+        OctreeNode* m_Octree;
     };
 }

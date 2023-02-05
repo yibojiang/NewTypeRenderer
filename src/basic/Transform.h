@@ -19,7 +19,7 @@ namespace new_type_renderer
 
         void SetScale(const Vector3& s);
 
-        void SetRotation(const Quaternion& o);
+        void SetRotation(const EulerRotation& rot);
 
         Vector3 GetLocation() const;
 

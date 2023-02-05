@@ -74,7 +74,7 @@ enum WriteFlag {
 
     User may programmatically calls the functions of a writer to generate JSON text.
 
-    On the other side, a writer can also be passed to objects that generates events, 
+    On the other side, a writer can also be passed to m_Objects that generates events, 
 
     for example Reader::Parse() and Document::Accept().
 
@@ -137,7 +137,7 @@ public:
 
     //! Checks whether the output is a complete JSON.
     /*!
-        A complete JSON has a complete root object or array.
+        A complete JSON has a complete m_Root object or array.
     */
     bool IsComplete() const {
         return hasRoot_ && level_stack_.Empty();
@@ -450,7 +450,7 @@ protected:
 
     void Prefix(Type type) {
         (void)type;
-        if (RAPIDJSON_LIKELY(level_stack_.GetSize() != 0)) { // this value is not at root
+        if (RAPIDJSON_LIKELY(level_stack_.GetSize() != 0)) { // this value is not at m_Root
             Level* level = level_stack_.template Top<Level>();
             if (level->valueCount > 0) {
                 if (level->inArray) 
@@ -463,7 +463,7 @@ protected:
             level->valueCount++;
         }
         else {
-            RAPIDJSON_ASSERT(!hasRoot_);    // Should only has one and only one root.
+            RAPIDJSON_ASSERT(!hasRoot_);    // Should only has one and only one m_Root.
             hasRoot_ = true;
         }
     }

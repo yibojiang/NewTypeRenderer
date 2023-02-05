@@ -19,22 +19,22 @@ namespace new_type_renderer
 
         void AddObject(std::weak_ptr<Object> obj);
 
-        std::weak_ptr<Object> GetObject() const { return object; }
+        std::weak_ptr<Object> GetObject() const { return m_Object; }
 
-        std::vector<std::shared_ptr<SceneNode>>& GetChildren() { return children; }
+        std::vector<std::shared_ptr<SceneNode>>& GetChildren() { return m_Children; }
 
         void RemoveAllChildren();
 
         void RemoveChild(std::shared_ptr<SceneNode> child);
 
     public:
-        Transform transform{};
+        Transform m_Transform{};
 
     protected:
-        std::vector<std::shared_ptr<SceneNode>> children{};
+        std::vector<std::shared_ptr<SceneNode>> m_Children{};
 
-        std::weak_ptr<SceneNode> parent{};
+        std::weak_ptr<SceneNode> m_Parent{};
 
-        std::weak_ptr<Object> object{};
+        std::weak_ptr<Object> m_Object{};
     };
 }

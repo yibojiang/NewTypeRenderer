@@ -1,7 +1,7 @@
 #include "raytracer.h"
 #include "utility/Log.h"
 #include "utility/ModelLoader.h"
-#include "utility/Random.h"
+#include "math/Common.h"
 
 #include "BVH.h"
 #include "math/Quaternion.h"
@@ -82,8 +82,8 @@ namespace new_type_renderer
 
     Color Raytracer::Tracing(Ray& ray, int depth, int E = 1)
     {
-        // Intersection intersection = scene.Intersect(ray);
-        Intersection intersection = scene.Intersect(ray);
+        // Intersection intersection = m_Scene.Intersect(ray);
+        Intersection intersection = m_Scene.Intersect(ray);
 
         Color ambColor(0, 0, 0);
         if (!intersection.object)
@@ -246,9 +246,9 @@ namespace new_type_renderer
         // Explicit light sample. Only support for sphere light
 #ifdef EXPLICIT_LIGHT_SAMPLE
         Color e;
-        for (unsigned int i = 0; i < scene.lights.size(); i++)
+        for (unsigned int i = 0; i < m_Scene.m_Lights.size(); i++)
         {
-            Object* light = scene.lights[i];
+            Object* light = m_Scene.m_Lights[i];
             Vector3 sw = light->GetCentriod() - hit;
             Vector3 su = ((fabs(sw.x) > .1 ? Vector3(0, 1, 0) : Vector3(1, 0, 0)).Cross(sw)).Normalize();
             Vector3 sv = sw.Cross(su);
@@ -264,8 +264,8 @@ namespace new_type_renderer
             l.Normalize();
 
             Ray shadowRay(hit, l);
-            Intersection shadow = scene.Intersect(shadowRay);
-            // Intersection shadow = scene.Intersect(shadowRay);
+            Intersection shadow = m_Scene.Intersect(shadowRay);
+            // Intersection shadow = m_Scene.Intersect(shadowRay);
 
             if (shadow.object && shadow.object == light)
             {
@@ -284,26 +284,22 @@ namespace new_type_renderer
 
     Raytracer::Raytracer(unsigned _width, unsigned _height, int _samples)
     {
-        width = _width;
-        height = _height;
-        samples = _samples;
+        m_Width = _width;
+        m_Height = _height;
+        m_Samples = _samples;
 
         std::string base_path = "";
-        // std::string name = "/scene/empty.json";
-        // std::string name = "/scene/sportcar.json";
-        // std::string name = "/scene/plane.json";
         std::string name = "/scene/cornellbox.json";
-        // std::string name = "/scene/sponza.json";
         std::string fullpath = base_path + name;
-        scene.LoadFromJson(fullpath);
+        m_Scene.LoadFromJson(fullpath);
     }
 
     void Raytracer::ScaleCamera(float scl)
     {
         scl = fmax(-0.99, scl);
         scl = -scl;
-        // scene.cameraScale = scene.cameraScale + scl;
-        Vector3 dir = scene.ro - scene.ta;
+        // m_Scene.cameraScale = m_Scene.cameraScale + scl;
+        Vector3 dir = m_Scene.ro - m_Scene.ta;
         // float scale = dir.Length() + scl;
         // scale = scale + scl;
         // Matrix4x4 m = Matrix4x4(scale, 0, 0,   1,
@@ -311,12 +307,12 @@ namespace new_type_renderer
         //               0, 0,   scale, 1,
         //               0, 0,   0,   1);
 
-        // Vector4 ro = m * Vector4(scene.ro, 1);
+        // Vector4 ro = m * Vector4(m_Scene.ro, 1);
 
-        scene.ro = scene.ta + dir * (1 + scl);
-        // scene.ro = Vector3(ro.x, ro.y, ro.z);
-        // scene.ta = Vector3(ta.x, ta.y, ta.z);
-        scene.ca = setCamera(scene.ro, scene.ta, scene.up);
+        m_Scene.ro = m_Scene.ta + dir * (1 + scl);
+        // m_Scene.ro = Vector3(ro.x, ro.y, ro.z);
+        // m_Scene.ta = Vector3(ta.x, ta.y, ta.z);
+        m_Scene.ca = setCamera(m_Scene.ro, m_Scene.ta, m_Scene.up);
     }
 
     void Raytracer::RotateCamera(float x, float y, float z)
@@ -324,19 +320,19 @@ namespace new_type_renderer
         Quaternion rot(x, y, z);
         Matrix4x4 m = rot.ToMatrix();
 
-        Vector4 ro = m * Vector4(scene.ro, 1);
-        scene.ro = Vector3(ro.x, ro.y, ro.z);
+        Vector4 ro = m * Vector4(m_Scene.ro, 1);
+        m_Scene.ro = Vector3(ro.x, ro.y, ro.z);
 
-        Vector4 ta = m * Vector4(scene.ta, 1);
-        scene.ta = Vector3(ta.x, ta.y, ta.z);
-        scene.ca = setCamera(scene.ro, scene.ta, scene.up);
+        Vector4 ta = m * Vector4(m_Scene.ta, 1);
+        m_Scene.ta = Vector3(ta.x, ta.y, ta.z);
+        m_Scene.ca = setCamera(m_Scene.ro, m_Scene.ta, m_Scene.up);
     }
 
     void Raytracer::MoveCamera(float x, float y)
     {
         // Matrix4x4 m = Matrix4x4();
         Vector3 move(-x, y, 0);
-        Vector3 cw = (scene.ta - scene.ro).Normalize();
+        Vector3 cw = (m_Scene.ta - m_Scene.ro).Normalize();
         auto up = Vector3(0, 1, 0);
         Vector3 cp = up.Normalized();
         Vector3 cu = cw.Cross(cp).Normalized();
@@ -344,22 +340,22 @@ namespace new_type_renderer
         auto m = Matrix3x3(cu, cv, cw);
 
         move = m * move;
-        scene.ta = scene.ta + move;
-        scene.ro = scene.ro + move;
-        scene.ca = setCamera(scene.ro, scene.ta, scene.up);
+        m_Scene.ta = m_Scene.ta + move;
+        m_Scene.ro = m_Scene.ro + move;
+        m_Scene.ca = setCamera(m_Scene.ro, m_Scene.ta, m_Scene.up);
     }
 
     Color Raytracer::GetEnvColor(const Vector3& dir) const
     {
         Color ambColor(0, 0, 0);
-        if (scene.hasHdri)
+        if (m_Scene.m_HasHdri)
         {
-            Matrix3x3 m(cos(scene.envRotate), 0, sin(scene.envRotate),
+            Matrix3x3 m(cos(m_Scene.m_EnvRotate), 0, sin(m_Scene.m_EnvRotate),
                         0, 1, 0,
-                        sin(scene.envRotate), 0, -cos(scene.envRotate));
+                        sin(m_Scene.m_EnvRotate), 0, -cos(m_Scene.m_EnvRotate));
             Vector3 newdir = m * dir;
-            // hdri  
-            HDRImage hdri = scene.hdri;
+            // m_HDRI  
+            HDRImage hdri = m_Scene.m_HDRI;
             double u = atan2(-newdir.x, newdir.z) / (2.0 * M_PI) + 0.5;
             double v = asin(-newdir.y) / M_PI + 0.5;
             int hdrx = u * (hdri.width - 1);
@@ -370,9 +366,9 @@ namespace new_type_renderer
             r = pow(r, 0.44);
             g = pow(g, 0.44);
             b = pow(b, 0.44);
-            r = scene.envLightIntense * pow(r, scene.envLightExp);
-            g = scene.envLightIntense * pow(g, scene.envLightExp);
-            b = scene.envLightIntense * pow(b, scene.envLightExp);
+            r = m_Scene.m_EnvLightIntense * pow(r, m_Scene.m_EnvLightExp);
+            g = m_Scene.m_EnvLightIntense * pow(g, m_Scene.m_EnvLightExp);
+            b = m_Scene.m_EnvLightIntense * pow(b, m_Scene.m_EnvLightExp);
             // return Vector3(r,g,b);
             ambColor = Color(r, g, b);
         }
@@ -381,14 +377,14 @@ namespace new_type_renderer
 
     void Raytracer::TestPixel(int x, int y)
     {
-        Matrix3x3 ca = scene.ca;
-        Vector3 ro = scene.ro;
-        double u = x * 1.0 / width;
-        double v = (height - y) * 1.0 / height;
+        Matrix3x3 ca = m_Scene.ca;
+        Vector3 ro = m_Scene.ro;
+        double u = x * 1.0 / m_Width;
+        double v = (m_Height - y) * 1.0 / m_Height;
         u = (u * 2.0 - 1.0);
         v = (v * 2.0 - 1.0);
-        v = v * height / width;
-        Vector3 rd = ca * (Vector3(u, v, scene.camera.near)).Normalize();
+        v = v * m_Height / m_Width;
+        Vector3 rd = ca * (Vector3(u, v, m_Scene.camera.m_Near)).Normalize();
         Ray ray(ro, rd);
         TestRaytracing(ray, 0);
     }
@@ -400,7 +396,7 @@ namespace new_type_renderer
             return;
         }
 
-        Intersection intersection = scene.Intersect(ray);
+        Intersection intersection = m_Scene.Intersect(ray);
 
         if (!intersection.object)
         {
@@ -424,10 +420,10 @@ namespace new_type_renderer
         TestRaytracing(reflRay, depth);
     }
 
-    void Raytracer::RenderDirect(double& time, Image& directImage, Image& normalImage, Image& boundingBoxImage)
+    void Raytracer::RenderDirect(float& time, Image& directImage, Image& normalImage, Image& boundingBoxImage)
     {
-        Matrix3x3 ca = scene.ca;
-        Vector3 ro = scene.ro;
+        Matrix3x3 ca = m_Scene.ca;
+        Vector3 ro = m_Scene.ro;
         Color normalColor;
         Color directColor;
         Color boundingBoxColor;
@@ -437,26 +433,26 @@ namespace new_type_renderer
         // Vector3 lig = Vector3(-1, -3, -1.5).Normalize();
         Vector3 pointLig(50, 78, 60);
 
-        for (unsigned int i = 0; i < scene.lights.size(); i++)
+        for (unsigned int i = 0; i < m_Scene.m_Lights.size(); i++)
         {
-            Object* light = scene.lights[i];
+            Object* light = m_Scene.m_Lights[i];
             pointLig = light->GetCentriod();
             break;
         }
 
 #pragma omp parallel for schedule(dynamic, 1)  private(directColor, normalColor, boundingBoxColor, ambColor)    // OpenMP
 
-        for (unsigned short i = 0; i < height; ++i)
+        for (unsigned short i = 0; i < m_Height; ++i)
         {
-            for (unsigned short j = 0; j < width; ++j)
+            for (unsigned short j = 0; j < m_Width; ++j)
             {
-                double u = j * 1.0 / width;
-                double v = (height - i) * 1.0 / height;
+                double u = j * 1.0 / m_Width;
+                double v = (m_Height - i) * 1.0 / m_Height;
                 u = (u * 2.0 - 1.0);
                 v = (v * 2.0 - 1.0);
-                // u = u * width/height;
-                v = v * height / width;
-                Vector3 rd = ca * (Vector3(u, v, scene.camera.near)).Normalize();
+                // u = u * m_Width/m_Height;
+                v = v * m_Height / m_Width;
+                Vector3 rd = ca * (Vector3(u, v, m_Scene.camera.m_Near)).Normalize();
                 normalColor = Color(0, 0, 0);
                 directColor = Color(0, 0, 0);
                 boundingBoxColor = Color(0, 0, 0);
@@ -471,7 +467,7 @@ namespace new_type_renderer
                     boundingBoxColor = Vector3(0, 1, 0);
                 }
 #endif
-                Intersection intersection = scene.Intersect(ray);
+                Intersection intersection = m_Scene.Intersect(ray);
                 ambColor = GetEnvColor(ray.dir);
                 if (intersection.object)
                 {
@@ -534,15 +530,15 @@ namespace new_type_renderer
         Color color(0, 0, 0);
         Color radiance(0, 0, 0);
 
-        Camera& camera = scene.camera;
-        // camera.focal_length = (camera.ta - camera.ro).Length();
+        Camera& camera = m_Scene.camera;
+        // camera.m_FocalLength = (camera.ta - camera.ro).Length();
 
-        // ratio of original/new aperture (>1: smaller view angle, <1: larger view angle)
-        double aperture = 0.5135 / camera.aperture;
+        // ratio of original/new m_Aperture (>1: smaller view angle, <1: larger view angle)
+        double aperture = 0.5135 / camera.m_Aperture;
 
         // Vector3 dir_norm = Vector3(0, -0.042612, -1).Normalize();
-        Vector3 dir_norm = (scene.ta - scene.ro).Normalize();
-        double L = scene.camera.near;
+        Vector3 dir_norm = (m_Scene.ta - m_Scene.ro).Normalize();
+        double L = m_Scene.camera.m_Near;
         double L_new = aperture * L;
         double L_diff = L - L_new;
         Vector3 cam_shift = dir_norm * (L_diff);
@@ -552,24 +548,24 @@ namespace new_type_renderer
         }
 
         L = L_new;
-        auto camera_ray = Ray(scene.ro + cam_shift, dir_norm);
+        auto camera_ray = Ray(m_Scene.ro + cam_shift, dir_norm);
         // Cross product gets the vector perpendicular to cx and the "gaze" direction
-        auto cx = Vector3((width * 1.0) / height, 0, 0);
-        Vector3 rd = (scene.ta - scene.ro).Normalize();
+        auto cx = Vector3((m_Width * 1.0) / m_Height, 0, 0);
+        Vector3 rd = (m_Scene.ta - m_Scene.ro).Normalize();
         Vector3 cy = (cx.Cross(rd)).Normalize();
 
 
 #pragma omp parallel for schedule(dynamic, 1) private(color, radiance)       // OpenMP
-        for (unsigned short i = 0; i < height; ++i)
+        for (unsigned short i = 0; i < m_Height; ++i)
         {
-            this->progress = 100. * i / (height - 1);
+            this->m_Progress = 100. * i / (m_Height - 1);
 
-            for (unsigned short j = 0; j < width; ++j)
+            for (unsigned short j = 0; j < m_Width; ++j)
             {
-                color = colorArray[i * width + j];
+                color = colorArray[i * m_Width + j];
                 radiance = Color();
 
-                // super samples
+                // super m_Samples
                 for (int sy = 0; sy < 2; ++sy)
                 {
                     // 2x2 subpixel rows
@@ -589,14 +585,14 @@ namespace new_type_renderer
                         // tent filter
                         float r1 = 2 * Random01(), dx = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
                         float r2 = 2 * Random01(), dy = r2 < 1 ? sqrt(r2) - 1 : 1 - sqrt(2 - r2);
-                        float u = (j + (sy - 0.5 + dy * 0.5) * 0.5) / width;
-                        float v = (height - (i + (sx - 0.5 + dx * 0.5) * 0.5)) / height;
+                        float u = (j + (sy - 0.5 + dy * 0.5) * 0.5) / m_Width;
+                        float v = (m_Height - (i + (sx - 0.5 + dx * 0.5) * 0.5)) / m_Height;
                         u = (u * 2.0 - 1.0);
                         v = (v * 2.0 - 1.0);
-                        // u = u * width/height;
-                        v = v * height / width;
+                        // u = u * m_Width/m_Height;
+                        v = v * m_Height / m_Width;
 
-                        Vector3 rd = scene.ca * Vector3(u, v, scene.camera.near);
+                        Vector3 rd = m_Scene.ca * Vector3(u, v, m_Scene.camera.m_Near);
                         // Vector3 rd = dir.Normalized();
                         // if (i == 0 && j == 0){
                         //     // qDebug() << "dir "<< dir;
@@ -605,19 +601,19 @@ namespace new_type_renderer
                         //     qDebug()<<"L: " << L;
                         //     qDebug()<<"cx: " << cx;
                         //     qDebug()<<"cy: " << cy;
-                        //     // qDebug() << "near" << scene.near * L;
+                        //     // qDebug() << "m_Near" << m_Scene.m_Near * L;
                         // }
-                        // Vector3 rd = scene.ca * (Vector3(u, v, scene.near)).Normalize();
+                        // Vector3 rd = m_Scene.ca * (Vector3(u, v, m_Scene.m_Near)).Normalize();
 
-                        Ray primiaryRay(scene.ro, rd);
+                        Ray primiaryRay(m_Scene.ro, rd);
 
                         // If we're actually using depth of field, we need to modify the camera ray to account for that
-                        if (camera.focus_on)
+                        if (camera.m_FocusOn)
                         {
-                            Vector3 fp = (camera_ray.origin + rd * L) + rd.Normalized() * camera.focal_length;
+                            Vector3 fp = (camera_ray.origin + rd * L) + rd.Normalized() * camera.m_FocalLength;
                             // Get a pixel point and new ray rdection to calculate where the rays should Intersect
-                            // Vector3 del_x = (cx * dx * L / float(width));
-                            // Vector3 del_y = (cy * dy * L / float(height));
+                            // Vector3 del_x = (cx * dx * L / float(m_Width));
+                            // Vector3 del_y = (cy * dy * L / float(m_Height));
                             Vector3 del_x = cx * dx * L;
                             Vector3 del_y = cy * dy * L;
                             Vector3 point = camera_ray.origin + rd * L;
@@ -627,7 +623,7 @@ namespace new_type_renderer
                         }
                         else
                         {
-                            primiaryRay = Ray(scene.ro, rd.Normalized());
+                            primiaryRay = Ray(m_Scene.ro, rd.Normalized());
                         }
 
                         radiance = radiance + Tracing(primiaryRay, 0) * 0.25;
@@ -655,7 +651,7 @@ namespace new_type_renderer
                 // clamp
                 color = (color * samples + Color(Clamp01(radiance.x), Clamp01(radiance.y), Clamp01(radiance.z))) * (1.0 / (
                     samples + 1));
-                colorArray[i * width + j] = color;
+                colorArray[i * m_Width + j] = color;
             }
         }
     }
@@ -664,19 +660,19 @@ namespace new_type_renderer
 
     // }
 
-    void Raytracer::RenderIndirect(double& time, Image& image)
+    void Raytracer::RenderIndirect(float& time, Image& image)
     {
-        int samps = samples / 4;
+        int samps = m_Samples / 4;
         is_rendering = true;
         Color r(0, 0, 0);
         Vector3 raw(0, 0, 0);
 #pragma omp parallel for schedule(dynamic, 1) private(r)       // OpenMP
-        for (unsigned short i = 0; i < height; ++i)
+        for (unsigned short i = 0; i < m_Height; ++i)
         {
-            this->progress = 100. * i / (height - 1);
-            // fprintf(stderr, "\rRendering (%d spp) %5.2f%%", samps * gridSize * gridSize, 100.*i / (height - 1));
-            LOG_INFO("Rendering ", "spp:", samps * 4, " ", 100. * i / (height - 1), '%');
-            for (unsigned short j = 0; j < width; ++j)
+            this->m_Progress = 100. * i / (m_Height - 1);
+            // fprintf(stderr, "\rRendering (%d spp) %5.2f%%", samps * gridSize * gridSize, 100.*i / (m_Height - 1));
+            LOG_INFO("Rendering ", "spp:", samps * 4, " ", 100. * i / (m_Height - 1), '%');
+            for (unsigned short j = 0; j < m_Width; ++j)
             {
                 Vector3 color;
                 for (int sy = 0; sy < 2; ++sy)
@@ -690,14 +686,14 @@ namespace new_type_renderer
                         {
                             double r1 = 2 * Random01(), dx = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
                             double r2 = 2 * Random01(), dy = r2 < 1 ? sqrt(r2) - 1 : 1 - sqrt(2 - r2);
-                            double u = (j + (sy - 0.5 + dy * 0.5) * 0.5) / width;
-                            double v = (height - (i + (sx - 0.5 + dx * 0.5) * 0.5)) / height;
+                            double u = (j + (sy - 0.5 + dy * 0.5) * 0.5) / m_Width;
+                            double v = (m_Height - (i + (sx - 0.5 + dx * 0.5) * 0.5)) / m_Height;
                             u = (u * 2.0 - 1.0);
                             v = (v * 2.0 - 1.0);
-                            u = u * width / height;
-                            Vector3 rd = scene.ca * (Vector3(u, v, scene.camera.near)).Normalize();
+                            u = u * m_Width / m_Height;
+                            Vector3 rd = m_Scene.ca * (Vector3(u, v, m_Scene.camera.m_Near)).Normalize();
 
-                            Ray primiaryRay(scene.ro, rd);
+                            Ray primiaryRay(m_Scene.ro, rd);
                             r = r + Tracing(primiaryRay, 0) * (1.0f / samps);
                         }
                         color = color + Vector3(Clamp01(r.x), Clamp01(r.y), Clamp01(r.z)) * .25;
@@ -714,8 +710,8 @@ namespace new_type_renderer
 
     void Raytracer::SetResolution(const int& in_width, const int& in_height)
     {
-        width = in_width;
-        height = in_height;
+        m_Width = in_width;
+        m_Height = in_height;
     }
 
     Raytracer::~Raytracer()

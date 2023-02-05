@@ -2,11 +2,23 @@
 #include "math/Matrix.h"
 #include "utility/Log.h"
 #include "test/TestCase.h"
+#include "renderer/OpenGlRenderer.h"
 
 int main(int argc, char *argv[])
 {
-    MathTest test0;
-    test0.Run();
+    using namespace new_type_renderer;
+
+    Scene scene;
+    scene.LoadFromJson("scene/cornellbox.json");
+    OpenGlRenderer viewport;
+    viewport.Init();
+    viewport.LoadScene(scene);
+
+    assert(viewport.IsInitialized());
+    while (viewport.IsWindowCloased() == false)
+    {
+        viewport.Render();
+    }
 
     return 0;
 }

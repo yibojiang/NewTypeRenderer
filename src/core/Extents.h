@@ -7,6 +7,11 @@
 
 namespace new_type_renderer
 {
+    /*
+     * Bounding volume for a set of given m_Objects, the bounding volume
+     * is represented as a collections of parallel planed. Each pair is
+     * defined by 2 distance value, m_DistNear and m_DistFar
+     */ 
     struct Extents
     {
     public:
@@ -37,8 +42,8 @@ namespace new_type_renderer
         }
 
     public:
-        float dnear[SLABCOUNT]{};
+        float m_DistNear[SLABCOUNT]{};
 
-        float dfar[SLABCOUNT]{};
+        float m_DistFar[SLABCOUNT]{};
     };
 }

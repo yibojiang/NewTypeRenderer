@@ -7,8 +7,12 @@
 namespace new_type_renderer
 {
     using namespace std;
-    // relative epsilon comparison
-    // https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/
+
+    /*
+     * float comparison by using relative epsilon comparison, there are other technique such as ULP
+     * checking the distance between the integer represented of the float
+     * https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/
+     */ 
     inline bool ApproximatelyEqual(float a, float b, float epsilon = FLT_EPSILON)
     {
         const float diff = fabs(a - b);
@@ -65,5 +69,15 @@ namespace new_type_renderer
     inline float Saturate(float v)
     {
         return Clamp(v, 0.0f, 1.0f);
+    }
+
+    inline float Random01()
+    {
+        return static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+    }
+
+    inline float ToRadian(const float degree)
+    {
+        return degree * M_PI / 180.0f;
     }
 }

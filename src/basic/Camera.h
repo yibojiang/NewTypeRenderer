@@ -1,30 +1,28 @@
 #pragma once
 #include "Object.h"
+#include "SceneNode.h"
+#include "Transform.h"
 
 namespace new_type_renderer
 {
-    class Camera : public Object
+    class Camera
     {
     public:
         Camera();
 
-        Vector3 GetCentriod() const override;
-
-        void UpdateTransformMatrix(const Matrix4x4&) override;
-
-        void ComputeBounds() override;
-
     public:
-        float fov{ 60.f };
+        float m_FOV{ 60.f };
 
-        float near{ 0.1f };
+        float m_Near{ 0.1f };
 
-        float focal_length{ 100.0f };
+        float m_FocalLength{ 100.0f };
 
-        float focus_on{ false };
+        float m_FocusOn{ false };
 
-        float aperture{ 1.0f };
+        float m_Aperture{ 1.0f };
 
-        float focal_distance{ 1000.0f };
+        float m_FocalDistance{ 1000.0f };
+
+        Matrix4x4 m_CameraMatrix;
     };
 }
