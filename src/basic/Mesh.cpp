@@ -6,17 +6,6 @@ namespace new_type_renderer
     {
     }
 
-    // Triangle::Triangle(Vector3 p1, Vector3 p2, Vector3 p3)
-    // {
-    //     m_P1 = p1;
-    //     m_P2 = p2;
-    //     m_P3 = p3;
-    //     auto u = m_P2 - m_P1;
-    //     auto v = m_P3 - m_P1;
-    //     m_Normal = u.Cross(v).Normalize();
-    //     isMesh = false;
-    // }
-
     MeshFace::~MeshFace()
     {
     }
@@ -159,28 +148,6 @@ namespace new_type_renderer
     void MeshFace::UpdateTransformMatrix(const Matrix4x4& m)
     {
         // Transform is already applied on Mesh, so need to apply it on the face
-
-        // Vector3 p1 = GetVertexPosition1();
-        // Vector3 p2 = GetVertexPosition2();
-        // Vector3 p3 = GetVertexPosition3();
-        //
-        // Vector4 vp1(p1, 1.0);
-        // Vector4 vp2(p2, 1.0);
-        // Vector4 vp3(p3, 1.0);
-        //
-        // vp1 = m * vp1;
-        // vp2 = m * vp2;
-        // vp3 = m * vp3;
-        //
-        // p1 = Vector3(vp1.x, vp1.y, vp1.z);
-        // p2 = Vector3(vp2.x, vp2.y, vp2.z);
-        // p3 = Vector3(vp3.x, vp3.y, vp3.z);
-        //
-        // m_VertexNormal1 = m * m_VertexNormal1;
-        // m_VertexNormal2 = m * m_VertexNormal2;
-        // m_VertexNormal3 = m * m_VertexNormal3;
-        //
-        // m_Normal = m_Normal * m_VertexNormal3;
     }
 
     Mesh::Mesh()
@@ -193,26 +160,6 @@ namespace new_type_renderer
 
     void Mesh::UpdateTransformMatrix(const Matrix4x4& m)
     {
-        // for (uint32_t i = 0; i < m_Faces.size(); ++i)
-        // {
-            // Vector4 p1(m_Faces[i]->m_P1, 1.0);
-            // Vector4 p2(m_Faces[i]->m_P2, 1.0);
-            // Vector4 p3(m_Faces[i]->m_P3, 1.0);
-            //
-            // p1 = m * p1;
-            // p2 = m * p2;
-            // p3 = m * p3;
-            //
-            // m_Faces[i]->m_P1 = Vector3(p1.x, p1.y, p1.z);
-            // m_Faces[i]->m_P2 = Vector3(p2.x, p2.y, p2.z);
-            // m_Faces[i]->m_P3 = Vector3(p3.x, p3.y, p3.z);
-            
-            // m_Faces[i]->m_VertexNormal1 = m * m_Faces[i]->m_VertexNormal1;
-            // m_Faces[i]->m_VertexNormal2 = m * m_Faces[i]->m_VertexNormal2;
-            // m_Faces[i]->m_VertexNormal3 = m * m_Faces[i]->m_VertexNormal3;
-            
-            // m_Faces[i]->m_Normal = m * m_Faces[i]->m_Normal;
-        // }
         for (int i = 0; i < m_Positions.size(); i++)
         {
             m_Positions[i] = m * m_Positions[i];

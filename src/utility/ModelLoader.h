@@ -134,7 +134,8 @@ namespace new_type_renderer
             for (unsigned int i = 0; i < rawShape.size(); i++)
             {
                 auto& positions = rawShape[i].mesh.positions;
-                for (int j = 0; j < positions.size() / 3; j++)
+                size_t positionsSize = rawShape[i].mesh.positions.size() / 3;
+                for (int j = 0; j < positionsSize; j++)
                 {
                     mesh->m_Positions.push_back(Vector3{ positions[j * 3], positions[j * 3 + 1], positions[j * 3 + 2] });
                     mesh->m_VertexNormals.push_back(Vector3{});
@@ -143,6 +144,10 @@ namespace new_type_renderer
                 size_t indicesSize = rawShape[i].mesh.indices.size() / 3;
                 for (size_t f = 0; f < indicesSize; f++)
                 {
+                    mesh->m_Indices.push_back(rawShape[i].mesh.indices[3 * f]);
+                    mesh->m_Indices.push_back(rawShape[i].mesh.indices[3 * f + 1]);
+                    mesh->m_Indices.push_back(rawShape[i].mesh.indices[3 * f + 2]);
+
                     // Triangle vertex coordinates
                     auto p1 = Vector3(
                         rawShape[i].mesh.positions[rawShape[i].mesh.indices[3 * f] * 3],
@@ -212,11 +217,7 @@ namespace new_type_renderer
                         rawShape[i].mesh.indices[3 * f],
                         rawShape[i].mesh.indices[3 * f + 1],
                         rawShape[i].mesh.indices[3 * f + 2]);
-
-                    mesh->m_Indices.push_back(3 * f);
-                    mesh->m_Indices.push_back(3 * f + 1);
-                    mesh->m_Indices.push_back(3 * f + 2);
-
+                    
                     face->SetupUVs(uv1, uv2, uv3);
 
                     // skip update vertex normal on the mesh, as obj file doesn't normally have the normal infomation

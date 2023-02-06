@@ -35,11 +35,12 @@ namespace new_type_renderer
         const char* vertexSource = R"glsl(
             #version 330 core
 
+            uniform mat4 u_MVP;
             layout(location = 0) in vec4 position;
 
             void main()
             {
-                gl_Position = position;
+                gl_Position = u_MVP * position;
             }
          )glsl";
 
@@ -54,7 +55,7 @@ namespace new_type_renderer
 
             void main()
             {
-                outColor = vec4(0, 0, 1, 1);
+                outColor = vec4(1, 1, 1, 1);
             }
 
          )glsl";
@@ -68,7 +69,6 @@ namespace new_type_renderer
         glAttachShader(shaderProgram, fragmentShader);
 
         glValidateProgram(shaderProgram);
-        glBindFragDataLocation(m_ShaderProgram, 0, "outColor");
 
         glLinkProgram(shaderProgram);
         glUseProgram(shaderProgram);
@@ -152,6 +152,9 @@ namespace new_type_renderer
         // World matrix is applied to the positions already
         Matrix4x4 mvp = prospective * view;
 
+        // Convert it to column based as OpenGl uses column base matrix representation
+        Matrix4x4 mvpTransposed = mvp.Transposed();
+
         GLuint vao;
         glGenVertexArrays(1, &vao);
         glBindVertexArray(vao);
@@ -173,8 +176,9 @@ namespace new_type_renderer
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
         glEnableVertexAttribArray(0);
 
-        // unsigned int location = glGetUniformLocation(m_ShaderProgram, "u_MVP");
-        // glUniformMatrix4fv(location, 1, false, &mvp.cols[0][0]);
+        // glBindFragDataLocation(m_ShaderProgram, 0, "outColor");
+        unsigned int location = glGetUniformLocation(m_ShaderProgram, "u_MVP");
+        glUniformMatrix4fv(location, 1, false, &mvpTransposed.cols[0][0]);
     }
 
     void OpenGlRenderer::Render()
