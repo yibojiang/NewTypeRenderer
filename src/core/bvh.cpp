@@ -133,28 +133,6 @@ namespace new_type_renderer
             IntersectNode(ray, m_Octree, closestIntersection, hitNodes);
         }
 
-
         return closestIntersection;
     }
-
-
-#if SLABCOUNT == 7
-    const Vector3 BVH::normals[SLABCOUNT] = {
-        Vector3(1, 0, 0),
-        Vector3(0, 1, 0),
-        Vector3(0, 0, 1),
-        Vector3(sqrt(3.0) / 3.0, sqrt(3.0) / 3.0, sqrt(3.0) / 3.0),
-        Vector3(-sqrt(3.0) / 3.0, sqrt(3.0) / 3.0, sqrt(3.0) / 3.0),
-        Vector3(-sqrt(3.0) / 3.0, -sqrt(3.0) / 3.0, sqrt(3.0) / 3.0),
-        Vector3(sqrt(3.0) / 3.0, -sqrt(3.0) / 3.0, sqrt(3.0) / 3.0)
-    };
-#endif
-
-#if SLABCOUNT == 3
-    const Vector3 BVH::normals[SLABCOUNT] = {
-        Vector3(1, 0, 0),
-        Vector3(0, 1, 0),
-        Vector3(0, 0, 1)
-    };
-#endif
 }

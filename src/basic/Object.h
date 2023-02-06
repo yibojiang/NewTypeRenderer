@@ -13,7 +13,6 @@ namespace new_type_renderer
     {
     public:
         std::string name;
-        bool isMesh;
 
         Object() {}
 
@@ -21,7 +20,7 @@ namespace new_type_renderer
         {
         }
 
-        virtual Vector3 GetNormal(const Vector3&) const { return Vector3(1); }
+        virtual Vector3 GetHitNormal(const Vector3&hitLocation) const { return Vector3(1); }
 
         virtual float Intersect(Ray&) { return 0; }
 

@@ -3,6 +3,26 @@
 
 namespace new_type_renderer
 {
+    // GL error handling https://www.khronos.org/opengl/wiki/OpenGL_Error
+    void GLAPIENTRY
+        MessageCallback(GLenum source,
+            GLenum type,
+            GLuint id,
+            GLenum severity,
+            GLsizei length,
+            const GLchar* message,
+            const void* userParam)
+    {
+        fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+            (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+            type, severity, message);
+
+        if (type == GL_DEBUG_TYPE_ERROR)
+        {
+            __debugbreak();
+        }
+    }
+
     OpenGlRenderer::~OpenGlRenderer()
     {
         glDeleteProgram(m_ShaderProgram);
@@ -13,14 +33,14 @@ namespace new_type_renderer
     {
         // Compile shader
         const char* vertexSource = R"glsl(
-             #version 330 core
+            #version 330 core
 
-             layout(location = 0) in vec4 position;
+            layout(location = 0) in vec4 position;
 
-             void main()
-             {
-                 gl_Position = position;
-             }
+            void main()
+            {
+                gl_Position = position;
+            }
          )glsl";
 
         vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -28,14 +48,14 @@ namespace new_type_renderer
         glCompileShader(vertexShader);
 
         const char* fragmentSource = R"glsl(
-             #version 330 core
+            #version 330 core
 
-             layout(location = 0) out vec4 outColor;
+            layout(location = 0) out vec4 outColor;
 
-             void main()
-             {
-                 outColor = vec4(1.0, 0.0, 1.0, 1.0);
-             }
+            void main()
+            {
+                outColor = vec4(0, 0, 1, 1);
+            }
 
          )glsl";
 
@@ -89,21 +109,48 @@ namespace new_type_renderer
             return;
         }
 
-        // create verts
-        float vertices[]
-        {
-             -0.5f, -0.5f, // 0
-              0.5f, -0.5f, // 1
-              0.5f,  0.5f, // 2
-             -0.5f,  0.5f  // 3
-        };
+        // During init, enable debug output
+        glEnable(GL_DEBUG_OUTPUT);
+        glDebugMessageCallback(MessageCallback, 0);
 
-        // index buffer data has to be unsingned
-        unsigned int indices[]
+        m_Initialized = true;
+    }
+
+    void OpenGlRenderer::LoadScene(const Scene& scene)
+    {
+        std::vector<float> positions;
+        std::vector<unsigned int> indices;
+
+        std::vector<shared_ptr<Object>> allObjects;
+        scene.m_Root->GetAllObjects(allObjects);
+
+        for (int i = 0; i < allObjects.size(); i++)
         {
-            0, 1, 2,
-            2, 3, 0
-        };
+            auto& object = allObjects[i];
+            if (std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(object))
+            {
+                LOG_INFO("previewing mesh %s", mesh->name.c_str());
+
+                for (int j = 0; j < mesh->m_Positions.size(); j++)
+                {
+                    positions.push_back(mesh->m_Positions[j].x);
+                    positions.push_back(mesh->m_Positions[j].y);
+                    positions.push_back(mesh->m_Positions[j].z);
+                }
+
+                for (int j = 0; j < mesh->m_Indices.size(); j++)
+                {
+                    indices.push_back(mesh->m_Indices[j]);
+                    m_IndicesCount++;
+                }
+            }
+        }
+
+        const Matrix4x4 view = scene.m_Camera.GetViewMatrix();
+        const Matrix4x4 prospective = Matrix4x4::CreatePerspectiveProjectMatrix(scene.m_Camera.m_FOV, scene.m_Camera.m_Near, scene.m_Camera.m_Far, m_ViewportWidth / m_ViewportHeight);
+
+        // World matrix is applied to the positions already
+        Matrix4x4 mvp = prospective * view;
 
         GLuint vao;
         glGenVertexArrays(1, &vao);
@@ -112,7 +159,7 @@ namespace new_type_renderer
         unsigned int vbo;
         glGenBuffers(1, &vbo);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(float), vertices, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(float), positions.data(), GL_STATIC_DRAW);
 
         unsigned int vertexShader, fragmentShader = 0;
         m_ShaderProgram = CompilerLinkShader(vertexShader, fragmentShader);
@@ -120,13 +167,14 @@ namespace new_type_renderer
         unsigned int ibo;
         glGenBuffers(1, &ibo);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
 
         // GLint posAttrib = glGetAttribLocation(m_ShaderProgram, "position");
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
         glEnableVertexAttribArray(0);
 
-        m_Initialized = true;
+        // unsigned int location = glGetUniformLocation(m_ShaderProgram, "u_MVP");
+        // glUniformMatrix4fv(location, 1, false, &mvp.cols[0][0]);
     }
 
     void OpenGlRenderer::Render()
@@ -135,7 +183,8 @@ namespace new_type_renderer
         glClear(GL_COLOR_BUFFER_BIT);
 
         // glDrawArrays(GL_TRIANGLES, 0, 3);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+        auto meshCount = m_IndicesCount / 3;
+        glDrawElements(GL_TRIANGLES, meshCount, GL_UNSIGNED_INT, nullptr);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(m_Window);
@@ -147,10 +196,5 @@ namespace new_type_renderer
     bool OpenGlRenderer::IsWindowCloased()
     {
         return glfwWindowShouldClose(m_Window);
-    }
-
-    void OpenGlRenderer::LoadScene(const Scene& scene)
-    {
-        
     }
 }

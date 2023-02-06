@@ -30,13 +30,11 @@ namespace new_type_renderer
         {
         }
 
-        Intersection(float d, Object* obj) : t(d), object(obj)
+        Intersection(float d, weak_ptr<Object> obj) : t(d), object(obj)
         {
         }
 
-        operator bool() {return object != nullptr; }
-
-        Object* GetHitObject()
+        weak_ptr<Object> GetHitObject()
         {
             return object;
         }
@@ -49,7 +47,7 @@ namespace new_type_renderer
     public:
         float t{ FLT_MAX };
 
-        Object* object{ nullptr };
+        weak_ptr<Object> object{};
     };
 }
 

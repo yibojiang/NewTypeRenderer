@@ -88,7 +88,7 @@ namespace new_type_renderer
         return extents;
     }
 
-    void OctreeNode::addObject(Object* obj)
+    void OctreeNode::addObject(shared_ptr<Object>& obj)
     {
         int debugDepth = 90;
 
@@ -232,7 +232,7 @@ namespace new_type_renderer
                 }
                 else
                 {
-                    Object* childObj = children[childIdx]->objects[0];
+                    auto childObj = children[childIdx]->objects[0];
                     children[childIdx]->addObject(obj);
                     children[childIdx]->objects.clear();
                     children[childIdx]->addObject(childObj);

@@ -18,13 +18,13 @@ namespace new_type_renderer
 
         void Init() override;
 
+        void LoadScene(const Scene& scene) override;
+
         void Render() override;
 
         bool IsWindowCloased();
 
         bool IsInitialized() const { return m_Initialized; }
-
-        void LoadScene(const Scene& scene) override;
 
     private:
         GLFWwindow* m_Window{ nullptr };
@@ -35,7 +35,9 @@ namespace new_type_renderer
 
         uint16_t m_ViewportHeight{ 800 };
 
-        unsigned int m_ShaderProgram { 0 };
+        unsigned int m_ShaderProgram{ 0 };
+
+        int m_IndicesCount{ 0 };
     };
 }
 

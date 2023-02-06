@@ -4,6 +4,24 @@
 
 namespace new_type_renderer
 {
+#if SLABCOUNT == 7
+    Vector3 Extents::m_Normals[SLABCOUNT]{
+        Vector3(1, 0, 0),
+        Vector3(0, 1, 0),
+        Vector3(0, 0, 1),
+        Vector3(sqrt(3.0) / 3.0, sqrt(3.0) / 3.0, sqrt(3.0) / 3.0),
+        Vector3(-sqrt(3.0) / 3.0, sqrt(3.0) / 3.0, sqrt(3.0) / 3.0),
+        Vector3(-sqrt(3.0) / 3.0, -sqrt(3.0) / 3.0, sqrt(3.0) / 3.0),
+        Vector3(sqrt(3.0) / 3.0, -sqrt(3.0) / 3.0, sqrt(3.0) / 3.0)
+    };
+#elif SLABCOUNT == 3
+    Vector3 Extents::m_Normals[SLABCOUNT]{
+        Vector3(1, 0, 0),
+        Vector3(0, 1, 0),
+        Vector3(0, 0, 1)
+    };
+#endif
+
     Extents::Extents()
     {
         for (uint8_t i = 0; i < SLABCOUNT; ++i)
@@ -52,8 +70,8 @@ namespace new_type_renderer
         float tmax = FLT_MAX;
         for (uint8_t i = 0; i < SLABCOUNT; ++i)
         {
-            double tNear = (-m_DistNear[i] - r.origin.Dot(BVH::normals[i])) / r.dir.Dot(BVH::normals[i]);
-            double tFar = (-m_DistFar[i] - r.origin.Dot(BVH::normals[i])) / r.dir.Dot(BVH::normals[i]);
+            double tNear = (-m_DistNear[i] - r.origin.Dot(Extents::m_Normals[i])) / r.dir.Dot(Extents::m_Normals[i]);
+            double tFar = (-m_DistFar[i] - r.origin.Dot(Extents::m_Normals[i])) / r.dir.Dot(Extents::m_Normals[i]);
 
             // Swap near and far t.
             if (tNear > tFar)
@@ -97,8 +115,8 @@ namespace new_type_renderer
         float tmax = FLT_MAX;
         for (uint8_t i = 0; i < SLABCOUNT; ++i)
         {
-            double tNear = (-m_DistNear[i] - r.origin.Dot(BVH::normals[i])) / r.dir.Dot(BVH::normals[i]);
-            double tFar = (-m_DistFar[i] - r.origin.Dot(BVH::normals[i])) / r.dir.Dot(BVH::normals[i]);
+            double tNear = (-m_DistNear[i] - r.origin.Dot(Extents::m_Normals[i])) / r.dir.Dot(Extents::m_Normals[i]);
+            double tFar = (-m_DistFar[i] - r.origin.Dot(Extents::m_Normals[i])) / r.dir.Dot(Extents::m_Normals[i]);
 
             // Swap near and far t.
             if (tNear > tFar)
@@ -159,8 +177,8 @@ namespace new_type_renderer
         double tmax = FLT_EPSILON;
         for (uint8_t i = 0; i < SLABCOUNT; ++i)
         {
-            double tNear = (-m_DistNear[i] - r.origin.Dot(BVH::normals[i])) / r.dir.Dot(BVH::normals[i]);
-            double tFar = (-m_DistFar[i] - r.origin.Dot(BVH::normals[i])) / r.dir.Dot(BVH::normals[i]);
+            double tNear = (-m_DistNear[i] - r.origin.Dot(Extents::m_Normals[i])) / r.dir.Dot(Extents::m_Normals[i]);
+            double tFar = (-m_DistFar[i] - r.origin.Dot(Extents::m_Normals[i])) / r.dir.Dot(Extents::m_Normals[i]);
 
             // Swap near and far t.
             if (tNear > tFar)
@@ -198,11 +216,11 @@ namespace new_type_renderer
         Vector3 hit = r.origin + r.dir * t;
         for (int i = 0; i < SLABCOUNT; ++i)
         {
-            if (fabs(-m_DistNear[i] - hit.Dot(BVH::normals[i])) < width)
+            if (fabs(-m_DistNear[i] - hit.Dot(Extents::m_Normals[i])) < width)
             {
                 count++;
             }
-            else if (fabs(-m_DistFar[i] - hit.Dot(BVH::normals[i])) < width)
+            else if (fabs(-m_DistFar[i] - hit.Dot(Extents::m_Normals[i])) < width)
             {
                 count++;
             }
@@ -218,11 +236,11 @@ namespace new_type_renderer
         hit = r.origin + r.dir * t;
         for (int i = 0; i < SLABCOUNT; ++i)
         {
-            if (fabs(-m_DistNear[i] - hit.Dot(BVH::normals[i])) < width)
+            if (fabs(-m_DistNear[i] - hit.Dot(Extents::m_Normals[i])) < width)
             {
                 count++;
             }
-            else if (fabs(-m_DistFar[i] - hit.Dot(BVH::normals[i])) < width)
+            else if (fabs(-m_DistFar[i] - hit.Dot(Extents::m_Normals[i])) < width)
             {
                 count++;
             }

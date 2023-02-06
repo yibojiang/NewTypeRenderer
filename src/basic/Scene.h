@@ -2,6 +2,7 @@
 
 #include "math/Vector.h"
 #include "Camera.h"
+#include "Mesh.h"
 #include "basic/Primitive.h"
 #include "basic/SceneNode.h"
 #include "core/BVH.h"
@@ -20,23 +21,22 @@ namespace new_type_renderer
 
         void LoadHdri(const std::string& name);
 
-        void Add(Object* object);
+        void Add(shared_ptr<Object>& object);
 
-        void AddMesh(Mesh* mesh);
+        void AddMesh(shared_ptr<Mesh>& mesh);
 
         Intersection Intersect(Ray& ray) const;
 
         void DestroyScene();
 
-        void UpdateTransform(SceneNode* scene_node, Matrix4x4 mt);
+        void UpdateTransform(shared_ptr<SceneNode>& sceneNode, Matrix4x4 mt);
 
     public:
+        shared_ptr<SceneNode> m_Root;
 
-        SceneNode* m_Root;
+        std::vector<shared_ptr<Object>> m_Objects;
 
-        std::vector<Object*> m_Objects;
-
-        std::vector<Object*> m_Lights;
+        std::vector<shared_ptr<Object>> m_Lights;
 
         HDRImage m_HDRI;
 
@@ -47,19 +47,9 @@ namespace new_type_renderer
         float m_EnvRotate;
 
         bool m_HasHdri;
-
-        Matrix3x3 ca;
-
-        Vector3 ro;
-
-        Vector3 ta;
-
-        float cameraScale;
-
-        Vector3 up;
-
+        
         BVH bvh;
 
-        Camera camera;
+        Camera m_Camera;
     };
 }

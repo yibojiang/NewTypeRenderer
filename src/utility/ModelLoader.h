@@ -2,6 +2,7 @@
 #include <cassert>
 
 #include "basic/material.h"
+#include "basic/Mesh.h"
 #include "basic/primitive.h"
 #include "thirdparty/tiny_obj_loader/tiny_obj_loader.h"
 #include "utility/Log.h"
@@ -11,7 +12,7 @@ namespace new_type_renderer
     class ObjLoader
     {
     public:
-        bool LoadModel(std::string name, Mesh* mesh, Material* default_material)
+        bool LoadModel(std::string name, shared_ptr<Mesh>& mesh, Material* default_material)
         {
             std::vector<tinyobj::shape_t> rawShape;
             std::vector<tinyobj::material_t> rawMaterial;
@@ -132,6 +133,13 @@ namespace new_type_renderer
             // Load triangles from obj
             for (unsigned int i = 0; i < rawShape.size(); i++)
             {
+                auto& positions = rawShape[i].mesh.positions;
+                for (int j = 0; j < positions.size() / 3; j++)
+                {
+                    mesh->m_Positions.push_back(Vector3{ positions[j * 3], positions[j * 3 + 1], positions[j * 3 + 2] });
+                    mesh->m_VertexNormals.push_back(Vector3{});
+                }
+
                 size_t indicesSize = rawShape[i].mesh.indices.size() / 3;
                 for (size_t f = 0; f < indicesSize; f++)
                 {
@@ -199,9 +207,20 @@ namespace new_type_renderer
                         rawShape[i].mesh.normals[rawShape[i].mesh.indices[3 * f + 2] * 3 + 2]
                     );
 
-                    auto face = new Triangle(p1, p2, p3);
-                    face->setupUVs(uv1, uv2, uv3);
-                    face->setupNormals(n1, n2, n3);
+                    auto face = make_shared<MeshFace>(
+                        mesh,
+                        rawShape[i].mesh.indices[3 * f],
+                        rawShape[i].mesh.indices[3 * f + 1],
+                        rawShape[i].mesh.indices[3 * f + 2]);
+
+                    mesh->m_Indices.push_back(3 * f);
+                    mesh->m_Indices.push_back(3 * f + 1);
+                    mesh->m_Indices.push_back(3 * f + 2);
+
+                    face->SetupUVs(uv1, uv2, uv3);
+
+                    // skip update vertex normal on the mesh, as obj file doesn't normally have the normal infomation
+                    // face->SetVertexNormals(n1, n2, n3);
                     mesh->AddFace(face);
 
                     unsigned long materialIdx = rawShape[i].mesh.material_ids[f];
@@ -214,6 +233,7 @@ namespace new_type_renderer
                         face->SetMaterial(default_material);
                     }
                 }
+                mesh->SmoothVertexNormal();
             }
 
             return true;

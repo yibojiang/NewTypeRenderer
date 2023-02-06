@@ -8,12 +8,15 @@ namespace new_type_renderer
     {
     }
 
+    SceneNode::SceneNode(shared_ptr<SceneNode>& parent) : m_Parent(parent)
+    {
+    }
+
     shared_ptr<SceneNode> SceneNode::AddChild(const Vector3& location)
     {
         auto child = make_shared<SceneNode>();
         child->m_Transform.SetLocation(location);
         m_Children.push_back(child);
-        child->m_Parent = make_shared<SceneNode>(*this);
         return child;
     }
 
@@ -23,9 +26,9 @@ namespace new_type_renderer
         return child;
     }
 
-    void SceneNode::AddObject(weak_ptr<Object> obj)
+    void SceneNode::AddObject(const shared_ptr<Object>& obj)
     {
-        m_Object = std::move(obj);
+        m_Object = obj;
     }
 
     void SceneNode::RemoveAllChildren()
@@ -36,11 +39,23 @@ namespace new_type_renderer
         }
 
         m_Children.clear();
-        delete this;
     }
 
     void SceneNode::RemoveChild(shared_ptr<SceneNode> child)
     {
         m_Children.erase(std::remove(m_Children.begin(), m_Children.end(), child), m_Children.end());
+    }
+
+    void SceneNode::GetAllObjects(std::vector<shared_ptr<Object>>& objects) const
+    {
+        if (m_Object != nullptr)
+        {
+            objects.push_back(m_Object);
+        }
+        
+        for (int i = 0; i < m_Children.size(); i++)
+        {
+            m_Children[i]->GetAllObjects(objects);
+        }
     }
 }

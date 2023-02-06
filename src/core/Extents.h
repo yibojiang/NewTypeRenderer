@@ -45,5 +45,11 @@ namespace new_type_renderer
         float m_DistNear[SLABCOUNT]{};
 
         float m_DistFar[SLABCOUNT]{};
+
+#if SLABCOUNT == 7
+        static Vector3 m_Normals[SLABCOUNT];
+#elif SLABCOUNT == 3
+        static Vector3 m_Normals[SLABCOUNT];
+#endif
     };
 }

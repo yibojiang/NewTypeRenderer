@@ -15,8 +15,6 @@ namespace new_type_renderer
     struct BVH
     {
     public:
-        static const Vector3 normals[SLABCOUNT];
-
         BVH();
 
         ~BVH();

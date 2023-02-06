@@ -34,10 +34,10 @@ namespace new_type_renderer
         void Rotate(EulerRotation rot);
 
     public:
-        Quaternion orientation{0.0f, 0.0f, 0.f, 1.0f};
+        Quaternion m_Orientation{0.0f, 0.0f, 0.f, 1.0f};
 
-        Vector3 location{0.0f, 0.0f, 0.0f};
+        Vector3 m_Location{0.0f, 0.0f, 0.0f};
 
-        Vector3 scale{1.0f, 1.0f, 1.0f};
+        Vector3 m_Scale{1.0f, 1.0f, 1.0f};
     };
 }

@@ -14,7 +14,7 @@ namespace new_type_renderer
 
         ~OctreeNode();
 
-        void addObject(Object*);
+        void addObject(shared_ptr<Object>& object);
 
         void traverse();
 
@@ -35,7 +35,7 @@ namespace new_type_renderer
         OctreeNode* parent{ nullptr };
         OctreeNode* children[8]{};
 
-        vector<Object*> objects{};
+        vector<shared_ptr<Object>> objects{};
         Vector3 boundMin{};
         Vector3 boundMax{};
 

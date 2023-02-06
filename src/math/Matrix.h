@@ -307,13 +307,13 @@ namespace new_type_renderer
             Matrix4x4 project{
                 1.0f / (tanHalfFOV * ratio),  0.0f,                0.0f,                        0.0f,
                 0.0f,                         1.0f / tanHalfFOV,   0.0f,                        0.0f,
-                0.0f,                         0.0f,                -(zNear - zFar) / zRange,    0.0f,
+                0.0f,                         0.0f,                -(zNear - zFar) / zRange,    2.0f * zFar * zNear / zRange,
                 0.0f,                         0.0f,                1.0f,                        0.0f
             };
             return project;
         }
 
-    private:
+    public:
         // Store the matrix in row based
         float cols[4][4]{};
     };

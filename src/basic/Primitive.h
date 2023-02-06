@@ -21,7 +21,6 @@ namespace new_type_renderer
         {
             normal = _nor.Normalize();
             off = _off;
-            isMesh = false;
         }
 
         float Intersect(Ray& r) override
@@ -29,7 +28,7 @@ namespace new_type_renderer
             return (-r.origin.Dot(normal) - off) / (normal).Dot(r.dir);
         }
 
-        Vector3 GetNormal(const Vector3&) const override
+        Vector3 GetHitNormal(const Vector3&hitLocation) const override
         {
             return normal;
         }
@@ -61,7 +60,6 @@ namespace new_type_renderer
         Sphere(double _rad)
         {
             rad = _rad;
-            isMesh = false;
             center = Vector3(0, 0, 0);
         }
 
@@ -103,14 +101,14 @@ namespace new_type_renderer
             r.uv = Vector2((atan2(sp.x, sp.z)) / (2.0 * M_PI) + 0.5,
                            asin(sp.y) / M_PI + 0.5);
 
-            r.normal = GetNormal(hit);
+            r.normal = GetHitNormal(hit);
             // return (t = b - det) > eps ? t : ((t = b + det) > eps ? t : 0);
             return t;
         }
 
-        Vector3 GetNormal(const Vector3& _pos) const override
+        Vector3 GetHitNormal(const Vector3& hitLocation) const override
         {
-            return (_pos - center) / rad;
+            return (hitLocation - center) / rad;
         }
 
         void UpdateTransformMatrix(const Matrix4x4& m) override
@@ -129,7 +127,7 @@ namespace new_type_renderer
             // bounds = new Extents();
             for (uint8_t i = 0; i < SLABCOUNT; ++i)
             {
-                Vector3 slabN = BVH::normals[i];
+                Vector3 slabN = Extents::m_Normals[i];
                 double d = center.Dot(slabN);
                 bounds.m_DistNear[i] = -rad - d;
                 bounds.m_DistFar[i] = rad - d;
@@ -174,8 +172,6 @@ namespace new_type_renderer
             p[6] = center + Vector3(-half_size.x, half_size.y, -half_size.z);
             p[7] = center + Vector3(-half_size.x, -half_size.y, -half_size.z);
             updatePlane();
-
-            isMesh = false;
         }
 
         void updatePlane()
@@ -254,31 +250,31 @@ namespace new_type_renderer
             }
 
             Vector3 hit = r.origin + r.dir * tmin;
-            r.normal = GetNormal(hit);
+            r.normal = GetHitNormal(hit);
 
             return tmin;
         }
 
-        Vector3 GetNormal(const Vector3& _pos) const override
+        Vector3 GetHitNormal(const Vector3& hitLocation) const override
         {
             for (int i = 0; i < 3; ++i)
             {
-                if (ApproximatelyEqual(_pos.Dot(normals[i]) + dnear[i], 0.0f))
+                if (ApproximatelyEqual(hitLocation.Dot(normals[i]) + dnear[i], 0.0f))
                 {
                     return normals[i];
                 }
 
-                if (ApproximatelyEqual(_pos.Dot(normals[i]) + dfar[i], 0.0f))
+                if (ApproximatelyEqual(hitLocation.Dot(normals[i]) + dfar[i], 0.0f))
                 {
                     return -normals[i];
                 }
 
-                if (ApproximatelyEqual(_pos.Dot(-normals[i]) + dnear[i], 0.0f))
+                if (ApproximatelyEqual(hitLocation.Dot(-normals[i]) + dnear[i], 0.0f))
                 {
                     return -normals[i];
                 }
 
-                if (ApproximatelyEqual(_pos.Dot(-normals[i]) + dfar[i], 0.0f))
+                if (ApproximatelyEqual(hitLocation.Dot(-normals[i]) + dfar[i], 0.0f))
                 {
                     return normals[i];
                 }
@@ -317,7 +313,7 @@ namespace new_type_renderer
                 for (int j = 0; j < 8; ++j)
                 {
                     // qDebug()<<p[j];
-                    double d = -p[j].Dot(BVH::normals[i]);
+                    double d = -p[j].Dot(Extents::m_Normals[i]);
                     if (d < bounds.m_DistNear[i])
                     {
                         bounds.m_DistNear[i] = d;
@@ -333,275 +329,6 @@ namespace new_type_renderer
         virtual Vector3 GetCentriod() const override
         {
             return center;
-        }
-    };
-
-    class Triangle : public Object
-    {
-    private:
-    public:
-        Vector2 uv1, uv2, uv3;
-        Vector3 n1, n2, n3;
-        Vector3 normal, u, v;
-        Vector3 p1, p2, p3;
-        double s, t;
-
-        Triangle(Vector3 in_p1, Vector3 in_p2, Vector3 in_p3)
-        {
-            p1 = in_p1;
-            p2 = in_p2;
-            p3 = in_p3;
-            u = p2 - p1;
-            v = p3 - p1;
-            normal = u.Cross(v).Normalize();
-            isMesh = false;
-        }
-
-        ~Triangle() override
-        {
-        }
-
-        void setupVertices(const Vector3 in_p1, const Vector3 in_p2, const Vector3 in_p3)
-        {
-            p1 = in_p1;
-            p2 = in_p2;
-            p3 = in_p3;
-            u = p2 - p1;
-            v = p3 - p1;
-            normal = u.Cross(v).Normalize(); // Cross product
-            isMesh = false;
-        }
-
-        void setupNormals(Vector3 in_n1, Vector3 in_n2, Vector3 in_n3)
-        {
-            n1 = in_n1.Normalize();
-            n2 = in_n2.Normalize();
-            n3 = in_n3.Normalize();
-        }
-
-        void setupUVs(Vector2 in_uv1, Vector2 in_uv2, Vector2 in_uv3)
-        {
-            uv1 = in_uv1;
-            uv2 = in_uv2;
-            uv3 = in_uv3;
-        }
-
-        Vector3 GetNormal(const Vector3&) const override
-        {
-            return normal;
-            // return n1;
-            // return n1 * (1 - s -t) + n2 * s + n3 * t;
-        }
-
-        float Intersect(Ray& r) override
-        {
-            // returns distance, 0 if nohit        
-            // Vector3 nl = r.dir.Dot(normal) > 0 ? normal : normal * -1;
-            // double dist = -r.origin.Dot(nl) + center.Dot(nl);
-            // double tt = dist / r.dir.Dot(nl);
-
-            // if (fabs(r.dir.Dot(normal)) < eps){
-            //     return 0;
-            // }
-
-
-            // if (normal == Vector3(0,0,0)){             // triangle is degenerate
-            //     return 0; 
-            // }
-
-            double dn = r.dir.Dot(normal);
-            if (fabs(dn) < FLT_EPSILON)
-            {
-                // ray is  parallel to triangle plane
-                return 0;
-            }
-
-            Vector3 center = (p1 + p2 + p3) / 3;
-            double dist = -r.origin.Dot(normal) + center.Dot(normal);
-            double tt = dist / dn;
-            Vector3 hit = r.origin + r.dir * tt;
-
-
-            u = p2 - p1;
-            v = p3 - p1;
-
-            // is I inside T?
-            double uu, uv, vv, wu, wv, D;
-            uu = u.Dot(u);
-            uv = u.Dot(v);
-            vv = v.Dot(v);
-
-            Vector3 w = hit - p1;
-            wu = w.Dot(u);
-            wv = w.Dot(v);
-            D = uv * uv - uu * vv;
-
-            // get and test parametric coords
-            // double s, t;
-            s = (uv * wv - vv * wu) / D;
-            if (s < 0.0 || s > 1.0)
-            {
-                // I is outside T
-                return 0;
-            }
-
-            t = (uv * wu - uu * wv) / D;
-            if (t < 0.0 || (s + t) > 1.0)
-            {
-                // I is outside T
-                return 0;
-            }
-
-            // r.uv = (uv1 * s +  uv2 * (1 - s));
-            r.uv = uv1 * (1 - s - t) + uv2 * s + uv3 * t;
-
-            r.normal = GetNormal(hit);
-            // r.normal = n1 * (1 - s -t) + n2 * s + n3 * t;
-            // r.uv = Vector2(drand48(), drand48());
-
-            // r.uv.x = fmin(1, r.uv.x);
-            // r.uv.y = fmin(1, r.uv.y);
-            // r.uv = uv1 * s +  uv2 * (1 - s);
-            return tt;
-        }
-
-        void ComputeBounds() override
-        {
-            for (uint8_t i = 0; i < SLABCOUNT; ++i)
-            {
-                Vector3 slabN = BVH::normals[i];
-                double d1 = -p1.Dot(slabN);
-                double d2 = -p2.Dot(slabN);
-                double d3 = -p3.Dot(slabN);
-                bounds.m_DistNear[i] = fmin(d1, fmin(d2, d3));
-                bounds.m_DistFar[i] = fmax(d1, fmax(d2, d3));
-
-                // bounds.m_DistNear[i]-=eps;
-                // bounds.m_DistFar[i]+=eps;
-                // qDebug() << this->name.c_str() << "m_Near" << bounds.m_DistNear[i];
-                // qDebug() << this->name.c_str() << "far" << bounds.m_DistFar[i];
-                // if ( fabs(bounds.m_DistFar[i] - bounds.m_DistNear[i]) < eps){
-                //     bounds.m_DistNear[i]-=eps;
-                //     bounds.m_DistFar[i]+=eps;
-                // }
-            }
-        }
-
-        Vector3 GetCentriod() const override
-        {
-            return (p1 + p2 + p3) / 3.0;
-        }
-
-        void UpdateTransformMatrix(const Matrix4x4& m) override
-        {
-            Vector4 vp1(p1, 1.0);
-            Vector4 vp2(p2, 1.0);
-            Vector4 vp3(p3, 1.0);
-
-            vp1 = m * vp1;
-            vp2 = m * vp2;
-            vp3 = m * vp3;
-
-            p1 = Vector3(vp1.x, vp1.y, vp1.z);
-            p2 = Vector3(vp2.x, vp2.y, vp2.z);
-            p3 = Vector3(vp3.x, vp3.y, vp3.z);
-
-            n1 = m * n1;
-            n2 = m * n2;
-            n3 = m * n3;
-        }
-    };
-
-    // class Face
-    // {
-
-    // public:
-    //     Vector3 v1, v2, v3;
-    //     Vector3 n1, n2, n3;
-    //     Vector2 uv1, uv2, uv3;
-
-    //     void setupUVs(const Vector2 uv1,const Vector2 uv2,const Vector2 uv3){
-    //         this->uv1 = uv1;
-    //         this->uv2 = uv2;
-    //         this->uv3 = uv3;
-
-    //     }
-
-    //     void setupVertices(const Vector3 v1,const Vector3 v2,const Vector3 v3){
-    //         this->v1 = v1;
-    //         this->v2 = v2;
-    //         this->v3 = v3;
-    //     }
-
-    //     void setupNormals(const Vector3 n1,const Vector3 n2,const Vector3 n3){
-    //         this->n1 = n1;
-    //         this->n2 = n2;
-    //         this->n3 = n3;
-    //     }
-
-
-    //     Face() {};
-    //     ~Face() {};
-
-    // };
-
-    class Mesh : public Object
-    {
-    public:
-        std::vector<Triangle*> faces;
-
-        Mesh()
-        {
-            isMesh = true;
-        }
-
-        ~Mesh() override
-        {
-            for (uint32_t i = 0; i < faces.size(); ++i)
-            {
-                delete faces[i];
-            }
-        }
-
-        void UpdateTransformMatrix(const Matrix4x4& m) override
-        {
-            for (uint32_t i = 0; i < faces.size(); ++i)
-            {
-                Vector4 p1(faces[i]->p1, 1.0);
-                Vector4 p2(faces[i]->p2, 1.0);
-                Vector4 p3(faces[i]->p3, 1.0);
-
-                p1 = m * p1;
-                p2 = m * p2;
-                p3 = m * p3;
-
-                faces[i]->p1 = Vector3(p1.x, p1.y, p1.z);
-                faces[i]->p2 = Vector3(p2.x, p2.y, p2.z);
-                faces[i]->p3 = Vector3(p3.x, p3.y, p3.z);
-
-                faces[i]->u = faces[i]->p2 - faces[i]->p1;
-                faces[i]->v = faces[i]->p3 - faces[i]->p1;
-                faces[i]->normal = faces[i]->u.Cross(faces[i]->v).Normalize();
-
-                faces[i]->n1 = m * faces[i]->n1;
-                faces[i]->n2 = m * faces[i]->n2;
-                faces[i]->n3 = m * faces[i]->n3;
-            }
-        }
-
-        void ComputeBounds() override
-        {
-
-        }
-
-        Vector3 GetCentriod() const override
-        {
-            return Vector3{};
-        }
-
-        void AddFace(Triangle* face)
-        {
-            faces.push_back(face);
         }
     };
 }

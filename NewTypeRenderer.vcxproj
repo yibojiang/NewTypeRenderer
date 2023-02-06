@@ -141,6 +141,7 @@
   <ItemGroup>
     <ClCompile Include="src\basic\Camera.cpp" />
     <ClCompile Include="src\basic\SceneNode.cpp" />
+    <ClCompile Include="src\basic\Mesh.cpp" />
     <ClCompile Include="src\basic\Transform.cpp" />
     <ClCompile Include="src\core\BVH.cpp" />
     <ClCompile Include="src\core\Extents.cpp" />
@@ -165,6 +166,7 @@
     <ClInclude Include="src\basic\Material.h" />
     <ClInclude Include="src\basic\Object.h" />
     <ClInclude Include="src\basic\Primitive.h" />
+    <ClInclude Include="src\basic\Mesh.h" />
     <ClInclude Include="src\core\Color.h" />
     <ClInclude Include="src\core\Image.h" />
     <ClInclude Include="src\core\OctreeNode.h" />
