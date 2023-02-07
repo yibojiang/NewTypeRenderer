@@ -70,7 +70,8 @@ namespace new_type_renderer
 
             void main()
             {
-                outColor = dot(-u_ViewDir, v_Normal) * vec4(1, 1, 1, 1);
+                float radiance = dot(-u_ViewDir, v_Normal);
+                outColor = vec4(radiance, radiance, radiance, 1);
             }
 
          )glsl";
