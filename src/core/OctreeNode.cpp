@@ -6,33 +6,22 @@ namespace new_type_renderer
 {
     int OctreeNode::maxDepth = 0;
 
-    OctreeNode::OctreeNode(OctreeNode* parent)
-    {
-        this->parent = parent;
-        isLeaf = true;
-        for (int i = 0; i < 8; ++i)
-        {
-            children[i] = nullptr;
-        }
-    }
-
     OctreeNode::OctreeNode()
     {
-        this->parent = nullptr;
-        isLeaf = true;
+        m_IsLeaf = true;
         for (int i = 0; i < 8; ++i)
         {
-            children[i] = nullptr;
+            m_Children[i] = nullptr;
         }
     }
 
-    void OctreeNode::destroyAllNodes()
+    void OctreeNode::DestroyAllNodes()
     {
         for (int i = 0; i < 8; ++i)
         {
-            if (this->children[i])
+            if (m_Children[i])
             {
-                this->children[i]->destroyAllNodes();
+                m_Children[i]->DestroyAllNodes();
             }
         }
 
@@ -43,62 +32,58 @@ namespace new_type_renderer
     {
     }
 
-    void OctreeNode::traverse()
+    void OctreeNode::Traverse()
     {
-        if (isLeaf)
+        if (m_IsLeaf)
         {
             return;
         }
 
         for (int i = 0; i < 8; ++i)
         {
-            if (children[i])
+            if (m_Children[i])
             {
-                children[i]->traverse();
+                m_Children[i]->Traverse();
             }
         }
     }
 
-    // friend bool Extents::operator==(Extents a, const Extents& b){
-    //     return false;
-    // }
-
-    Extents OctreeNode::computeExetents()
+    Extents OctreeNode::ComputeExetents()
     {
-        if (isLeaf)
+        if (m_IsLeaf)
         {
-            name = objects[0]->name + "_boundingbox";
-            for (unsigned int i = 0; i < objects.size(); ++i)
+            m_Name = m_Objects[0]->name + "_boundingbox";
+            for (unsigned int i = 0; i < m_Objects.size(); ++i)
             {
-                Extents e = objects[i]->GetBounds();
-                extents.ExtendBy(e);
+                Extents e = m_Objects[i]->GetBounds();
+                m_Extents.ExtendBy(e);
             }
 
-            return extents;
+            return m_Extents;
         }
         for (unsigned int i = 0; i < 8; ++i)
         {
-            if (children[i])
+            if (m_Children[i])
             {
-                Extents e = children[i]->computeExetents();
-                extents.ExtendBy(e);
+                Extents e = m_Children[i]->ComputeExetents();
+                m_Extents.ExtendBy(e);
             }
         }
 
-        return extents;
+        return m_Extents;
     }
 
-    void OctreeNode::addObject(shared_ptr<Object>& obj)
+    void OctreeNode::AddObject(shared_ptr<Object>& obj)
     {
         int debugDepth = 90;
 
-        if (depth > maxDepth)
+        if (m_Depth > maxDepth)
         {
-            maxDepth = depth;
+            maxDepth = m_Depth;
         }
 
         Extents e = obj->GetBounds();
-        Vector3 center = (boundMin + boundMax) * 0.5;
+        Vector3 center = (m_BoundMin + m_BoundMax) * 0.5;
         Vector3 pos = obj->GetCentriod() - center;
 
 
@@ -164,96 +149,97 @@ namespace new_type_renderer
         {
             childIdx = vec[i];
 
-            if (!children[vec[i]])
+            if (!m_Children[vec[i]])
             {
                 childIdx = vec[i];
                 break;
             }
         }
 
-        if (!children[childIdx])
+        if (!m_Children[childIdx])
         {
-            children[childIdx] = new OctreeNode(this);
-            children[childIdx]->name = std::to_string(depth) + "_" + std::to_string(childIdx);
-            children[childIdx]->depth = depth + 1;
-            children[childIdx]->objects.push_back(obj);
-            children[childIdx]->isLeaf = true;
+            m_Children[childIdx] = make_shared<OctreeNode>();
+            m_Children[childIdx]->m_Parent = shared_from_this();
+            m_Children[childIdx]->m_Name = std::to_string(m_Depth) + "_" + std::to_string(childIdx);
+            m_Children[childIdx]->m_Depth = m_Depth + 1;
+            m_Children[childIdx]->m_Objects.push_back(obj);
+            m_Children[childIdx]->m_IsLeaf = true;
 
             // TODO: caculate the child node bounding min and boundg max
             if (childIdx == 0)
             {
-                children[childIdx]->boundMin = center;
-                children[childIdx]->boundMax = this->boundMax;
+                m_Children[childIdx]->m_BoundMin = center;
+                m_Children[childIdx]->m_BoundMax = this->m_BoundMax;
             }
             else if (childIdx == 1)
             {
-                children[childIdx]->boundMin = Vector3(boundMin.x, center.y, center.z);
-                children[childIdx]->boundMax = Vector3(center.x, boundMax.y, boundMax.z);
+                m_Children[childIdx]->m_BoundMin = Vector3(m_BoundMin.x, center.y, center.z);
+                m_Children[childIdx]->m_BoundMax = Vector3(center.x, m_BoundMax.y, m_BoundMax.z);
             }
             else if (childIdx == 2)
             {
-                children[childIdx]->boundMin = Vector3(boundMin.x, center.y, boundMin.z);
-                children[childIdx]->boundMax = Vector3(center.x, boundMax.y, center.z);
+                m_Children[childIdx]->m_BoundMin = Vector3(m_BoundMin.x, center.y, m_BoundMin.z);
+                m_Children[childIdx]->m_BoundMax = Vector3(center.x, m_BoundMax.y, center.z);
             }
             else if (childIdx == 3)
             {
-                children[childIdx]->boundMin = Vector3(center.x, center.y, boundMin.z);
-                children[childIdx]->boundMax = Vector3(boundMax.x, boundMax.y, center.z);
+                m_Children[childIdx]->m_BoundMin = Vector3(center.x, center.y, m_BoundMin.z);
+                m_Children[childIdx]->m_BoundMax = Vector3(m_BoundMax.x, m_BoundMax.y, center.z);
             }
             else if (childIdx == 4)
             {
-                children[childIdx]->boundMin = Vector3(center.x, boundMin.y, center.z);
-                children[childIdx]->boundMax = Vector3(boundMax.x, center.y, boundMax.z);
+                m_Children[childIdx]->m_BoundMin = Vector3(center.x, m_BoundMin.y, center.z);
+                m_Children[childIdx]->m_BoundMax = Vector3(m_BoundMax.x, center.y, m_BoundMax.z);
             }
             else if (childIdx == 5)
             {
-                children[childIdx]->boundMin = Vector3(boundMin.x, boundMin.y, center.z);
-                children[childIdx]->boundMax = Vector3(center.x, center.y, boundMax.z);
+                m_Children[childIdx]->m_BoundMin = Vector3(m_BoundMin.x, m_BoundMin.y, center.z);
+                m_Children[childIdx]->m_BoundMax = Vector3(center.x, center.y, m_BoundMax.z);
             }
             else if (childIdx == 6)
             {
-                children[childIdx]->boundMin = boundMin;
-                children[childIdx]->boundMax = center;
+                m_Children[childIdx]->m_BoundMin = m_BoundMin;
+                m_Children[childIdx]->m_BoundMax = center;
             }
             else if (childIdx == 7)
             {
-                children[childIdx]->boundMin = Vector3(center.x, boundMin.y, boundMin.z);
-                children[childIdx]->boundMax = Vector3(boundMax.x, center.y, center.z);
+                m_Children[childIdx]->m_BoundMin = Vector3(center.x, m_BoundMin.y, m_BoundMin.z);
+                m_Children[childIdx]->m_BoundMax = Vector3(m_BoundMax.x, center.y, center.z);
             }
         }
         else
         {
             // if it is a leaf node
-            if (children[childIdx]->isLeaf)
+            if (m_Children[childIdx]->m_IsLeaf)
             {
-                if (depth >= 50)
+                if (m_Depth >= 50)
                 {
-                    children[childIdx]->objects.push_back(obj);
+                    m_Children[childIdx]->m_Objects.push_back(obj);
                 }
                 else
                 {
-                    auto childObj = children[childIdx]->objects[0];
-                    children[childIdx]->addObject(obj);
-                    children[childIdx]->objects.clear();
-                    children[childIdx]->addObject(childObj);
-                    children[childIdx]->isLeaf = false;
+                    auto childObj = m_Children[childIdx]->m_Objects[0];
+                    m_Children[childIdx]->AddObject(obj);
+                    m_Children[childIdx]->m_Objects.clear();
+                    m_Children[childIdx]->AddObject(childObj);
+                    m_Children[childIdx]->m_IsLeaf = false;
                 }
             }
             else
             {
-                children[childIdx]->addObject(obj);
+                m_Children[childIdx]->AddObject(obj);
             }
         }
     }
 
-    void OctreeNode::intersectTestWireframe(const Ray& r, Intersection& intersection) const
+    void OctreeNode::IntersectTestWireframe(const Ray& r, Intersection& intersection) const
     {
-        if (this->depth > 4)
+        if (this->m_Depth > 4)
         {
             return;
         }
 
-        double t = this->extents.IntersectWireframe(r);
+        double t = this->m_Extents.IntersectWireframe(r);
 
         // Hit the bounding box.
         if (t > FLT_EPSILON && t < intersection.t)
@@ -261,35 +247,35 @@ namespace new_type_renderer
             intersection.t = t;
         }
 
-        if (!this->isLeaf)
+        if (!this->m_IsLeaf)
         {
             for (int i = 0; i < 8; ++i)
             {
-                if (this->children[i])
+                if (this->m_Children[i])
                 {
-                    this->children[i]->intersectTestWireframe(r, intersection);
+                    this->m_Children[i]->IntersectTestWireframe(r, intersection);
                 }
             }
         }
     }
 
 
-    void OctreeNode::intersectTest(Ray& r, Intersection& intersection) const
+    void OctreeNode::IntersectTest(Ray& r, Intersection& intersection) const
     {
-        float test = this->extents.Intersect(r);
+        float test = this->m_Extents.Intersect(r);
 
         // Hit the bounding box.
         if (test > FLT_EPSILON)
         {
-            if (this->isLeaf)
+            if (this->m_IsLeaf)
             {
-                for (unsigned int i = 0; i < this->objects.size(); ++i)
+                for (unsigned int i = 0; i < this->m_Objects.size(); ++i)
                 {
-                    double t = this->objects[i]->Intersect(r);
+                    double t = this->m_Objects[i]->Intersect(r);
                     if (t > FLT_EPSILON && t < intersection.t)
                     {
-                        t = this->objects[i]->Intersect(r);
-                        intersection.object = this->objects[i];
+                        t = this->m_Objects[i]->Intersect(r);
+                        intersection.object = this->m_Objects[i];
                         intersection.t = t;
                     }
                 }
@@ -299,9 +285,9 @@ namespace new_type_renderer
                 // add the child node into a priority list, and check distance
                 for (int i = 0; i < 8; ++i)
                 {
-                    if (this->children[i])
+                    if (this->m_Children[i])
                     {
-                        this->children[i]->intersectTest(r, intersection);
+                        this->m_Children[i]->IntersectTest(r, intersection);
                     }
                 }
             }

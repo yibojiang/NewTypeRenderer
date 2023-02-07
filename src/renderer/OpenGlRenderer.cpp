@@ -1,6 +1,10 @@
 #include "OpenGlRenderer.h"
 #include "utility/Log.h"
 
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
 namespace new_type_renderer
 {
     // GL error handling https://www.khronos.org/opengl/wiki/OpenGL_Error
@@ -26,6 +30,9 @@ namespace new_type_renderer
     OpenGlRenderer::~OpenGlRenderer()
     {
         glDeleteProgram(m_ShaderProgram);
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
         glfwTerminate();
     }
 
@@ -86,6 +93,29 @@ namespace new_type_renderer
             return;
         }
 
+        // Decide GL+GLSL versions
+#if defined(IMGUI_IMPL_OPENGL_ES2)
+    // GL ES 2.0 + GLSL 100
+        const char* glslVersion = "#version 100";
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+#elif defined(__APPLE__)
+    // GL 3.2 + GLSL 150
+        const char* glslVersion = "#version 150";
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // Required on Mac
+#else
+    // GL 3.0 + GLSL 130
+        const char* glslVersion = "#version 130";
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+        //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
+        //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
+#endif
+
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -113,16 +143,22 @@ namespace new_type_renderer
         glEnable(GL_DEBUG_OUTPUT);
         glDebugMessageCallback(MessageCallback, 0);
 
+        ImGui::CreateContext();
+        ImGui_ImplGlfw_InitForOpenGL(m_Window, true);
+        ImGui_ImplOpenGL3_Init(glslVersion);
+        ImGui::StyleColorsDark();
+
         m_Initialized = true;
     }
 
-    void OpenGlRenderer::LoadScene(const Scene& scene)
+    void OpenGlRenderer::LoadScene(shared_ptr<Scene>& scene)
     {
+        m_Scene = scene;
         std::vector<float> positions;
         std::vector<unsigned int> indices;
 
         std::vector<shared_ptr<Object>> allObjects;
-        scene.m_Root->GetAllObjects(allObjects);
+        scene->m_Root->GetAllObjects(allObjects);
 
         for (int i = 0; i < allObjects.size(); i++)
         {
@@ -146,15 +182,6 @@ namespace new_type_renderer
             }
         }
 
-        const Matrix4x4 view = scene.m_Camera.GetViewMatrix();
-        const Matrix4x4 prospective = Matrix4x4::CreatePerspectiveProjectMatrix(scene.m_Camera.m_FOV, scene.m_Camera.m_Near, scene.m_Camera.m_Far, m_ViewportWidth / m_ViewportHeight);
-
-        // World matrix is applied to the positions already
-        Matrix4x4 mvp = prospective * view;
-
-        // Convert it to column based as OpenGl uses column base matrix representation
-        Matrix4x4 mvpTransposed = mvp.Transposed();
-
         GLuint vao;
         glGenVertexArrays(1, &vao);
         glBindVertexArray(vao);
@@ -176,13 +203,24 @@ namespace new_type_renderer
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
         glEnableVertexAttribArray(0);
 
-        // glBindFragDataLocation(m_ShaderProgram, 0, "outColor");
-        unsigned int location = glGetUniformLocation(m_ShaderProgram, "u_MVP");
-        glUniformMatrix4fv(location, 1, false, &mvpTransposed.cols[0][0]);
+        
     }
 
     void OpenGlRenderer::Render()
     {
+        const Matrix4x4 view = m_Scene->m_Camera.GetViewMatrix();
+        const Matrix4x4 prospective = Matrix4x4::CreatePerspectiveProjectMatrix(m_Scene->m_Camera.m_FOV, m_Scene->m_Camera.m_Near, m_Scene->m_Camera.m_Far, m_ViewportWidth / m_ViewportHeight);
+
+        // World matrix is applied to the positions already
+        Matrix4x4 mvp = prospective * view;
+
+        // Convert it to column based as OpenGl uses column base matrix representation
+        Matrix4x4 mvpTransposed = mvp.Transposed();
+
+        // glBindFragDataLocation(m_ShaderProgram, 0, "outColor");
+        unsigned int location = glGetUniformLocation(m_ShaderProgram, "u_MVP");
+        glUniformMatrix4fv(location, 1, false, &mvpTransposed.cols[0][0]);
+
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -190,11 +228,35 @@ namespace new_type_renderer
         auto meshCount = m_IndicesCount / 3;
         glDrawElements(GL_TRIANGLES, meshCount, GL_UNSIGNED_INT, nullptr);
 
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        OnGUI();
+
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
         /* Swap front and back buffers */
         glfwSwapBuffers(m_Window);
 
         /* Poll for and process events */
         glfwPollEvents();
+    }
+
+    void OpenGlRenderer::OnGUI()
+    {
+        {
+            ImGui::Begin("Debug Menu");                          // Create a window called "Hello, world!" and append into it.
+            ImGui::Text("Camera");
+            
+            ImGui::SliderFloat3("Camera Location", &m_Scene->m_Camera.m_Location.x, -500.0f, 500.0f);
+            ImGui::SliderFloat3("Camera Rotation", &m_Scene->m_Camera.m_Rotation.x, -500.0f, 500.0f);
+            ImGui::SliderFloat("Camera FOV", &m_Scene->m_Camera.m_FOV, 30.0f, 160.f);
+
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            ImGui::End();
+        }
     }
 
     bool OpenGlRenderer::IsWindowCloased()

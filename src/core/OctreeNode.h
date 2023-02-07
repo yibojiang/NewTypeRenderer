@@ -5,51 +5,50 @@
 
 namespace new_type_renderer
 {
-    struct OctreeNode
+    // https://en.cppreference.com/w/cpp/memory/enable_shared_from_this
+    struct OctreeNode : public std::enable_shared_from_this<OctreeNode>
     {
     public:
         OctreeNode();
 
-        OctreeNode(OctreeNode* parent);
-
         ~OctreeNode();
 
-        void addObject(shared_ptr<Object>& object);
+        void AddObject(shared_ptr<Object>& object);
 
-        void traverse();
+        void Traverse();
 
-        void destroyAllNodes();
+        void DestroyAllNodes();
 
-        void intersectTest(Ray& r, Intersection& intersection) const;
+        void IntersectTest(Ray& r, Intersection& intersection) const;
 
-        void intersectTestWireframe(const Ray& r, Intersection& intersection) const;
+        void IntersectTestWireframe(const Ray& r, Intersection& intersection) const;
 
         static int maxDepth;
 
-        Extents computeExetents();
+        Extents ComputeExetents();
 
     public:
-        std::string name{};
-        int depth{ 0 };
-        bool isLeaf{ false };
-        OctreeNode* parent{ nullptr };
-        OctreeNode* children[8]{};
+        std::string m_Name{};
+        int m_Depth{ 0 };
+        bool m_IsLeaf{ false };
+        weak_ptr<OctreeNode> m_Parent{};
+        shared_ptr<OctreeNode> m_Children[8]{};
 
-        vector<shared_ptr<Object>> objects{};
-        Vector3 boundMin{};
-        Vector3 boundMax{};
+        vector<shared_ptr<Object>> m_Objects{};
+        Vector3 m_BoundMin{};
+        Vector3 m_BoundMax{};
 
-        Extents extents;
+        Extents m_Extents;
     };
 
     struct HitNode
     {
-        const OctreeNode* node;
-        double t;
+        shared_ptr<OctreeNode> m_Node;
+        float t;
 
-        HitNode(const OctreeNode* n, double thit)
+        HitNode(const shared_ptr<OctreeNode>& n, float thit)
         {
-            node = n;
+            m_Node = n;
             t = thit;
         }
 

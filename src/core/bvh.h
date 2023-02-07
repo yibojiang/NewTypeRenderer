@@ -19,7 +19,7 @@ namespace new_type_renderer
 
         ~BVH();
 
-        void Setup(Scene& scene);
+        void Setup(const shared_ptr<Scene>& scene);
 
         void Destroy();
 
@@ -29,13 +29,13 @@ namespace new_type_renderer
 
         Intersection IntersectBVH(const Ray& ray) const;
 
-        void IntersectNode(Ray& ray, const OctreeNode* node, Intersection& intersection, std::priority_queue<HitNode>&) const;
+        void IntersectNode(Ray& ray, const shared_ptr<OctreeNode>& node, Intersection& intersection, std::priority_queue<HitNode>&) const;
         
     public:
-        Scene* m_Scene;
+        shared_ptr <Scene> m_Scene;
 
         std::vector<Extents*> m_Extents;
 
-        OctreeNode* m_Octree;
+        shared_ptr<OctreeNode> m_Octree;
     };
 }

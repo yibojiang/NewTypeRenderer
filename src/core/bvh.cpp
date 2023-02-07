@@ -8,31 +8,31 @@ namespace new_type_renderer
     {
     }
 
-    void BVH::Setup(Scene& scene)
+    void BVH::Setup(const shared_ptr<Scene>& scene)
     {
-        this->m_Scene = &scene;
+        this->m_Scene = scene;
         Extents sceneExtents;
-        for (uint32_t i = 0; i < scene.m_Objects.size(); ++i)
+        for (uint32_t i = 0; i < scene->m_Objects.size(); ++i)
         {
-            scene.m_Objects[i]->ComputeBounds();
-            Extents e = scene.m_Objects[i]->GetBounds();
+            scene->m_Objects[i]->ComputeBounds();
+            Extents e = scene->m_Objects[i]->GetBounds();
             sceneExtents.ExtendBy(e);
         }
 
-        m_Octree = new OctreeNode();
-        m_Octree->extents = sceneExtents;
-        m_Octree->depth = 0;
+        m_Octree = make_shared<OctreeNode>();
+        m_Octree->m_Extents = sceneExtents;
+        m_Octree->m_Depth = 0;
 
-        m_Octree->boundMin = sceneExtents.GetBoundMin();
-        m_Octree->boundMax = sceneExtents.GetBoundMax();
+        m_Octree->m_BoundMin = sceneExtents.GetBoundMin();
+        m_Octree->m_BoundMax = sceneExtents.GetBoundMax();
 
         // Construct bvh hierarchy.
-        for (uint32_t i = 0; i < scene.m_Objects.size(); ++i)
+        for (uint32_t i = 0; i < scene->m_Objects.size(); ++i)
         {
-            m_Octree->addObject(scene.m_Objects[i]);
+            m_Octree->AddObject(scene->m_Objects[i]);
         }
-        m_Octree->isLeaf = false;
-        m_Octree->computeExetents();      
+        m_Octree->m_IsLeaf = false;
+        m_Octree->ComputeExetents();      
     }
 
     BVH::~BVH()
@@ -45,7 +45,7 @@ namespace new_type_renderer
 
     void BVH::Destroy()
     {
-        m_Octree->destroyAllNodes();
+        m_Octree->DestroyAllNodes();
     }    
 
     Intersection BVH::IntersectBoundingBox(const Ray& ray) const
@@ -67,24 +67,24 @@ namespace new_type_renderer
     {
         // std::priority_queue<OctreeNode> closeNode;
         Intersection closestIntersection;
-        m_Octree->intersectTestWireframe(ray, closestIntersection);
+        m_Octree->IntersectTestWireframe(ray, closestIntersection);
         return closestIntersection;
     }
 
 
-    void BVH::IntersectNode(Ray& r, const OctreeNode* node, Intersection& intersection,
+    void BVH::IntersectNode(Ray& r, const shared_ptr<OctreeNode>& node, Intersection& intersection,
                             std::priority_queue<HitNode>& hitNodes) const
     {
-        if (node->isLeaf)
+        if (node->m_IsLeaf)
         {
-            for (unsigned int i = 0; i < node->objects.size(); ++i)
+            for (unsigned int i = 0; i < node->m_Objects.size(); ++i)
             {
-                double t = node->objects[i]->Intersect(r);
+                double t = node->m_Objects[i]->Intersect(r);
 
                 if (t > FLT_EPSILON && t < intersection.t)
                 {
-                    t = node->objects[i]->Intersect(r);
-                    intersection.object = node->objects[i];
+                    t = node->m_Objects[i]->Intersect(r);
+                    intersection.object = node->m_Objects[i];
                     intersection.t = t;
                 }
             }
@@ -93,12 +93,12 @@ namespace new_type_renderer
         {
             for (int i = 0; i < 8; ++i)
             {
-                if (node->children[i])
+                if (node->m_Children[i])
                 {
-                    float test = node->children[i]->extents.IntersectNear(r);
+                    float test = node->m_Children[i]->m_Extents.IntersectNear(r);
                     if (test > FLT_EPSILON)
                     {
-                        hitNodes.push(HitNode(node->children[i], test));
+                        hitNodes.push(HitNode(node->m_Children[i], test));
                     }
                 }
             }
@@ -109,7 +109,7 @@ namespace new_type_renderer
             return;
         }
 
-        const OctreeNode* nearstNode = hitNodes.top().node;
+        const shared_ptr<OctreeNode> nearstNode = hitNodes.top().m_Node;
         double nearestHit = hitNodes.top().t;
         hitNodes.pop();
 
@@ -126,8 +126,7 @@ namespace new_type_renderer
         std::priority_queue<HitNode> hitNodes;
         Intersection closestIntersection;
 
-
-        double test = m_Octree->extents.IntersectNear(ray);
+        float test = m_Octree->m_Extents.IntersectNear(ray);
         if (test > FLT_EPSILON)
         {
             IntersectNode(ray, m_Octree, closestIntersection, hitNodes);

@@ -1,4 +1,8 @@
 #pragma once
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
 #include "Renderer.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -10,7 +14,7 @@ namespace new_type_renderer
     public:
         OpenGlRenderer() {}
 
-        OpenGlRenderer(uint16_t viewportWidth, uint16_t viewportHeight) : m_ViewportWidth(viewportWidth), m_ViewportHeight(viewportHeight) {}
+        OpenGlRenderer(unsigned int viewportWidth, unsigned int viewportHeight) : m_ViewportWidth(viewportWidth), m_ViewportHeight(viewportHeight) {}
 
         ~OpenGlRenderer();
 
@@ -18,9 +22,11 @@ namespace new_type_renderer
 
         void Init() override;
 
-        void LoadScene(const Scene& scene) override;
+        void LoadScene(shared_ptr<Scene>& scene) override;
 
         void Render() override;
+
+        void OnGUI();
 
         bool IsWindowCloased();
 
@@ -31,9 +37,9 @@ namespace new_type_renderer
 
         bool m_Initialized{ false };
 
-        uint16_t m_ViewportWidth{ 1280 };
+        unsigned int m_ViewportWidth{ 1280 };
 
-        uint16_t m_ViewportHeight{ 800 };
+        unsigned int m_ViewportHeight{ 800 };
 
         unsigned int m_ShaderProgram{ 0 };
 

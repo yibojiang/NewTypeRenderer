@@ -26,7 +26,6 @@ namespace new_type_renderer
         std::string json((std::istreambuf_iterator<char>(t)),
                          std::istreambuf_iterator<char>());
 
-
         rapidjson::Document document;
         if (document.Parse(json.c_str()).HasParseError())
         {
@@ -304,7 +303,6 @@ namespace new_type_renderer
         m_Root->RemoveAllChildren();
         m_Lights.clear();
         m_Objects.clear();
-        bvh.Destroy();
     }
 
     void Scene::UpdateTransform(shared_ptr<SceneNode>& sceneNode, Matrix4x4 matrix)

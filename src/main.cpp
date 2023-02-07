@@ -8,8 +8,8 @@ int main(int argc, char *argv[])
 {
     using namespace new_type_renderer;
 
-    Scene scene;
-    scene.LoadFromJson("scene/cornellbox.json");
+    auto scene = make_shared<Scene>();
+    scene->LoadFromJson("scene/cornellbox.json");
     OpenGlRenderer viewport;
     viewport.Init();
     viewport.LoadScene(scene);

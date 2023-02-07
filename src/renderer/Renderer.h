@@ -10,9 +10,9 @@ namespace new_type_renderer
 
         virtual void Render() = 0;
 
-        virtual void LoadScene(const Scene& scene) = 0;
+        virtual void LoadScene(shared_ptr<Scene>& scene) = 0;
 
-    private:
-        Scene m_Scene;
+    protected:
+        shared_ptr<Scene> m_Scene;
     };
 }
