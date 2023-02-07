@@ -199,6 +199,13 @@ namespace new_type_renderer
             return mat;
         }
 
+        Vector3 TransformLocation(const Vector3& location) const
+        {
+            Vector4 locationV4 = Vector4{ location.x, location.y, location.z, 1.0f };
+            Vector4 res = *this * locationV4;
+            return Vector3{ res.x, res.y, res.z };
+        }
+
         friend Vector4 operator*(Matrix4x4 a, const Vector4& b)
         {
             Vector4 c;
@@ -239,7 +246,7 @@ namespace new_type_renderer
             {
                 for (int j = 0; j < 4; ++j)
                 {
-                    float sum = 9.0f;
+                    float sum = 0.0f;
                     for (int k = 0; k < 4; ++k)
                     {
                         sum += a.cols[i][k] * b.cols[k][j];
@@ -266,6 +273,21 @@ namespace new_type_renderer
             return true;
         }
 
+        std::string ToString() const
+        {
+            std::stringstream stream;
+            stream << '[';
+            for (int i = 0; i < 4; ++i)
+            {
+                for (int j = 0; j < 4; ++j)
+                {
+                    stream << cols[i][j] << ((i * j == 9) ? ']' : ',');
+                }
+                stream << std::endl;
+            }
+            return stream.str();
+        }
+
         friend std::ostream& operator<<(std::ostream& stream, const Matrix4x4& a)
         {
             stream << '[';
@@ -281,21 +303,22 @@ namespace new_type_renderer
         }
 
         // view/camera matrix explanation https://ogldev.org/www/tutorial13/tutorial13.html
-        static Matrix4x4 CreateViewMatrix(const Vector3& location, const Vector3& look_at)
+        static Matrix4x4 CreateViewMatrix(const Vector3& location, const Vector3& lookAt)
         {
-            Vector3 forward = (location - look_at).Normalized();
+            Vector3 forward = (location - lookAt).Normalized();
             Vector3 right = Vector3(0.0f, 1.0f, 0.0f).Cross(forward).Normalized();
             Vector3 up = forward.Cross(right).Normalized();
 
             const Matrix4x4 orientation{
                 right.x,   right.y,   right.z,   0.0f,
-                up.y,      up.y,      up.z,      0.0f,
-                forward.z, forward.z, forward.z, 0.0f,
+                up.x,      up.y,      up.z,      0.0f,
+                forward.x, forward.y, forward.z, 0.0f,
                 0.0f,      0.0f,      0.0f,      1.0f
             };
 
-            const Matrix4x4 translate = FromTranslate(-location.x, -location.y, -location.z);
-            return translate * orientation;
+            auto dist = location;
+            const Matrix4x4 translate = FromTranslate(dist.x, dist.y, dist.z);
+            return orientation * translate;
         }
 
         // perspective matrix explanation https://ogldev.org/www/tutorial12/tutorial12.html
@@ -307,7 +330,7 @@ namespace new_type_renderer
             Matrix4x4 project{
                 1.0f / (tanHalfFOV * ratio),  0.0f,                0.0f,                        0.0f,
                 0.0f,                         1.0f / tanHalfFOV,   0.0f,                        0.0f,
-                0.0f,                         0.0f,                -(zNear - zFar) / zRange,    2.0f * zFar * zNear / zRange,
+                0.0f,                         0.0f,                (-zNear - zFar) / zRange,    2.0f * zFar * zNear / zRange,
                 0.0f,                         0.0f,                1.0f,                        0.0f
             };
             return project;

@@ -162,7 +162,7 @@ namespace new_type_renderer
     {
         for (int i = 0; i < m_Positions.size(); i++)
         {
-            m_Positions[i] = m * m_Positions[i];
+            m_Positions[i] = m.TransformLocation(m_Positions[i]);
         }
 
         for (int i = 0; i < m_Positions.size(); i++)

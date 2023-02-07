@@ -24,8 +24,6 @@ namespace new_type_renderer
                 m_Children[i]->DestroyAllNodes();
             }
         }
-
-        delete this;
     }
 
     OctreeNode::~OctreeNode()
@@ -85,7 +83,6 @@ namespace new_type_renderer
         Extents e = obj->GetBounds();
         Vector3 center = (m_BoundMin + m_BoundMax) * 0.5;
         Vector3 pos = obj->GetCentriod() - center;
-
 
         int childIdx = -1;
 

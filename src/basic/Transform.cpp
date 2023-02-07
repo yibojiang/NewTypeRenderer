@@ -1,11 +1,13 @@
 #include "Transform.h"
 
+#include "utility/Log.h"
+
 namespace new_type_renderer
 {
     Transform::Transform()
     {
     }
-
+            
     Vector3 Transform::TransformLocation(const Vector3& position) const
     {
         const Vector4 result = TransformMatrix() * Vector4{position.x, position.y, position.z, 1.0f};

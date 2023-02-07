@@ -7,6 +7,8 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include "MeshDraw.h"
+
 namespace new_type_renderer
 {
     class OpenGlRenderer : public Renderer
@@ -43,7 +45,11 @@ namespace new_type_renderer
 
         unsigned int m_ShaderProgram{ 0 };
 
-        int m_IndicesCount{ 0 };
+        std::vector<shared_ptr<Object>> m_AllObjects;
+
+        float m_AspectRatio{ 0.0f };
+
+        std::vector<MeshDraw> m_MeshDraws;
     };
 }
 

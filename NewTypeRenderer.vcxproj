@@ -157,6 +157,7 @@
     <ClCompile Include="src\core\Raytracer.cpp" />
     <ClCompile Include="src\basic\Scene.cpp" />
     <ClCompile Include="src\basic\Object.cpp" />
+    <ClCompile Include="src\renderer\MeshDraw.cpp" />
     <ClCompile Include="src\renderer\OpenGlRenderer.cpp" />
     <ClCompile Include="src\thirdparty\tiny_obj_loader\tiny_obj_loader.cc" />
     <ClCompile Include="src\main.cpp" />
@@ -199,6 +200,7 @@
     <ClInclude Include="src\math\Common.h" />
     <ClInclude Include="src\math\Quaternion.h" />
     <ClInclude Include="src\math\Vector.h" />
+    <ClInclude Include="src\renderer\MeshDraw.h" />
     <ClInclude Include="src\renderer\OpenGlRenderer.h" />
     <ClInclude Include="src\renderer\Renderer.h" />
     <ClInclude Include="src\test\TestCase.h" />

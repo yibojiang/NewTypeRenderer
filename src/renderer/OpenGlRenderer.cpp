@@ -44,10 +44,12 @@ namespace new_type_renderer
 
             uniform mat4 u_MVP;
             layout(location = 0) in vec4 position;
+            out vec4 v_Position;
 
             void main()
             {
                 gl_Position = u_MVP * position;
+                v_Position = position;
             }
          )glsl";
 
@@ -58,11 +60,12 @@ namespace new_type_renderer
         const char* fragmentSource = R"glsl(
             #version 330 core
 
+            in vec4 v_Position;
             layout(location = 0) out vec4 outColor;
 
             void main()
             {
-                outColor = vec4(1, 1, 1, 1);
+                outColor = v_Position;
             }
 
          )glsl";
@@ -122,6 +125,7 @@ namespace new_type_renderer
 
         /* Create a windowed mode m_Window and its OpenGL context */
         m_Window = glfwCreateWindow(m_ViewportWidth, m_ViewportHeight, "Viewport", NULL, NULL);
+        m_AspectRatio = m_ViewportWidth * 1.0f / m_ViewportHeight;
 
         if (!m_Window)
         {
@@ -154,79 +158,49 @@ namespace new_type_renderer
     void OpenGlRenderer::LoadScene(shared_ptr<Scene>& scene)
     {
         m_Scene = scene;
-        std::vector<float> positions;
-        std::vector<unsigned int> indices;
 
         std::vector<shared_ptr<Object>> allObjects;
         scene->m_Root->GetAllObjects(allObjects);
 
+        unsigned int vertexShader, fragmentShader = 0;
+        m_ShaderProgram = CompilerLinkShader(vertexShader, fragmentShader);
+        // push the mesh into the vertex buffer
         for (int i = 0; i < allObjects.size(); i++)
         {
             auto& object = allObjects[i];
             if (std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(object))
             {
-                LOG_INFO("previewing mesh %s", mesh->name.c_str());
-
-                for (int j = 0; j < mesh->m_Positions.size(); j++)
-                {
-                    positions.push_back(mesh->m_Positions[j].x);
-                    positions.push_back(mesh->m_Positions[j].y);
-                    positions.push_back(mesh->m_Positions[j].z);
-                }
-
-                for (int j = 0; j < mesh->m_Indices.size(); j++)
-                {
-                    indices.push_back(mesh->m_Indices[j]);
-                    m_IndicesCount++;
-                }
+                m_MeshDraws.emplace_back(mesh, m_ShaderProgram);
             }
         }
 
-        GLuint vao;
-        glGenVertexArrays(1, &vao);
-        glBindVertexArray(vao);
-
-        unsigned int vbo;
-        glGenBuffers(1, &vbo);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(float), positions.data(), GL_STATIC_DRAW);
-
-        unsigned int vertexShader, fragmentShader = 0;
-        m_ShaderProgram = CompilerLinkShader(vertexShader, fragmentShader);
-
-        unsigned int ibo;
-        glGenBuffers(1, &ibo);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
-
-        // GLint posAttrib = glGetAttribLocation(m_ShaderProgram, "position");
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
-        glEnableVertexAttribArray(0);
-
-        
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL_DEPTH_TEST);
     }
 
     void OpenGlRenderer::Render()
     {
         const Matrix4x4 view = m_Scene->m_Camera.GetViewMatrix();
-        const Matrix4x4 prospective = Matrix4x4::CreatePerspectiveProjectMatrix(m_Scene->m_Camera.m_FOV, m_Scene->m_Camera.m_Near, m_Scene->m_Camera.m_Far, m_ViewportWidth / m_ViewportHeight);
+        const Matrix4x4 prospective = Matrix4x4::CreatePerspectiveProjectMatrix(m_Scene->m_Camera.m_FOV, m_Scene->m_Camera.m_Near, m_Scene->m_Camera.m_Far, m_ViewportWidth * 1.0f / m_ViewportHeight);
 
         // World matrix is applied to the positions already
         Matrix4x4 mvp = prospective * view;
 
         // Convert it to column based as OpenGl uses column base matrix representation
         Matrix4x4 mvpTransposed = mvp.Transposed();
-
+        //
         // glBindFragDataLocation(m_ShaderProgram, 0, "outColor");
         unsigned int location = glGetUniformLocation(m_ShaderProgram, "u_MVP");
         glUniformMatrix4fv(location, 1, false, &mvpTransposed.cols[0][0]);
 
         /* Render here */
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        // glDrawArrays(GL_TRIANGLES, 0, 3);
-        auto meshCount = m_IndicesCount / 3;
-        glDrawElements(GL_TRIANGLES, meshCount, GL_UNSIGNED_INT, nullptr);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        
+        for (int i = 0; i < m_MeshDraws.size(); i++)
+        {
+            m_MeshDraws[i].Draw();
+        }
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -247,14 +221,19 @@ namespace new_type_renderer
     void OpenGlRenderer::OnGUI()
     {
         {
-            ImGui::Begin("Debug Menu");                          // Create a window called "Hello, world!" and append into it.
+            ImGui::Begin("Debug Menu");
             ImGui::Text("Camera");
             
-            ImGui::SliderFloat3("Camera Location", &m_Scene->m_Camera.m_Location.x, -500.0f, 500.0f);
-            ImGui::SliderFloat3("Camera Rotation", &m_Scene->m_Camera.m_Rotation.x, -500.0f, 500.0f);
+            ImGui::SliderFloat3("Camera Location", &m_Scene->m_Camera.m_Location.x, -5.0f, 5.0f);
+            ImGui::SliderFloat3("Camera LookAt", &m_Scene->m_Camera.m_LookAt.x, -5.0f, 5.0f);
             ImGui::SliderFloat("Camera FOV", &m_Scene->m_Camera.m_FOV, 30.0f, 160.f);
 
+            const Matrix4x4 view = m_Scene->m_Camera.GetViewMatrix();
+            const Matrix4x4 proj = Matrix4x4::CreatePerspectiveProjectMatrix(m_Scene->m_Camera.m_FOV, m_Scene->m_Camera.m_Near, m_Scene->m_Camera.m_Far, m_ViewportWidth / m_ViewportHeight);
+
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            ImGui::Text("view:\n%s", view.ToString().c_str());
+            ImGui::Text("proj:\n%s", proj.ToString().c_str());
             ImGui::End();
         }
     }

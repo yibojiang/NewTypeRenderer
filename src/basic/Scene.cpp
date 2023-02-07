@@ -30,6 +30,7 @@ namespace new_type_renderer
         if (document.Parse(json.c_str()).HasParseError())
         {
             LOG_ERR("can't parse the scene");
+            __debugbreak();
             return false;
         }
 
@@ -37,8 +38,7 @@ namespace new_type_renderer
         {
             rapidjson::Value& camera_data = document["camera"];
 
-            m_Camera.m_FOV = camera_data["fov"].GetFloat() * M_PI / 180;
-            m_Camera.m_Near = 1.0f / tan(m_Camera.m_FOV * 0.5f);
+            m_Camera.m_FOV = camera_data["fov"].GetFloat();
             const rapidjson::Value& position = camera_data["transform"]["position"];
             const rapidjson::Value& target = camera_data["transform"]["target"];
             const rapidjson::Value& up = camera_data["transform"]["up"];
@@ -233,7 +233,7 @@ namespace new_type_renderer
                 obj->name = primitives[i]["name"].GetString();
                 m_Root->AddChild(node);
                 node->AddObject(obj);
-                LOG_INFO("add ", obj->name.c_str(), " to the scene");
+                LOG_INFO("add %s to the scene", obj->name.c_str());
             }
         }
 
@@ -261,12 +261,6 @@ namespace new_type_renderer
         for (uint32_t i = 0; i < mesh->m_Faces.size(); ++i)
         {
             auto face = mesh->m_Faces[i];
-            // triangle->setupVertices(mesh->faces[i]->p1, mesh->faces[i]->p2, mesh->faces[i]->p3);
-            // Triangle *triangle = new Triangle(mesh->faces[i]->v1, mesh->faces[i]->v2, mesh->faces[i]->v3);
-            // Triangle *triangle = new Triangle(mesh->faces[i]->p1, mesh->faces[i]->p2, mesh->faces[i]->p3);
-            // if (mesh->GetMaterial()){
-            //     triangle->setMaterial(mesh->GetMaterial());    
-            // }
 
             if (!face->GetMaterial())
             {
@@ -274,7 +268,6 @@ namespace new_type_renderer
             }
 
             face->name = mesh->name + '_' + std::to_string(i);
-            // triangle->setupUVs(mesh->faces[i]->uv1, mesh->faces[i]->uv2, mesh->faces[i]->uv3);
             auto obj = dynamic_pointer_cast<Object>(face);
             Add(obj);
         }
@@ -308,8 +301,6 @@ namespace new_type_renderer
     void Scene::UpdateTransform(shared_ptr<SceneNode>& sceneNode, Matrix4x4 matrix)
     {
         matrix = matrix * sceneNode->m_Transform.TransformMatrix();
-        auto& obj = sceneNode->GetObject();
-
         if (auto& obj = sceneNode->GetObject())
         {
             obj->UpdateTransformMatrix(matrix);
