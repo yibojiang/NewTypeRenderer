@@ -10,9 +10,13 @@ namespace new_type_renderer
 
         for (int j = 0; j < mesh->m_Positions.size(); j++)
         {
-            m_Positions.push_back(mesh->m_Positions[j].x);
-            m_Positions.push_back(mesh->m_Positions[j].y);
-            m_Positions.push_back(mesh->m_Positions[j].z);
+            m_Vertices.push_back(mesh->m_Positions[j].x);
+            m_Vertices.push_back(mesh->m_Positions[j].y);
+            m_Vertices.push_back(mesh->m_Positions[j].z);
+
+            m_Vertices.push_back(mesh->m_VertexNormals[j].x);
+            m_Vertices.push_back(mesh->m_VertexNormals[j].y);
+            m_Vertices.push_back(mesh->m_VertexNormals[j].z);
         }
 
         for (int j = 0; j < mesh->m_Indices.size(); j++)
@@ -25,17 +29,24 @@ namespace new_type_renderer
 
         glGenBuffers(1, &m_VBO);
         glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-        glBufferData(GL_ARRAY_BUFFER, m_Positions.size() * sizeof(float), m_Positions.data(), GL_STATIC_DRAW);
-
-        // unsigned int vertexShader, fragmentShader = 0;
-        // m_ShaderProgram = CompilerLinkShader(vertexShader, fragmentShader);
+        glBufferData(GL_ARRAY_BUFFER, m_Vertices.size() * sizeof(float), m_Vertices.data(), GL_STATIC_DRAW);
 
         glGenBuffers(1, &m_IBO);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IBO);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_Indices.size() * sizeof(unsigned int), m_Indices.data(), GL_STATIC_DRAW);
 
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
-        glEnableVertexAttribArray(0);
+        const int verticeStride = 6;
+        unsigned int positionAttribIndex = 0;
+        unsigned int normalAttribIndex = 1;
+
+        int positionOffset = 0 * sizeof(float);
+        int normalOffset = 3 * sizeof(float);
+
+        glEnableVertexAttribArray(positionAttribIndex);
+        glVertexAttribPointer(positionAttribIndex, 3, GL_FLOAT, GL_FALSE, sizeof(float) * verticeStride, (void*)positionOffset);
+
+        glEnableVertexAttribArray(normalAttribIndex);
+        glVertexAttribPointer(normalAttribIndex, 3, GL_FLOAT, GL_FALSE, sizeof(float) * verticeStride, (void*)normalOffset);
 
         // Unbind buffer
         glBindVertexArray(0);

@@ -115,8 +115,8 @@
     "name": "camera",
     "transform": {
       "position": [
-        0,
-        0,
+        1,
+        2,
         -5
       ],
       "target": [

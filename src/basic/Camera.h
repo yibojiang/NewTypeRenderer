@@ -18,7 +18,7 @@ namespace new_type_renderer
          
         void SetRotation(const EulerRotation& rotation) { m_Rotation = rotation; }
 
-        Vector3 GetLookAt() { return m_Location; }
+        Vector3 GetLookAt() { return m_LookAt; }
 
         Matrix4x4 GetViewMatrix() const
         {

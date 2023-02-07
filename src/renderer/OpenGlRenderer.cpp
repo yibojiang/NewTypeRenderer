@@ -44,12 +44,15 @@ namespace new_type_renderer
 
             uniform mat4 u_MVP;
             layout(location = 0) in vec4 position;
+            layout(location = 1) in vec4 normal;
             out vec4 v_Position;
+            out vec4 v_Normal;
 
             void main()
             {
                 gl_Position = u_MVP * position;
                 v_Position = position;
+                v_Normal = normal;
             }
          )glsl";
 
@@ -60,12 +63,14 @@ namespace new_type_renderer
         const char* fragmentSource = R"glsl(
             #version 330 core
 
+            uniform vec4 u_ViewDir;
             in vec4 v_Position;
+            in vec4 v_Normal;
             layout(location = 0) out vec4 outColor;
 
             void main()
             {
-                outColor = v_Position;
+                outColor = dot(-u_ViewDir, v_Normal) * vec4(1, 1, 1, 1);
             }
 
          )glsl";
@@ -191,10 +196,14 @@ namespace new_type_renderer
         Matrix4x4 mvpTransposed = mvp.Transposed();
         //
         // glBindFragDataLocation(m_ShaderProgram, 0, "outColor");
-        unsigned int location = glGetUniformLocation(m_ShaderProgram, "u_MVP");
-        glUniformMatrix4fv(location, 1, false, &mvpTransposed.cols[0][0]);
+        unsigned int mvpLocation = glGetUniformLocation(m_ShaderProgram, "u_MVP");
+        glUniformMatrix4fv(mvpLocation, 1, false, &mvpTransposed.cols[0][0]);
 
-        /* Render here */
+        Vector3 viewDir = m_Scene->m_Camera.GetLookAt() - m_Scene->m_Camera.GetLocation();
+        viewDir.Normalize();
+        unsigned int viewDirLocation = glGetUniformLocation(m_ShaderProgram, "u_ViewDir");
+        glUniform4f(viewDirLocation, viewDir.x, viewDir.y, viewDir.z, 0.0f);
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
         for (int i = 0; i < m_MeshDraws.size(); i++)
