@@ -25,7 +25,7 @@ namespace new_type_renderer
         const Matrix4x4 t = Matrix4x4::FromTranslate(m_Location.x, m_Location.y, m_Location.z);
         const Matrix4x4 r = m_Orientation.ToMatrix();
         const Matrix4x4 s = Matrix4x4::FromScale(m_Scale.x, m_Scale.y, m_Scale.z);
-        return s * t * r;
+        return t * r * s;
     }
 
     void Transform::SetLocation(const Vector3& position)
