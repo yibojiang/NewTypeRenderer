@@ -17,6 +17,7 @@ int main(int argc, char *argv[])
     assert(viewport.IsInitialized());
     while (viewport.IsWindowCloased() == false)
     {
+        viewport.Update();
         viewport.Render();
     }
 

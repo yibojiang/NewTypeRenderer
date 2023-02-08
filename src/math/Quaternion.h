@@ -5,6 +5,12 @@ namespace new_type_renderer
 {
     typedef Vector4 EulerRotation;
 
+    /*
+     * Quaternion detail
+     * https://www.youtube.com/watch?v=MZuYmG1GBFk
+     * https://www.youtube.com/watch?v=d4EgbgTm0Bg
+     * https://www.youtube.com/watch?v=zjMuIxRvygQ
+     */ 
     struct Quaternion
     {
     public:

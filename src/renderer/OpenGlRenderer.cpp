@@ -27,6 +27,22 @@ namespace new_type_renderer
         }
     }
 
+    double InputHandler::m_MousePosX{ 0.0f };
+
+    double InputHandler::m_MousePosY{ 0.0f };
+
+    double InputHandler::m_LastMousePositionX{ 0.0f };
+
+    double InputHandler::m_LastMousePositionY{ 0.0f };
+
+    int InputHandler::m_MouseStates[NUM_MOUSE_BUTTON];
+
+    bool InputHandler::IsMousePressed(const int buttonId)
+    {
+        assert(buttonId < NUM_MOUSE_BUTTON);
+        return InputHandler::m_MouseStates[buttonId];
+    }
+
     OpenGlRenderer::~OpenGlRenderer()
     {
         glDeleteProgram(m_ShaderProgram);
@@ -233,17 +249,12 @@ namespace new_type_renderer
         {
             ImGui::Begin("Debug Menu");
             ImGui::Text("Camera");
-            
-            ImGui::SliderFloat3("Camera Location", &m_Scene->m_Camera.m_Location.x, -5.0f, 5.0f);
-            ImGui::SliderFloat3("Camera LookAt", &m_Scene->m_Camera.m_LookAt.x, -5.0f, 5.0f);
             ImGui::SliderFloat("Camera FOV", &m_Scene->m_Camera.m_FOV, 30.0f, 160.f);
 
             const Matrix4x4 view = m_Scene->m_Camera.GetViewMatrix();
             const Matrix4x4 proj = Matrix4x4::CreatePerspectiveProjectMatrix(m_Scene->m_Camera.m_FOV, m_Scene->m_Camera.m_Near, m_Scene->m_Camera.m_Far, m_ViewportWidth / m_ViewportHeight);
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-            ImGui::Text("view:\n%s", view.ToString().c_str());
-            ImGui::Text("proj:\n%s", proj.ToString().c_str());
             ImGui::End();
         }
     }
@@ -251,5 +262,48 @@ namespace new_type_renderer
     bool OpenGlRenderer::IsWindowCloased()
     {
         return glfwWindowShouldClose(m_Window);
+    }
+
+    void OpenGlRenderer::Update()
+    {
+        glfwGetCursorPos(m_Window, &InputHandler::m_MousePosX, &InputHandler::m_MousePosY);
+        InputHandler::m_MouseStates[GLFW_MOUSE_BUTTON_LEFT] = glfwGetMouseButton(m_Window, GLFW_MOUSE_BUTTON_LEFT);
+        InputHandler::m_MouseStates[GLFW_MOUSE_BUTTON_MIDDLE] = glfwGetMouseButton(m_Window, GLFW_MOUSE_BUTTON_MIDDLE);
+        InputHandler::m_MouseStates[GLFW_MOUSE_BUTTON_RIGHT] = glfwGetMouseButton(m_Window, GLFW_MOUSE_BUTTON_RIGHT);
+
+        if (InputHandler::IsMousePressed(0) == GLFW_PRESS)
+        {
+            float offsetX = InputHandler::m_MousePosX - InputHandler::m_LastMousePositionX;
+            float offsetY = InputHandler::m_MousePosY - InputHandler::m_LastMousePositionY;
+
+            Vector3 camLocation = m_LastCameraLocation;
+            Vector3 camLookat = m_Scene->m_Camera.GetLookAt();
+            Vector3 camDir = camLookat - camLocation;
+            float camDist = camDir.Length();
+
+            constexpr float camRotateSpeed = 0.1f;
+            // get the radian of rotation
+            float pitch = atan(offsetX / camDist * camRotateSpeed / camDist);
+            float roll = atan2(offsetY / camDist * camRotateSpeed, camDist);
+
+            auto orientation = Quaternion(roll, 0.0f, 0.0f);
+            auto rotatedCamDir = orientation.ToMatrix() * camDir;
+            Vector3 newNamLocation = camLookat - rotatedCamDir;
+            m_Scene->m_Camera.SetLocation(newNamLocation);
+        }
+
+        if (InputHandler::IsMousePressed(2) == GLFW_PRESS)
+        {
+            float offsetX = InputHandler::m_MousePosX - InputHandler::m_LastMousePositionX;
+            float offsetY = InputHandler::m_MousePosY - InputHandler::m_LastMousePositionY;
+            
+        }
+
+        if (InputHandler::IsMousePressed(0) == GLFW_RELEASE)
+        {
+            InputHandler::m_LastMousePositionX = InputHandler::m_MousePosX;
+            InputHandler::m_LastMousePositionY = InputHandler::m_MousePosY;
+            m_LastCameraLocation = m_Scene->m_Camera.GetLocation();
+        }
     }
 }

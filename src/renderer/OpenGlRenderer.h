@@ -9,8 +9,27 @@
 
 #include "MeshDraw.h"
 
+#define NUM_MOUSE_BUTTON 8
+
 namespace new_type_renderer
 {
+    class InputHandler
+    {
+    public:
+        static bool IsMousePressed(const int buttonId);
+
+    public:
+        static double m_MousePosX;
+
+        static double m_MousePosY;
+
+        static double m_LastMousePositionX;
+
+        static double m_LastMousePositionY;
+
+        static int m_MouseStates[NUM_MOUSE_BUTTON];
+    };
+
     class OpenGlRenderer : public Renderer
     {
     public:
@@ -34,6 +53,8 @@ namespace new_type_renderer
 
         bool IsInitialized() const { return m_Initialized; }
 
+        void Update() override;
+
     private:
         GLFWwindow* m_Window{ nullptr };
 
@@ -50,6 +71,8 @@ namespace new_type_renderer
         float m_AspectRatio{ 0.0f };
 
         std::vector<MeshDraw> m_MeshDraws;
+
+        Vector3 m_LastCameraLocation{};
     };
 }
 

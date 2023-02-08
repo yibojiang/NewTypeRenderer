@@ -23,6 +23,12 @@ namespace new_type_renderer
         static void Print(LogLevel log_level, const char* fmt...)
         {
             using namespace std;
+
+            if (log_level > m_LogLevel)
+            {
+                return;
+            }
+
             if (log_level == LogLevel::Info)
             {
                 cout << "[Info]";
@@ -66,6 +72,15 @@ namespace new_type_renderer
                         float f = va_arg(args, float);
                         std::cout << f;
                     }
+                    else if (*fmt == 'l')
+                    {
+                        fmt++;
+                        if (*fmt == 'f')
+                        {
+                            float lf = va_arg(args, double);
+                            std::cout << lf;
+                        }
+                    }
                     else if (*fmt == 'd')
                     {
                         int i = va_arg(args, int);
@@ -84,7 +99,8 @@ namespace new_type_renderer
             va_end(args);
             std::cout << endl;
         }
-    };
 
-    
+    public:
+        static LogLevel m_LogLevel;
+    };
 }

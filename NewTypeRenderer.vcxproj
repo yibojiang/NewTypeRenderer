@@ -163,6 +163,7 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\thirdparty\HDRLoader\HDRloader.cpp" />
     <ClCompile Include="src\thirdparty\loadpng\lodepng.cpp" />
+    <ClCompile Include="src\utility\Log.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="libs\GLEW\include\GL\eglew.h" />
