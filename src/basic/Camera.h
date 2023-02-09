@@ -22,7 +22,7 @@ namespace new_type_renderer
 
         Matrix4x4 GetViewMatrix() const
         {
-            return Matrix4x4::CreateViewMatrix(m_Location, m_LookAt);
+            return Matrix4x4::CreateViewMatrix(m_Location, m_Right, m_Up, m_Forward);
         }
 
     public:
@@ -45,5 +45,19 @@ namespace new_type_renderer
         Vector3 m_Location{};
 
         EulerRotation m_Rotation{};
+
+        float m_AngleV{};
+
+        float m_AngleH{};
+
+        float m_LastAngleV{};
+
+        float m_LastAngleH{};
+
+        Vector3 m_Up{ 0.0f, 1.0f, 0.0f };
+
+        Vector3 m_Right{ 1.0f, 0.0f, 0.0f};
+
+        Vector3 m_Forward{ 0.0f, 0.0f, 1.0f };
     };
 }

@@ -254,7 +254,8 @@ namespace new_type_renderer
             const Matrix4x4 view = m_Scene->m_Camera.GetViewMatrix();
             const Matrix4x4 proj = Matrix4x4::CreatePerspectiveProjectMatrix(m_Scene->m_Camera.m_FOV, m_Scene->m_Camera.m_Near, m_Scene->m_Camera.m_Far, m_ViewportWidth / m_ViewportHeight);
 
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
             ImGui::End();
         }
     }
@@ -273,29 +274,43 @@ namespace new_type_renderer
 
         if (InputHandler::IsMousePressed(0) == GLFW_PRESS)
         {
-            float offsetX = InputHandler::m_MousePosX - InputHandler::m_LastMousePositionX;
-            float offsetY = InputHandler::m_MousePosY - InputHandler::m_LastMousePositionY;
+            double deltaX = InputHandler::m_MousePosX - InputHandler::m_LastMousePositionX;
+            double deltaY = InputHandler::m_MousePosY - InputHandler::m_LastMousePositionY;
 
-            Vector3 camLocation = m_LastCameraLocation;
-            Vector3 camLookat = m_Scene->m_Camera.GetLookAt();
-            Vector3 camDir = camLookat - camLocation;
-            float camDist = camDir.Length();
+            InputHandler::m_LastMousePositionX = InputHandler::m_MousePosX;
+            InputHandler::m_LastMousePositionY = InputHandler::m_MousePosY;
 
-            constexpr float camRotateSpeed = 0.1f;
-            // get the radian of rotation
-            float pitch = atan(offsetX / camDist * camRotateSpeed / camDist);
-            float roll = atan2(offsetY / camDist * camRotateSpeed, camDist);
+            Camera& camera = m_Scene->m_Camera;
 
-            auto orientation = Quaternion(roll, 0.0f, 0.0f);
-            auto rotatedCamDir = orientation.ToMatrix() * camDir;
-            Vector3 newNamLocation = camLookat - rotatedCamDir;
-            m_Scene->m_Camera.SetLocation(newNamLocation);
+            camera.m_AngleH += deltaX / 10.0f;
+            camera.m_AngleV += deltaY / 10.0f;
+            camera.m_AngleV = Clamp(camera.m_AngleV, -90.0f, 90.0f);
+
+            // Update the camera view from the angle
+            Vector3 forward{ 0.0f, 0.0f, 1.0f };
+
+            LOG_INFO("before rotate: %s", forward.ToString().c_str());
+            forward.Rotate(ToRadian(camera.m_AngleH), Vector3{ 0.0f, 1.0f, 0.0f });
+            forward.Normalize();
+            LOG_INFO("after rotate: %s", forward.ToString().c_str());
+            
+            Vector3 right = Vector3{ 0.0f, 1.0f, 0.0f }.Cross(forward);
+            right.Normalize();
+            forward.Rotate(ToRadian(camera.m_AngleV), right);
+
+            forward.Normalize();
+            Vector3 up = forward.Cross(right);
+            up.Normalize();
+
+            camera.m_Right = right;
+            camera.m_Up = up;
+            camera.m_Forward = forward;
         }
 
         if (InputHandler::IsMousePressed(2) == GLFW_PRESS)
         {
-            float offsetX = InputHandler::m_MousePosX - InputHandler::m_LastMousePositionX;
-            float offsetY = InputHandler::m_MousePosY - InputHandler::m_LastMousePositionY;
+            float deltaX = InputHandler::m_MousePosX - InputHandler::m_LastMousePositionX;
+            float deltaY = InputHandler::m_MousePosY - InputHandler::m_LastMousePositionY;
             
         }
 
@@ -303,7 +318,6 @@ namespace new_type_renderer
         {
             InputHandler::m_LastMousePositionX = InputHandler::m_MousePosX;
             InputHandler::m_LastMousePositionY = InputHandler::m_MousePosY;
-            m_LastCameraLocation = m_Scene->m_Camera.GetLocation();
         }
     }
 }

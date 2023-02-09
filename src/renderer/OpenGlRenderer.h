@@ -71,8 +71,6 @@ namespace new_type_renderer
         float m_AspectRatio{ 0.0f };
 
         std::vector<MeshDraw> m_MeshDraws;
-
-        Vector3 m_LastCameraLocation{};
     };
 }
 

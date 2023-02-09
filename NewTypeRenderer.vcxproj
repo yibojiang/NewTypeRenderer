@@ -157,6 +157,7 @@
     <ClCompile Include="src\core\Raytracer.cpp" />
     <ClCompile Include="src\basic\Scene.cpp" />
     <ClCompile Include="src\basic\Object.cpp" />
+    <ClCompile Include="src\math\Quaternion.cpp" />
     <ClCompile Include="src\renderer\MeshDraw.cpp" />
     <ClCompile Include="src\renderer\OpenGlRenderer.cpp" />
     <ClCompile Include="src\thirdparty\tiny_obj_loader\tiny_obj_loader.cc" />

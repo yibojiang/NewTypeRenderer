@@ -80,4 +80,9 @@ namespace new_type_renderer
     {
         return degree * M_PI / 180.0f;
     }
+
+    inline float ToDegree(const float rad)
+    {
+        return rad * 180.0f / M_PI;
+    }
 }

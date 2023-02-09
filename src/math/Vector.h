@@ -4,6 +4,7 @@
 
 #include <sstream>
 #include "Common.h"
+#include "Quaternion.h"
 
 namespace new_type_renderer
 {
@@ -89,6 +90,17 @@ namespace new_type_renderer
         Vector3 Cross(Vector3& b) const { return Vector3{ y * b.z - z * b.y, z * b.x - x * b.z, x * b.y - y * b.x }; }
 
         Vector3 Reflect(Vector3& normal) const { return *this - normal * (Dot(normal) * 2); }
+
+        void Rotate(float radian, const Vector3& axis)
+        {
+            Quaternion q{ axis, radian };
+            Quaternion conjq = q.Conjugated();
+            Quaternion result = q * (*this);
+            result = result * conjq;
+            x = result.x;
+            y = result.y;
+            z = result.z;
+        }
 
         std::string ToString() const
         {

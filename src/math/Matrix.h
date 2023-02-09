@@ -302,13 +302,8 @@ namespace new_type_renderer
             return stream;
         }
 
-        // view/camera matrix explanation https://ogldev.org/www/tutorial13/tutorial13.html
-        static Matrix4x4 CreateViewMatrix(const Vector3& location, const Vector3& lookAt)
+        static Matrix4x4 CreateViewMatrix(const Vector3& location, const Vector3& right, const Vector3& up, const Vector3& forward)
         {
-            Vector3 forward = (lookAt - location).Normalized();
-            Vector3 right = Vector3(0.0f, 1.0f, 0.0f).Cross(forward).Normalized();
-            Vector3 up = forward.Cross(right).Normalized();
-
             const Matrix4x4 orientation{
                 right.x,   right.y,   right.z,   0.0f,
                 up.x,      up.y,      up.z,      0.0f,
@@ -320,6 +315,23 @@ namespace new_type_renderer
 
             // Need to apply the translate before rotation
             return orientation * translate;
+        }
+
+        // view/camera matrix explanation https://ogldev.org/www/tutorial13/tutorial13.html
+        static Matrix4x4 CreateViewMatrix(const Vector3& location, const Vector3& lookAt)
+        {
+            Vector3 forward = (lookAt - location).Normalized();
+            Vector3 right = Vector3(0.0f, 1.0f, 0.0f).Cross(forward).Normalized();
+            Vector3 up = forward.Cross(right).Normalized();
+
+            // const Matrix4x4 orientation{
+            //     right.x,   right.y,   right.z,   0.0f,
+            //     up.x,      up.y,      up.z,      0.0f,
+            //     forward.x, forward.y, forward.z, 0.0f,
+            //     0.0f,      0.0f,      0.0f,      1.0f
+            // };
+
+            return CreateViewMatrix(location, right, up, forward);
         }
 
         // perspective matrix explanation https://ogldev.org/www/tutorial12/tutorial12.html
