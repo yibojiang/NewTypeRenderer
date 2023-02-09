@@ -288,11 +288,8 @@ namespace new_type_renderer
 
             // Update the camera view from the angle
             Vector3 forward{ 0.0f, 0.0f, 1.0f };
-
-            LOG_INFO("before rotate: %s", forward.ToString().c_str());
             forward.Rotate(ToRadian(camera.m_AngleH), Vector3{ 0.0f, 1.0f, 0.0f });
             forward.Normalize();
-            LOG_INFO("after rotate: %s", forward.ToString().c_str());
             
             Vector3 right = Vector3{ 0.0f, 1.0f, 0.0f }.Cross(forward);
             right.Normalize();
