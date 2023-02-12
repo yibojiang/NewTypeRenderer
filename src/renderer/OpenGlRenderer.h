@@ -3,9 +3,10 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
-#include "Renderer.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+
+#include "renderer/Renderer.h"
 
 #include "MeshDraw.h"
 

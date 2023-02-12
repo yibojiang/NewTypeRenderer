@@ -4,8 +4,6 @@
 
 namespace new_type_renderer
 {
-    int OctreeNode::maxDepth = 0;
-
     OctreeNode::OctreeNode()
     {
         m_IsLeaf = true;
@@ -13,6 +11,19 @@ namespace new_type_renderer
         {
             m_Children[i] = nullptr;
         }
+    }
+
+    OctreeNode::OctreeNode(Extents boundingExtent): m_Extents(boundingExtent)
+    {
+        
+        m_Depth = 0;
+        for (int i = 0; i < 8; ++i)
+        {
+            m_Children[i] = nullptr;
+        }
+
+        m_BoundMin = boundingExtent.GetBoundMin();
+        m_BoundMax = boundingExtent.GetBoundMax();
     }
 
     void OctreeNode::DestroyAllNodes()
@@ -51,7 +62,7 @@ namespace new_type_renderer
         if (m_IsLeaf)
         {
             m_Name = m_Objects[0]->name + "_boundingbox";
-            for (unsigned int i = 0; i < m_Objects.size(); ++i)
+            for (int i = 0; i < m_Objects.size(); ++i)
             {
                 Extents e = m_Objects[i]->GetBounds();
                 m_Extents.ExtendBy(e);
@@ -59,7 +70,8 @@ namespace new_type_renderer
 
             return m_Extents;
         }
-        for (unsigned int i = 0; i < 8; ++i)
+
+        for (int i = 0; i < 8; ++i)
         {
             if (m_Children[i])
             {
@@ -73,158 +85,161 @@ namespace new_type_renderer
 
     void OctreeNode::AddObject(shared_ptr<Object>& obj)
     {
-        int debugDepth = 90;
+        Extents objectExtent = obj->GetBounds();
+        const Vector3 center = (m_BoundMin + m_BoundMax) * 0.5;
 
-        if (m_Depth > maxDepth)
+        // Decide which subdiv node the mesh would attach to base on the relative location to bound center
+        const Vector3 relativePos = obj->GetCentriod() - center;
+
+        int selectChildId = -1;
+
+        std::vector<int> candidatesNodesIds {
+            0, 1, 2, 3, 4, 5, 6, 7
+        };
+
+        // filter out the candidates by the relative location
+        if (relativePos.z > 0)
         {
-            maxDepth = m_Depth;
+            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 2), candidatesNodesIds.end());
+            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 3), candidatesNodesIds.end());
+            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 6), candidatesNodesIds.end());
+            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 7), candidatesNodesIds.end());
+        }
+        else if (relativePos.z < 0)
+        {
+            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 0), candidatesNodesIds.end());
+            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 1), candidatesNodesIds.end());
+            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 5), candidatesNodesIds.end());
+            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 4), candidatesNodesIds.end());
         }
 
-        Extents e = obj->GetBounds();
-        Vector3 center = (m_BoundMin + m_BoundMax) * 0.5;
-        Vector3 pos = obj->GetCentriod() - center;
-
-        int childIdx = -1;
-
-        std::vector<int> vec;
-        vec.push_back(0);
-        vec.push_back(1);
-        vec.push_back(2);
-        vec.push_back(3);
-        vec.push_back(4);
-        vec.push_back(5);
-        vec.push_back(6);
-        vec.push_back(7);
-
-
-        if (pos.z > 0)
+        if (relativePos.x > 0)
         {
-            vec.erase(std::remove(vec.begin(), vec.end(), 2), vec.end());
-            vec.erase(std::remove(vec.begin(), vec.end(), 3), vec.end());
-            vec.erase(std::remove(vec.begin(), vec.end(), 6), vec.end());
-            vec.erase(std::remove(vec.begin(), vec.end(), 7), vec.end());
+            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 1), candidatesNodesIds.end());
+            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 2), candidatesNodesIds.end());
+            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 5), candidatesNodesIds.end());
+            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 6), candidatesNodesIds.end());
         }
-        else if (pos.z < 0)
+        else if (relativePos.x < 0)
         {
-            vec.erase(std::remove(vec.begin(), vec.end(), 0), vec.end());
-            vec.erase(std::remove(vec.begin(), vec.end(), 1), vec.end());
-            vec.erase(std::remove(vec.begin(), vec.end(), 5), vec.end());
-            vec.erase(std::remove(vec.begin(), vec.end(), 4), vec.end());
+            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 0), candidatesNodesIds.end());
+            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 3), candidatesNodesIds.end());
+            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 4), candidatesNodesIds.end());
+            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 7), candidatesNodesIds.end());
         }
 
-        if (pos.x > 0)
+        if (relativePos.y > 0)
         {
-            vec.erase(std::remove(vec.begin(), vec.end(), 1), vec.end());
-            vec.erase(std::remove(vec.begin(), vec.end(), 2), vec.end());
-            vec.erase(std::remove(vec.begin(), vec.end(), 5), vec.end());
-            vec.erase(std::remove(vec.begin(), vec.end(), 6), vec.end());
+            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 4), candidatesNodesIds.end());
+            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 5), candidatesNodesIds.end());
+            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 6), candidatesNodesIds.end());
+            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 7), candidatesNodesIds.end());
         }
-        else if (pos.x < 0)
+        else if (relativePos.y < 0)
         {
-            vec.erase(std::remove(vec.begin(), vec.end(), 0), vec.end());
-            vec.erase(std::remove(vec.begin(), vec.end(), 3), vec.end());
-            vec.erase(std::remove(vec.begin(), vec.end(), 4), vec.end());
-            vec.erase(std::remove(vec.begin(), vec.end(), 7), vec.end());
-        }
-
-        if (pos.y > 0)
-        {
-            vec.erase(std::remove(vec.begin(), vec.end(), 4), vec.end());
-            vec.erase(std::remove(vec.begin(), vec.end(), 5), vec.end());
-            vec.erase(std::remove(vec.begin(), vec.end(), 6), vec.end());
-            vec.erase(std::remove(vec.begin(), vec.end(), 7), vec.end());
-        }
-        else if (pos.y < 0)
-        {
-            vec.erase(std::remove(vec.begin(), vec.end(), 0), vec.end());
-            vec.erase(std::remove(vec.begin(), vec.end(), 1), vec.end());
-            vec.erase(std::remove(vec.begin(), vec.end(), 2), vec.end());
-            vec.erase(std::remove(vec.begin(), vec.end(), 3), vec.end());
+            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 0), candidatesNodesIds.end());
+            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 1), candidatesNodesIds.end());
+            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 2), candidatesNodesIds.end());
+            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 3), candidatesNodesIds.end());
         }
 
-        for (unsigned int i = 0; i < vec.size(); ++i)
+        for (int i = 0; i < candidatesNodesIds.size(); ++i)
         {
-            childIdx = vec[i];
+            selectChildId = candidatesNodesIds[i];
 
-            if (!m_Children[vec[i]])
+            // Choose the first candidate child node to insert the mesh
+            if (!m_Children[candidatesNodesIds[i]])
             {
-                childIdx = vec[i];
+                selectChildId = candidatesNodesIds[i];
                 break;
             }
         }
 
-        if (!m_Children[childIdx])
+        auto& selectedChildNode = m_Children[selectChildId];
+        if (!m_Children[selectChildId])
         {
-            m_Children[childIdx] = make_shared<OctreeNode>();
-            m_Children[childIdx]->m_Parent = shared_from_this();
-            m_Children[childIdx]->m_Name = std::to_string(m_Depth) + "_" + std::to_string(childIdx);
-            m_Children[childIdx]->m_Depth = m_Depth + 1;
-            m_Children[childIdx]->m_Objects.push_back(obj);
-            m_Children[childIdx]->m_IsLeaf = true;
+            selectedChildNode = make_shared<OctreeNode>();
+            selectedChildNode->m_Parent = shared_from_this();
+            selectedChildNode->m_Name = std::to_string(m_Depth) + "_" + std::to_string(selectChildId);
+            selectedChildNode->m_Depth = m_Depth + 1;
+            selectedChildNode->m_Objects.push_back(obj);
+            selectedChildNode->m_IsLeaf = true;
 
-            // TODO: caculate the child node bounding min and boundg max
-            if (childIdx == 0)
+            // TODO: caculate the child node bounding min and bounding max
+            if (selectChildId == 0)
             {
-                m_Children[childIdx]->m_BoundMin = center;
-                m_Children[childIdx]->m_BoundMax = this->m_BoundMax;
+                selectedChildNode->m_BoundMin = center;
+                selectedChildNode->m_BoundMax = this->m_BoundMax;
             }
-            else if (childIdx == 1)
+            else if (selectChildId == 1)
             {
-                m_Children[childIdx]->m_BoundMin = Vector3(m_BoundMin.x, center.y, center.z);
-                m_Children[childIdx]->m_BoundMax = Vector3(center.x, m_BoundMax.y, m_BoundMax.z);
+                selectedChildNode->m_BoundMin = Vector3(m_BoundMin.x, center.y, center.z);
+                selectedChildNode->m_BoundMax = Vector3(center.x, m_BoundMax.y, m_BoundMax.z);
             }
-            else if (childIdx == 2)
+            else if (selectChildId == 2)
             {
-                m_Children[childIdx]->m_BoundMin = Vector3(m_BoundMin.x, center.y, m_BoundMin.z);
-                m_Children[childIdx]->m_BoundMax = Vector3(center.x, m_BoundMax.y, center.z);
+                selectedChildNode->m_BoundMin = Vector3(m_BoundMin.x, center.y, m_BoundMin.z);
+                selectedChildNode->m_BoundMax = Vector3(center.x, m_BoundMax.y, center.z);
             }
-            else if (childIdx == 3)
+            else if (selectChildId == 3)
             {
-                m_Children[childIdx]->m_BoundMin = Vector3(center.x, center.y, m_BoundMin.z);
-                m_Children[childIdx]->m_BoundMax = Vector3(m_BoundMax.x, m_BoundMax.y, center.z);
+                selectedChildNode->m_BoundMin = Vector3(center.x, center.y, m_BoundMin.z);
+                selectedChildNode->m_BoundMax = Vector3(m_BoundMax.x, m_BoundMax.y, center.z);
             }
-            else if (childIdx == 4)
+            else if (selectChildId == 4)
             {
-                m_Children[childIdx]->m_BoundMin = Vector3(center.x, m_BoundMin.y, center.z);
-                m_Children[childIdx]->m_BoundMax = Vector3(m_BoundMax.x, center.y, m_BoundMax.z);
+                selectedChildNode->m_BoundMin = Vector3(center.x, m_BoundMin.y, center.z);
+                selectedChildNode->m_BoundMax = Vector3(m_BoundMax.x, center.y, m_BoundMax.z);
             }
-            else if (childIdx == 5)
+            else if (selectChildId == 5)
             {
-                m_Children[childIdx]->m_BoundMin = Vector3(m_BoundMin.x, m_BoundMin.y, center.z);
-                m_Children[childIdx]->m_BoundMax = Vector3(center.x, center.y, m_BoundMax.z);
+                selectedChildNode->m_BoundMin = Vector3(m_BoundMin.x, m_BoundMin.y, center.z);
+                selectedChildNode->m_BoundMax = Vector3(center.x, center.y, m_BoundMax.z);
             }
-            else if (childIdx == 6)
+            else if (selectChildId == 6)
             {
-                m_Children[childIdx]->m_BoundMin = m_BoundMin;
-                m_Children[childIdx]->m_BoundMax = center;
+                selectedChildNode->m_BoundMin = m_BoundMin;
+                selectedChildNode->m_BoundMax = center;
             }
-            else if (childIdx == 7)
+            else if (selectChildId == 7)
             {
-                m_Children[childIdx]->m_BoundMin = Vector3(center.x, m_BoundMin.y, m_BoundMin.z);
-                m_Children[childIdx]->m_BoundMax = Vector3(m_BoundMax.x, center.y, center.z);
+                selectedChildNode->m_BoundMin = Vector3(center.x, m_BoundMin.y, m_BoundMin.z);
+                selectedChildNode->m_BoundMax = Vector3(m_BoundMax.x, center.y, center.z);
             }
         }
         else
         {
-            // if it is a leaf node
-            if (m_Children[childIdx]->m_IsLeaf)
+            // Leaf node contains the object, need to further split the child node
+            if (selectedChildNode->m_IsLeaf)
             {
-                if (m_Depth >= 50)
+                /*
+                 * If the tree reach max depth, just put them into the same node, otherwise
+                 * split the nodes and the objects into the child nodes of the split nodes
+                 */
+                if (m_Depth >= m_MaxDepth)
                 {
-                    m_Children[childIdx]->m_Objects.push_back(obj);
+                    m_Children[selectChildId]->m_Objects.push_back(obj);
                 }
                 else
                 {
-                    auto childObj = m_Children[childIdx]->m_Objects[0];
-                    m_Children[childIdx]->AddObject(obj);
-                    m_Children[childIdx]->m_Objects.clear();
-                    m_Children[childIdx]->AddObject(childObj);
-                    m_Children[childIdx]->m_IsLeaf = false;
+                    // Mark the selected child node as the leaf node as it needs to be split
+                    selectedChildNode->m_IsLeaf = false;
+
+                    // Split the nodes as the child node has object
+                    auto childObj = selectedChildNode->m_Objects[0];
+
+                    selectedChildNode->AddObject(obj);
+
+                    // Needs to clear the object list as only the leaf node contains the object
+                    selectedChildNode->m_Objects.clear();
+                    selectedChildNode->AddObject(childObj);
+                    
                 }
             }
             else
             {
-                m_Children[childIdx]->AddObject(obj);
+                // Recursively call to add the object to the target child node
+                selectedChildNode->AddObject(obj);
             }
         }
     }

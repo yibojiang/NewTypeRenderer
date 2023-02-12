@@ -17,9 +17,7 @@ namespace new_type_renderer
     public:
         BVH();
 
-        ~BVH();
-
-        void Setup(const shared_ptr<Scene>& scene);
+        void Build(const shared_ptr<Scene>& scene);
 
         void Destroy();
 
@@ -34,8 +32,9 @@ namespace new_type_renderer
     public:
         shared_ptr <Scene> m_Scene;
 
-        std::vector<Extents*> m_Extents;
-
+        /*
+         * Octree is used to used to construct the BVH by combining the mesh nodes
+         */
         shared_ptr<OctreeNode> m_Octree;
     };
 }

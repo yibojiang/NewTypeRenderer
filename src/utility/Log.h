@@ -77,7 +77,7 @@ namespace new_type_renderer
                         fmt++;
                         if (*fmt == 'f')
                         {
-                            float lf = va_arg(args, double);
+                            double lf = va_arg(args, double);
                             std::cout << lf;
                         }
                     }

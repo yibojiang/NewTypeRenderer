@@ -154,6 +154,7 @@
     <ClCompile Include="src\core\BVH.cpp" />
     <ClCompile Include="src\core\Extents.cpp" />
     <ClCompile Include="src\core\OctreeNode.cpp" />
+    <ClCompile Include="src\renderer\PathtracingRenderer.cpp" />
     <ClCompile Include="src\core\Raytracer.cpp" />
     <ClCompile Include="src\basic\Scene.cpp" />
     <ClCompile Include="src\basic\Object.cpp" />
@@ -191,6 +192,7 @@
     <ClInclude Include="src\core\Color.h" />
     <ClInclude Include="src\core\Image.h" />
     <ClInclude Include="src\core\OctreeNode.h" />
+    <ClInclude Include="src\renderer\PathtracingRenderer.h" />
     <ClInclude Include="src\core\Ray.h" />
     <ClInclude Include="src\basic\SceneNode.h" />
     <ClInclude Include="src\basic\Texture.h" />

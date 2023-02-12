@@ -8,9 +8,11 @@ namespace new_type_renderer
     {
     }
 
-    void BVH::Setup(const shared_ptr<Scene>& scene)
+    void BVH::Build(const shared_ptr<Scene>& scene)
     {
         this->m_Scene = scene;
+
+        // Compute the bounding extent for the whole scene for octree
         Extents sceneExtents;
         for (uint32_t i = 0; i < scene->m_Objects.size(); ++i)
         {
@@ -19,28 +21,16 @@ namespace new_type_renderer
             sceneExtents.ExtendBy(e);
         }
 
-        m_Octree = make_shared<OctreeNode>();
-        m_Octree->m_Extents = sceneExtents;
-        m_Octree->m_Depth = 0;
-
-        m_Octree->m_BoundMin = sceneExtents.GetBoundMin();
-        m_Octree->m_BoundMax = sceneExtents.GetBoundMax();
+        m_Octree = make_shared<OctreeNode>(sceneExtents);
+        m_Octree->m_IsLeaf = false;
 
         // Construct bvh hierarchy.
         for (uint32_t i = 0; i < scene->m_Objects.size(); ++i)
         {
             m_Octree->AddObject(scene->m_Objects[i]);
         }
-        m_Octree->m_IsLeaf = false;
-        m_Octree->ComputeExetents();      
-    }
 
-    BVH::~BVH()
-    {
-        for (uint32_t i = 0; i < m_Extents.size(); ++i)
-        {
-            delete m_Extents[i];
-        }
+        m_Octree->ComputeExetents();
     }
 
     void BVH::Destroy()
@@ -65,7 +55,6 @@ namespace new_type_renderer
 
     Intersection BVH::IntersectBVH(const Ray& ray) const
     {
-        // std::priority_queue<OctreeNode> closeNode;
         Intersection closestIntersection;
         m_Octree->IntersectTestWireframe(ray, closestIntersection);
         return closestIntersection;

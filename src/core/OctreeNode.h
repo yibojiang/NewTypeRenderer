@@ -11,6 +11,8 @@ namespace new_type_renderer
     public:
         OctreeNode();
 
+        OctreeNode(Extents boundingExtent);
+
         ~OctreeNode();
 
         void AddObject(shared_ptr<Object>& object);
@@ -23,7 +25,7 @@ namespace new_type_renderer
 
         void IntersectTestWireframe(const Ray& r, Intersection& intersection) const;
 
-        static int maxDepth;
+        static constexpr int m_MaxDepth{ 50 };
 
         Extents ComputeExetents();
 

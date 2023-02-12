@@ -255,6 +255,10 @@ namespace new_type_renderer
             const Matrix4x4 proj = Matrix4x4::CreatePerspectiveProjectMatrix(m_Scene->m_Camera.m_FOV, m_Scene->m_Camera.m_Near, m_Scene->m_Camera.m_Far, m_ViewportWidth / m_ViewportHeight);
 
             ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            if (ImGui::Button("Render"))
+            {
+                
+            }
 
             ImGui::End();
         }
@@ -282,8 +286,9 @@ namespace new_type_renderer
 
             Camera& camera = m_Scene->m_Camera;
 
-            camera.m_AngleH += deltaX / 10.0f;
-            camera.m_AngleV += deltaY / 10.0f;
+            const float mouseMoveSpeed = 0.1f;
+            camera.m_AngleH += deltaX * mouseMoveSpeed;
+            camera.m_AngleV += deltaY * mouseMoveSpeed;
             camera.m_AngleV = Clamp(camera.m_AngleV, -90.0f, 90.0f);
 
             // Update the camera view from the angle
