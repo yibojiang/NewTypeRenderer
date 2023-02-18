@@ -129,8 +129,8 @@ namespace new_type_renderer
             {
                 Vector3 slabN = Extents::m_Normals[i];
                 double d = center.Dot(slabN);
-                bounds.m_DistNear[i] = -rad - d;
-                bounds.m_DistFar[i] = rad - d;
+                m_Bounds.m_DistNear[i] = -rad - d;
+                m_Bounds.m_DistFar[i] = rad - d;
             }
         }
 
@@ -308,19 +308,19 @@ namespace new_type_renderer
         {
             for (uint8_t i = 0; i < SLABCOUNT; ++i)
             {
-                bounds.m_DistNear[i] = FLT_MAX;
-                bounds.m_DistFar[i] = -FLT_MAX;
+                m_Bounds.m_DistNear[i] = FLT_MAX;
+                m_Bounds.m_DistFar[i] = -FLT_MAX;
                 for (int j = 0; j < 8; ++j)
                 {
                     // qDebug()<<p[j];
                     double d = -p[j].Dot(Extents::m_Normals[i]);
-                    if (d < bounds.m_DistNear[i])
+                    if (d < m_Bounds.m_DistNear[i])
                     {
-                        bounds.m_DistNear[i] = d;
+                        m_Bounds.m_DistNear[i] = d;
                     }
-                    if (d > bounds.m_DistFar[i])
+                    if (d > m_Bounds.m_DistFar[i])
                     {
-                        bounds.m_DistFar[i] = d;
+                        m_Bounds.m_DistFar[i] = d;
                     }
                 }
             }

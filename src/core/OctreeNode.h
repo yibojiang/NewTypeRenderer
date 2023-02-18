@@ -11,7 +11,7 @@ namespace new_type_renderer
     public:
         OctreeNode();
 
-        OctreeNode(Extents boundingExtent);
+        OctreeNode(Vector3 boundMin, Vector3 boundMax);
 
         ~OctreeNode();
 

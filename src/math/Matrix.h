@@ -323,14 +323,6 @@ namespace new_type_renderer
             Vector3 forward = (lookAt - location).Normalized();
             Vector3 right = Vector3(0.0f, 1.0f, 0.0f).Cross(forward).Normalized();
             Vector3 up = forward.Cross(right).Normalized();
-
-            // const Matrix4x4 orientation{
-            //     right.x,   right.y,   right.z,   0.0f,
-            //     up.x,      up.y,      up.z,      0.0f,
-            //     forward.x, forward.y, forward.z, 0.0f,
-            //     0.0f,      0.0f,      0.0f,      1.0f
-            // };
-
             return CreateViewMatrix(location, right, up, forward);
         }
 

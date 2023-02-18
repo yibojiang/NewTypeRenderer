@@ -99,10 +99,10 @@ namespace new_type_renderer
         Vector3 nl = N.Dot(ray.dir) < 0 ? N : N * -1;
 
 
-        Color albedo = obj->GetMaterial()->getDiffuseColor(ray.uv);
+        Color albedo = obj->GetMaterial()->GetDiffuseColor(ray.uv);
 
-        Color refractColor = obj->GetMaterial()->getRefractColor(ray.uv);
-        Color reflectColor = obj->GetMaterial()->getReflectColor(ray.uv);
+        Color refractColor = obj->GetMaterial()->GetRefractColor(ray.uv);
+        Color reflectColor = obj->GetMaterial()->GetReflectColor(ray.uv);
 
 #ifdef RUSSIAN_ROULETTE_TERMINATION
         // Russian roulette termination.
@@ -124,12 +124,12 @@ namespace new_type_renderer
 
         if (++depth > 5)
         {
-            return obj->GetMaterial()->getEmission() * E;
+            return obj->GetMaterial()->GetEmission() * E;
         }
 #endif
 
         double randomVal = Random01();
-        if (randomVal <= obj->GetMaterial()->refract)
+        if (randomVal <= obj->GetMaterial()->m_Refract)
         {
             // Vector3 reflectColor = obj->GetMaterial()->getReflectColor(ray.uv);
 
@@ -137,11 +137,11 @@ namespace new_type_renderer
             Vector3 refl = ray.dir - N * 2 * N.Dot(ray.dir);
             Ray reflRay(hit, refl); // Ideal dielectric REFRACTION
             bool into = N.Dot(nl) > 0; // Ray from outside going in?
-            double nc = 1, nt = obj->GetMaterial()->ior, nnt = into ? nc / nt : nt / nc, ddn = ray.dir.Dot(nl), cos2t;
+            double nc = 1, nt = obj->GetMaterial()->m_IOR, nnt = into ? nc / nt : nt / nc, ddn = ray.dir.Dot(nl), cos2t;
             if ((cos2t = 1 - nnt * nnt * (1 - ddn * ddn)) < 0)
             {
                 // Total internal reflection
-                return obj->GetMaterial()->getEmission() + albedo * Tracing(reflRay, depth);
+                return obj->GetMaterial()->GetEmission() + albedo * Tracing(reflRay, depth);
             }
             Vector3 tdir = (ray.dir * nnt - N * ((into ? 1 : -1) * (ddn * nnt + sqrt(cos2t)))).Normalize();
 
@@ -156,7 +156,7 @@ namespace new_type_renderer
             double RP = Re / P;
             double TP = Tr / (1 - P);
 
-            return obj->GetMaterial()->getEmission() + refractColor * (depth > 2
+            return obj->GetMaterial()->GetEmission() + refractColor * (depth > 2
                                                                            ? (Random01() < P
                                                                                   ? // Russian roulette
                                                                                   Tracing(reflRay, depth) * RP
@@ -164,10 +164,10 @@ namespace new_type_renderer
                                                                            : Tracing(reflRay, depth) * Re + Tracing(
                                                                                refrRay, depth) * Tr);
         }
-        if (randomVal <= obj->GetMaterial()->refract + obj->GetMaterial()->reflection)
+        if (randomVal <= obj->GetMaterial()->m_Refract + obj->GetMaterial()->m_Reflection)
         {
 #ifdef COOK_TORRANCE
-            float roughness = obj->GetMaterial()->roughness;
+            float roughness = obj->GetMaterial()->m_Roughness;
             Vector3 viewVector = -ray.dir;
             // Important sample
             // float rand1 = drand48();
@@ -196,7 +196,7 @@ namespace new_type_renderer
 
             Ray reflRay(hit, sampleVector);
             // Calculate fresnel with Fresnel_Schlick approixmation
-            float F0 = obj->GetMaterial()->F0;
+            float F0 = obj->GetMaterial()->m_F0;
             float fresnel = F0 + (1 - F0) * pow((1 - sampleVector.Dot(halfVector)), 5);
 
             // Geometry term GGX Distribution
@@ -212,7 +212,7 @@ namespace new_type_renderer
             float denominator = 4 * NdotV;
             Color specularColor = reflectColor * Saturate(fresnel * geometry / denominator);
 
-            return obj->GetMaterial()->getEmission() + specularColor * Tracing(reflRay, depth);
+            return obj->GetMaterial()->GetEmission() + specularColor * Tracing(reflRay, depth);
 
 
 #else
@@ -270,11 +270,11 @@ namespace new_type_renderer
             if (shadow.object.expired() == false && shadow.object.lock() == light)
             {
                 double omega = 2 * M_PI * (1 - cos_a_max);
-                e = e + albedo * M_1_PI * (light->GetMaterial()->getEmission() * l.Dot(nl) * omega); // 1/pi for brdf
+                e = e + albedo * M_1_PI * (light->GetMaterial()->GetEmission() * l.Dot(nl) * omega); // 1/pi for brdf
             }
         }
 
-        return obj->GetMaterial()->getEmission() * E + e + albedo * (Tracing(reflRay, depth, 0));
+        return obj->GetMaterial()->GetEmission() * E + e + albedo * (Tracing(reflRay, depth, 0));
 #else
 
             return obj->GetMaterial()->getEmission() + albedo * (Tracing(reflRay, depth));
@@ -432,14 +432,14 @@ namespace new_type_renderer
                     // Vector3 ld = (pointLig - hit).Normalize();
 
                     Color albedo;
-                    if (obj->GetMaterial()->useBackground)
+                    if (obj->GetMaterial()->m_UseBackground)
                     {
                         // albedo = GetEnvColor(ray.dir)/fmax(ld.Dot(N), 0);
                         albedo = GetEnvColor(ray.dir);
                     }
                     else
                     {
-                        albedo = obj->GetMaterial()->getDiffuseColor(ray.uv);
+                        albedo = obj->GetMaterial()->GetDiffuseColor(ray.uv);
                     }
                     // Vector3 diffuseColor =  albedo * fmax(ld.Dot(N), 0) * obj->GetMaterial()->diffuse;
 

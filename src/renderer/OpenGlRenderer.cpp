@@ -4,6 +4,8 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "basic/Shader.h"
+#include "gui/InputManager.h"
 
 namespace new_type_renderer
 {
@@ -27,87 +29,23 @@ namespace new_type_renderer
         }
     }
 
-    double InputHandler::m_MousePosX{ 0.0f };
-
-    double InputHandler::m_MousePosY{ 0.0f };
-
-    double InputHandler::m_LastMousePositionX{ 0.0f };
-
-    double InputHandler::m_LastMousePositionY{ 0.0f };
-
-    int InputHandler::m_MouseStates[NUM_MOUSE_BUTTON];
-
-    bool InputHandler::IsMousePressed(const int buttonId)
+    void OpenGlRenderer::OnKeyPressed(int key, int scancode, int action, int mods)
     {
-        assert(buttonId < NUM_MOUSE_BUTTON);
-        return InputHandler::m_MouseStates[buttonId];
+        
+    }
+
+    void OpenGlRenderer::OnKeyPressedCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+    {
+        OpenGlRenderer* obj = static_cast<OpenGlRenderer*>(glfwGetWindowUserPointer(window));
+        obj->OnKeyPressed(key, scancode, action, mods);
     }
 
     OpenGlRenderer::~OpenGlRenderer()
     {
-        glDeleteProgram(m_ShaderProgram);
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
         glfwTerminate();
-    }
-
-    unsigned int OpenGlRenderer::CompilerLinkShader(unsigned int& vertexShader, unsigned int& fragmentShader)
-    {
-        // Compile shader
-        const char* vertexSource = R"glsl(
-            #version 330 core
-
-            uniform mat4 u_MVP;
-            layout(location = 0) in vec4 position;
-            layout(location = 1) in vec4 normal;
-            out vec4 v_Position;
-            out vec4 v_Normal;
-
-            void main()
-            {
-                gl_Position = u_MVP * position;
-                v_Position = position;
-                v_Normal = normal;
-            }
-         )glsl";
-
-        vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, 1, &vertexSource, NULL);
-        glCompileShader(vertexShader);
-
-        const char* fragmentSource = R"glsl(
-            #version 330 core
-
-            uniform vec4 u_ViewDir;
-            in vec4 v_Position;
-            in vec4 v_Normal;
-            layout(location = 0) out vec4 outColor;
-
-            void main()
-            {
-                float radiance = dot(-u_ViewDir, v_Normal);
-                outColor = vec4(radiance, radiance, radiance, 1);
-            }
-
-         )glsl";
-
-        fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
-        glCompileShader(fragmentShader);
-
-        unsigned int shaderProgram = glCreateProgram();
-        glAttachShader(shaderProgram, vertexShader);
-        glAttachShader(shaderProgram, fragmentShader);
-
-        glValidateProgram(shaderProgram);
-
-        glLinkProgram(shaderProgram);
-        glUseProgram(shaderProgram);
-
-        glDeleteShader(vertexShader);
-        glDeleteShader(fragmentShader);
-        return shaderProgram;
     }
 
     void OpenGlRenderer::Init()
@@ -169,10 +107,15 @@ namespace new_type_renderer
         glEnable(GL_DEBUG_OUTPUT);
         glDebugMessageCallback(MessageCallback, 0);
 
+        glfwSetWindowUserPointer(m_Window, this);
+
         ImGui::CreateContext();
         ImGui_ImplGlfw_InitForOpenGL(m_Window, true);
         ImGui_ImplOpenGL3_Init(glslVersion);
         ImGui::StyleColorsDark();
+
+        // Bind the input callback
+        glfwSetKeyCallback(m_Window, OnKeyPressedCallback);
 
         m_Initialized = true;
     }
@@ -184,15 +127,13 @@ namespace new_type_renderer
         std::vector<shared_ptr<Object>> allObjects;
         scene->m_Root->GetAllObjects(allObjects);
 
-        unsigned int vertexShader, fragmentShader = 0;
-        m_ShaderProgram = CompilerLinkShader(vertexShader, fragmentShader);
         // push the mesh into the vertex buffer
         for (int i = 0; i < allObjects.size(); i++)
         {
             auto& object = allObjects[i];
             if (std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(object))
             {
-                m_MeshDraws.emplace_back(mesh, m_ShaderProgram);
+                m_MeshDraws.emplace_back(MeshDraw{ mesh, mesh->GetMaterial() });
             }
         }
 
@@ -210,22 +151,23 @@ namespace new_type_renderer
         Matrix4x4 mvp = prospective * view;
 
         // Convert it to column based as OpenGl uses column base matrix representation
-        Matrix4x4 mvpTransposed = mvp.Transposed();
-        //
-        // glBindFragDataLocation(m_ShaderProgram, 0, "outColor");
-        unsigned int mvpLocation = glGetUniformLocation(m_ShaderProgram, "u_MVP");
-        glUniformMatrix4fv(mvpLocation, 1, false, &mvpTransposed.cols[0][0]);
+        // Matrix4x4 mvpTransposed = mvp.Transposed();
 
-        Vector3 viewDir = m_Scene->m_Camera.GetLookAt() - m_Scene->m_Camera.GetLocation();
-        viewDir.Normalize();
-        unsigned int viewDirLocation = glGetUniformLocation(m_ShaderProgram, "u_ViewDir");
-        glUniform4f(viewDirLocation, viewDir.x, viewDir.y, viewDir.z, 0.0f);
+        // Vector3 viewDir = m_Scene->m_Camera.GetLookAt() - m_Scene->m_Camera.GetLocation();
+        // viewDir.Normalize();
+
+        // glBindFragDataLocation(m_ShaderProgram, 0, "outColor");
+        // unsigned int mvpLocation = glGetUniformLocation(m_ShaderProgram, "u_MVP");
+        // glUniformMatrix4fv(mvpLocation, 1, false, &mvpTransposed.cols[0][0]);
+        //
+        // unsigned int viewDirLocation = glGetUniformLocation(m_ShaderProgram, "u_ViewDir");
+        // glUniform4f(viewDirLocation, viewDir.x, viewDir.y, viewDir.z, 0.0f);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
         for (int i = 0; i < m_MeshDraws.size(); i++)
         {
-            m_MeshDraws[i].Draw();
+            m_MeshDraws[i].Draw(mvp);
         }
 
         ImGui_ImplOpenGL3_NewFrame();
@@ -250,11 +192,19 @@ namespace new_type_renderer
             ImGui::Begin("Debug Menu");
             ImGui::Text("Camera");
             ImGui::SliderFloat("Camera FOV", &m_Scene->m_Camera.m_FOV, 30.0f, 160.f);
+            ImGui::SliderFloat("Speed", &m_CameraSpeedMultiplier, 1.0f, 20.f);
 
             const Matrix4x4 view = m_Scene->m_Camera.GetViewMatrix();
             const Matrix4x4 proj = Matrix4x4::CreatePerspectiveProjectMatrix(m_Scene->m_Camera.m_FOV, m_Scene->m_Camera.m_Near, m_Scene->m_Camera.m_Far, m_ViewportWidth / m_ViewportHeight);
 
             ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            for (auto& meshDraw : m_MeshDraws)
+            {
+                auto mesh = meshDraw.GetMesh();
+                ImGui::Text("Mesh: %s", mesh->name.c_str());
+                ImGui::Text("Tris: %d", mesh->m_Faces.size());
+            }
+            
             if (ImGui::Button("Render"))
             {
                 
@@ -269,20 +219,68 @@ namespace new_type_renderer
         return glfwWindowShouldClose(m_Window);
     }
 
-    void OpenGlRenderer::Update()
+    void OpenGlRenderer::Update(const float elapsedTime)
     {
-        glfwGetCursorPos(m_Window, &InputHandler::m_MousePosX, &InputHandler::m_MousePosY);
-        InputHandler::m_MouseStates[GLFW_MOUSE_BUTTON_LEFT] = glfwGetMouseButton(m_Window, GLFW_MOUSE_BUTTON_LEFT);
-        InputHandler::m_MouseStates[GLFW_MOUSE_BUTTON_MIDDLE] = glfwGetMouseButton(m_Window, GLFW_MOUSE_BUTTON_MIDDLE);
-        InputHandler::m_MouseStates[GLFW_MOUSE_BUTTON_RIGHT] = glfwGetMouseButton(m_Window, GLFW_MOUSE_BUTTON_RIGHT);
+        glfwGetCursorPos(m_Window, &InputManager::m_MousePosX, &InputManager::m_MousePosY);
+        InputManager::m_MouseStates[GLFW_MOUSE_BUTTON_LEFT] = glfwGetMouseButton(m_Window, GLFW_MOUSE_BUTTON_LEFT);
+        InputManager::m_MouseStates[GLFW_MOUSE_BUTTON_MIDDLE] = glfwGetMouseButton(m_Window, GLFW_MOUSE_BUTTON_MIDDLE);
+        InputManager::m_MouseStates[GLFW_MOUSE_BUTTON_RIGHT] = glfwGetMouseButton(m_Window, GLFW_MOUSE_BUTTON_RIGHT);
 
-        if (InputHandler::IsMousePressed(0) == GLFW_PRESS)
+        if (glfwGetKey(m_Window, GLFW_KEY_W) == GLFW_PRESS)
         {
-            double deltaX = InputHandler::m_MousePosX - InputHandler::m_LastMousePositionX;
-            double deltaY = InputHandler::m_MousePosY - InputHandler::m_LastMousePositionY;
+            Camera& camera = m_Scene->m_Camera;
+            Vector3 camPos = camera.GetLocation();
+            Vector3 fwd = camera.GetForward();
+            camera.SetLocation(camPos + fwd * m_CameraSpeedMultiplier * elapsedTime);
+        }
 
-            InputHandler::m_LastMousePositionX = InputHandler::m_MousePosX;
-            InputHandler::m_LastMousePositionY = InputHandler::m_MousePosY;
+        if (glfwGetKey(m_Window, GLFW_KEY_S) == GLFW_PRESS)
+        {
+            Camera& camera = m_Scene->m_Camera;
+            Vector3 camPos = camera.GetLocation();
+            Vector3 fwd = camera.GetForward();
+            camera.SetLocation(camPos - fwd * m_CameraSpeedMultiplier * elapsedTime);
+        }
+
+        if (glfwGetKey(m_Window, GLFW_KEY_A) == GLFW_PRESS)
+        {
+            Camera& camera = m_Scene->m_Camera;
+            Vector3 camPos = camera.GetLocation();
+            Vector3 right = camera.GetRight();
+            camera.SetLocation(camPos - right * m_CameraSpeedMultiplier * elapsedTime);
+        }
+
+        if (glfwGetKey(m_Window, GLFW_KEY_D) == GLFW_PRESS)
+        {
+            Camera& camera = m_Scene->m_Camera;
+            Vector3 camPos = camera.GetLocation();
+            Vector3 right = camera.GetRight();
+            camera.SetLocation(camPos + right * m_CameraSpeedMultiplier * elapsedTime);
+        }
+
+        if (glfwGetKey(m_Window, GLFW_KEY_E) == GLFW_PRESS)
+        {
+            Camera& camera = m_Scene->m_Camera;
+            Vector3 camPos = camera.GetLocation();
+            Vector3 up = Vector3{ 0, 1, 0 };
+            camera.SetLocation(camPos + up * m_CameraSpeedMultiplier * elapsedTime);
+        }
+
+        if (glfwGetKey(m_Window, GLFW_KEY_Q) == GLFW_PRESS)
+        {
+            Camera& camera = m_Scene->m_Camera;
+            Vector3 camPos = camera.GetLocation();
+            Vector3 up = Vector3{ 0, 1, 0 };
+            camera.SetLocation(camPos - up * m_CameraSpeedMultiplier * elapsedTime);
+        }
+
+        if (InputManager::IsMousePressed(1) == GLFW_PRESS)
+        {
+            double deltaX = InputManager::m_MousePosX - InputManager::m_LastMousePositionX;
+            double deltaY = InputManager::m_MousePosY - InputManager::m_LastMousePositionY;
+
+            InputManager::m_LastMousePositionX = InputManager::m_MousePosX;
+            InputManager::m_LastMousePositionY = InputManager::m_MousePosY;
 
             Camera& camera = m_Scene->m_Camera;
 
@@ -295,7 +293,7 @@ namespace new_type_renderer
             Vector3 forward{ 0.0f, 0.0f, 1.0f };
             forward.Rotate(ToRadian(camera.m_AngleH), Vector3{ 0.0f, 1.0f, 0.0f });
             forward.Normalize();
-            
+
             Vector3 right = Vector3{ 0.0f, 1.0f, 0.0f }.Cross(forward);
             right.Normalize();
             forward.Rotate(ToRadian(camera.m_AngleV), right);
@@ -309,17 +307,16 @@ namespace new_type_renderer
             camera.m_Forward = forward;
         }
 
-        if (InputHandler::IsMousePressed(2) == GLFW_PRESS)
+        if (InputManager::IsMousePressed(2) == GLFW_PRESS)
         {
-            float deltaX = InputHandler::m_MousePosX - InputHandler::m_LastMousePositionX;
-            float deltaY = InputHandler::m_MousePosY - InputHandler::m_LastMousePositionY;
-            
+            float deltaX = InputManager::m_MousePosX - InputManager::m_LastMousePositionX;
+            float deltaY = InputManager::m_MousePosY - InputManager::m_LastMousePositionY;
         }
 
-        if (InputHandler::IsMousePressed(0) == GLFW_RELEASE)
+        if (InputManager::IsMousePressed(1) == GLFW_RELEASE)
         {
-            InputHandler::m_LastMousePositionX = InputHandler::m_MousePosX;
-            InputHandler::m_LastMousePositionY = InputHandler::m_MousePosY;
+            InputManager::m_LastMousePositionX = InputManager::m_MousePosX;
+            InputManager::m_LastMousePositionY = InputManager::m_MousePosY;
         }
     }
 }

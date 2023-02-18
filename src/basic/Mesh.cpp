@@ -132,8 +132,8 @@ namespace new_type_renderer
             double d1 = -p1.Dot(slabN);
             double d2 = -p2.Dot(slabN);
             double d3 = -p3.Dot(slabN);
-            bounds.m_DistNear[i] = fmin(d1, fmin(d2, d3));
-            bounds.m_DistFar[i] = fmax(d1, fmax(d2, d3));
+            m_Bounds.m_DistNear[i] = fmin(d1, fmin(d2, d3));
+            m_Bounds.m_DistFar[i] = fmax(d1, fmax(d2, d3));
         }
     }
 

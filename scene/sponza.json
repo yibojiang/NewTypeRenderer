@@ -2,7 +2,7 @@
     "envlight":{
         "intense": 100,
         "exp": 1,
-        "hdri": "/textures/Ridgecrest_Road_Ref.hdr"
+        "HDRI": "/textures/Ridgecrest_Road_Ref.hdr"
     },
     "materials": {
         "light":{
@@ -21,14 +21,14 @@
         "name": "camera",
         "transform": {
             "position": [
-                100,
-                100,
-                500
+                1,
+                1,
+                0
             ],
             "target": [
-                -100,
-                430,
-                300
+                0,
+                0,
+                0
             ],
             "up": [
                 0,
@@ -48,7 +48,7 @@
             "transform": {
                 "position": [
                     0,
-                    10000,
+                    10,
                     0
                 ],
                 "scale": [
@@ -75,9 +75,9 @@
                     0
                 ],
                 "scale": [
-                    40,
-                    40,
-                    40
+                    1,
+                    1,
+                    1
                 ],
                 "rotation": [
                     0,

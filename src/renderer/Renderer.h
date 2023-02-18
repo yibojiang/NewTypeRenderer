@@ -12,7 +12,7 @@ namespace new_type_renderer
 
         virtual void LoadScene(shared_ptr<Scene>& scene) = 0;
 
-        virtual void Update() = 0;
+        virtual void Update(const float elapsedTime) = 0;
 
     protected:
         shared_ptr<Scene> m_Scene;

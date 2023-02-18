@@ -20,6 +20,10 @@ namespace new_type_renderer
 
         Vector3 GetLookAt() { return m_LookAt; }
 
+        Vector3 GetForward() const { return m_Forward;  }
+
+        Vector3 GetRight() const { return m_Right; }
+
         Matrix4x4 GetViewMatrix() const
         {
             return Matrix4x4::CreateViewMatrix(m_Location, m_Right, m_Up, m_Forward);

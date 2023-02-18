@@ -21,7 +21,7 @@ namespace new_type_renderer
             sceneExtents.ExtendBy(e);
         }
 
-        m_Octree = make_shared<OctreeNode>(sceneExtents);
+        m_Octree = make_shared<OctreeNode>(sceneExtents.GetBoundMin(), sceneExtents.GetBoundMax());
         m_Octree->m_IsLeaf = false;
 
         // Construct bvh hierarchy.

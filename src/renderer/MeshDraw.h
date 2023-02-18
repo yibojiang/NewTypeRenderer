@@ -5,21 +5,27 @@
 
 namespace new_type_renderer
 {
+    using std::vector;
+
     class MeshDraw
     {
     public:
-        MeshDraw(const shared_ptr<Mesh>& mesh, unsigned int shaderProgram);
+        MeshDraw(const shared_ptr<Mesh>& mesh, const shared_ptr<Material>& material);
 
-        void Draw();
+        shared_ptr<Mesh> GetMesh() { return m_Mesh; }
+
+        int GetVertexCount() const;
+
+        void Draw(Matrix4x4& mvp);
 
     public:
-        unsigned int m_ShaderProgram{};
+        shared_ptr<Mesh> m_Mesh{};
 
-        shared_ptr<Mesh> m_Mesh;
+        shared_ptr<Material> m_Material{};
 
-        std::vector<float> m_Vertices{};
+        vector<float> m_Vertices{};
 
-        std::vector<unsigned int> m_Indices{};
+        vector<unsigned int> m_Indices{};
 
         unsigned int m_VAO{};
 

@@ -1,3 +1,8 @@
+### resources ###
+*.hdr
+textures/
+models/
+
 ### C++ ###
 # Prerequisites
 *.d

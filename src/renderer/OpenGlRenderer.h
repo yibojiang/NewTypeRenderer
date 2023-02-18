@@ -9,27 +9,11 @@
 #include "renderer/Renderer.h"
 
 #include "MeshDraw.h"
-
-#define NUM_MOUSE_BUTTON 8
+#include "gui/InputManager.h"
 
 namespace new_type_renderer
 {
-    class InputHandler
-    {
-    public:
-        static bool IsMousePressed(const int buttonId);
-
-    public:
-        static double m_MousePosX;
-
-        static double m_MousePosY;
-
-        static double m_LastMousePositionX;
-
-        static double m_LastMousePositionY;
-
-        static int m_MouseStates[NUM_MOUSE_BUTTON];
-    };
+    using std::vector;
 
     class OpenGlRenderer : public Renderer
     {
@@ -39,8 +23,6 @@ namespace new_type_renderer
         OpenGlRenderer(unsigned int viewportWidth, unsigned int viewportHeight) : m_ViewportWidth(viewportWidth), m_ViewportHeight(viewportHeight) {}
 
         ~OpenGlRenderer();
-
-        unsigned int CompilerLinkShader(unsigned int& vertexShader, unsigned int& fragmentShader);
 
         void Init() override;
 
@@ -54,7 +36,11 @@ namespace new_type_renderer
 
         bool IsInitialized() const { return m_Initialized; }
 
-        void Update() override;
+        void Update(const float elapsedTime) override;
+
+        void OnKeyPressed(int key, int scancode, int action, int mods);
+
+        static void OnKeyPressedCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
     private:
         GLFWwindow* m_Window{ nullptr };
@@ -65,13 +51,13 @@ namespace new_type_renderer
 
         unsigned int m_ViewportHeight{ 800 };
 
-        unsigned int m_ShaderProgram{ 0 };
+        vector<shared_ptr<Object>> m_AllObjects;
 
-        std::vector<shared_ptr<Object>> m_AllObjects;
+        vector<MeshDraw> m_MeshDraws;
 
-        float m_AspectRatio{ 0.0f };
+        float m_AspectRatio{ 1.0f };
 
-        std::vector<MeshDraw> m_MeshDraws;
+        float m_CameraSpeedMultiplier{ 10.0f };
     };
 }
 

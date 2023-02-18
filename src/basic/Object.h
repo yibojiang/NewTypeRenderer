@@ -30,14 +30,14 @@ namespace new_type_renderer
         }
 
 
-        void SetMaterial(Material* _material)
+        void SetMaterial(shared_ptr<Material>& material)
         {
-            material = _material;
+            m_Material = material;
         }
 
-        Material* GetMaterial() const
+        shared_ptr<Material>& GetMaterial()
         {
-            return material;
+            return m_Material;
         }
 
         virtual Vector3 GetCentriod() const = 0;
@@ -48,12 +48,12 @@ namespace new_type_renderer
 
         Extents GetBounds()
         {
-            return bounds;
+            return m_Bounds;
         }
 
     protected:
-        Extents bounds{};
+        Extents m_Bounds{};
 
-        Material* material;
+        shared_ptr<Material> m_Material;
     };
 }

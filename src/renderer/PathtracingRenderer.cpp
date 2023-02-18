@@ -21,7 +21,7 @@ namespace new_type_renderer
         m_BVH.Build(scene);
     }
 
-    void PathtracingRenderer::Update()
+    void PathtracingRenderer::Update(const float elapsedTime)
     {
 
     }

@@ -12,7 +12,7 @@ namespace new_type_renderer
     class ObjLoader
     {
     public:
-        bool LoadModel(std::string name, shared_ptr<Mesh>& mesh, Material* default_material)
+        bool LoadModel(std::string name, shared_ptr<Mesh>& mesh, shared_ptr<Material>& defalutMaterial)
         {
             std::vector<tinyobj::shape_t> rawShape;
             std::vector<tinyobj::material_t> rawMaterial;
@@ -35,53 +35,53 @@ namespace new_type_renderer
             LOG_INFO("loading material...");
             LOG_INFO("material size: %d", rawMaterial.size());
 
-            std::vector<Material*> materials;
+            std::vector<shared_ptr<Material>> materials;
             // Load materials/textures from obj
             // TODO: Only texture is loaded at the moment, need to implement material types and colours
             for (unsigned int i = 0; i < rawMaterial.size(); i++)
             {
                 std::string texture_path = "/textures/";
-                auto material = new Material();
-                material->diffuseColor = Color(rawMaterial[i].diffuse[0], rawMaterial[i].diffuse[1],
+                auto material = make_shared<Material>();
+                material->m_DiffuseColor = Color(rawMaterial[i].diffuse[0], rawMaterial[i].diffuse[1],
                                                  rawMaterial[i].diffuse[2]);
 
-                material->glossy = rawMaterial[i].shininess;
-                material->roughness = sqrt(2.0 / (2.0 + rawMaterial[i].shininess));
+                material->m_Glossy = rawMaterial[i].shininess;
+                material->m_Roughness = sqrt(2.0 / (2.0 + rawMaterial[i].shininess));
 
-                material->ior = rawMaterial[i].ior;
-                material->emissionColor = Color(rawMaterial[i].emission[0], rawMaterial[i].emission[1],
+                material->m_IOR = rawMaterial[i].ior;
+                material->m_EmissionColor = Color(rawMaterial[i].emission[0], rawMaterial[i].emission[1],
                                                   rawMaterial[i].emission[2]);
-                if (material->emissionColor.Length() > 0)
+                if (material->m_EmissionColor.Length() > 0)
                 {
-                    material->emission = 100;
+                    material->m_Emission = 100;
                 }
-                material->reflectColor = Color(rawMaterial[i].specular[0], rawMaterial[i].specular[1],
+                material->m_ReflectColor = Color(rawMaterial[i].specular[0], rawMaterial[i].specular[1],
                                                  rawMaterial[i].specular[2]);
-                material->refract = 1 - rawMaterial[i].dissolve;
-                material->metallic = material->reflectColor.Length() / sqrt(3.0);
+                material->m_Refract = 1 - rawMaterial[i].dissolve;
+                material->m_Metallic = material->m_ReflectColor.Length() / sqrt(3.0);
 
-                if (material->diffuseColor.Length() == 0)
+                if (material->m_DiffuseColor.Length() == 0)
                 {
-                    material->diffuse = 0;
+                    material->m_Diffuse = 0;
                 }
                 else
                 {
-                    material->diffuse = 1;
+                    material->m_Diffuse = 1;
                 }
 
 
-                if (material->reflectColor.Length() == 0)
+                if (material->m_ReflectColor.Length() == 0)
                 {
-                    material->reflection = 0;
+                    material->m_Reflection = 0;
                 }
                 else
                 {
-                    material->reflection = 1;
+                    material->m_Reflection = 1;
                 }
 
-                material->metallic = fmin(material->metallic, 1);
-                material->metallic = fmax(material->metallic, 0);
-                material->metallic = 1;
+                material->m_Metallic = fmin(material->m_Metallic, 1);
+                material->m_Metallic = fmax(material->m_Metallic, 0);
+                material->m_Metallic = 1;
 
                 if (!rawMaterial[i].diffuse_texname.empty())
                 {
@@ -93,7 +93,7 @@ namespace new_type_renderer
                     texture_path = texture_path + rawMaterial[i].diffuse_texname;
                     LOG_INFO("diffuse texture: %s", texture_path.c_str());
 
-                    material->setDiffuseTexture(texture_path);
+                    material->SetDiffuseTexture(texture_path);
                 }
 
                 if (!rawMaterial[i].specular_texname.empty())
@@ -118,14 +118,14 @@ namespace new_type_renderer
                     LOG_INFO("normal texture: %s", texture_path.c_str());
                 }
 
-                material->init();
-                LOG_INFO("%s diffuse: %f", rawMaterial[i].name.c_str(), material->diffuse);
-                LOG_INFO("%s reflection: %f", rawMaterial[i].name.c_str(), material->reflection);
-                LOG_INFO("%s refract %f", rawMaterial[i].name.c_str(), material->refract);
-                LOG_INFO("%s metallic: %f", rawMaterial[i].name.c_str(), material->metallic);
-                LOG_INFO("%s roughness: %f", rawMaterial[i].name.c_str(), material->roughness);
-                LOG_INFO("%s ior: %f", rawMaterial[i].name.c_str(), material->ior);
-                LOG_INFO("%s specularColor: %f", rawMaterial[i].name.c_str(), material->reflectColor);
+                material->Init();
+                LOG_INFO("%s diffuse: %f", rawMaterial[i].name.c_str(), material->m_Diffuse);
+                LOG_INFO("%s reflection: %f", rawMaterial[i].name.c_str(), material->m_Reflection);
+                LOG_INFO("%s refract %f", rawMaterial[i].name.c_str(), material->m_Refract);
+                LOG_INFO("%s metallic: %f", rawMaterial[i].name.c_str(), material->m_Metallic);
+                LOG_INFO("%s roughness: %f", rawMaterial[i].name.c_str(), material->m_Roughness);
+                LOG_INFO("%s ior: %f", rawMaterial[i].name.c_str(), material->m_IOR);
+                LOG_INFO("%s specularColor: %f", rawMaterial[i].name.c_str(), material->m_ReflectColor);
                 materials.push_back(material);
             }
 
@@ -231,7 +231,7 @@ namespace new_type_renderer
                     }
                     else
                     {
-                        face->SetMaterial(default_material);
+                        face->SetMaterial(defalutMaterial);
                     }
                 }
                 mesh->SmoothVertexNormal();

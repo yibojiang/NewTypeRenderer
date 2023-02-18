@@ -83,7 +83,7 @@ namespace new_type_renderer
         {
             rapidjson::Value& primitives = document["primitives"];
             rapidjson::Value& materials = document["materials"];
-
+            auto defaultShader = make_shared<Shader>();
             for (rapidjson::SizeType i = 0; i < primitives.Size(); ++i)
             {
                 rapidjson::Value& pos = primitives[i]["transform"]["position"];
@@ -93,97 +93,98 @@ namespace new_type_renderer
                 std::string materialName = primitives[i]["material"].GetString();
 
                 Log::Print(Info, materialName.c_str());
-                auto material = new Material();
+                auto material = make_shared<Material>();
+                material->SetShader(defaultShader);
                 if (materials.HasMember(materialName.c_str()))
                 {
                     rapidjson::Value& mat = materials[materialName.c_str()];
                     if (mat.HasMember("diffuse"))
                     {
-                        material->diffuse = mat["diffuse"].GetFloat();
+                        material->m_Diffuse = mat["diffuse"].GetFloat();
                     }
 
                     if (mat.HasMember("specular"))
                     {
-                        material->specular = mat["specular"].GetFloat();
+                        material->m_Specular = mat["specular"].GetFloat();
                     }
 
                     if (mat.HasMember("reflection"))
                     {
-                        material->reflection = mat["reflection"].GetFloat();
+                        material->m_Reflection = mat["reflection"].GetFloat();
                     }
 
                     if (mat.HasMember("roughness"))
                     {
-                        material->roughness = mat["roughness"].GetFloat();
+                        material->m_Roughness = mat["roughness"].GetFloat();
                     }
 
                     if (mat.HasMember("glossy"))
                     {
-                        material->glossy = mat["glossy"].GetFloat();
+                        material->m_Glossy = mat["glossy"].GetFloat();
                     }
 
                     if (mat.HasMember("useBackground"))
                     {
-                        material->useBackground = mat["useBackground"].GetBool();
+                        material->m_UseBackground = mat["useBackground"].GetBool();
                     }
 
 
                     if (mat.HasMember("metallic"))
                     {
-                        material->metallic = mat["metallic"].GetFloat();
+                        material->m_Metallic = mat["metallic"].GetFloat();
                     }
 
                     if (mat.HasMember("diffuseRoughness"))
                     {
-                        material->diffuseRoughness = mat["diffuseRoughness"].GetFloat();
+                        material->m_DiffuseRoughness = mat["diffuseRoughness"].GetFloat();
                     }
 
                     if (mat.HasMember("emission"))
                     {
-                        material->emission = mat["emission"].GetFloat();
+                        material->m_Emission = mat["emission"].GetFloat();
                     }
 
                     if (mat.HasMember("ior"))
                     {
-                        material->ior = mat["ior"].GetFloat();
+                        material->m_IOR = mat["ior"].GetFloat();
                     }
 
                     if (mat.HasMember("refract"))
                     {
-                        material->refract = mat["refract"].GetFloat();
+                        material->m_Refract = mat["refract"].GetFloat();
                     }
 
                     if (mat.HasMember("diffuseColor"))
                     {
-                        material->diffuseColor = Color(mat["diffuseColor"][0].GetFloat(),
+                        material->m_DiffuseColor = Color(mat["diffuseColor"][0].GetFloat(),
                                                        mat["diffuseColor"][1].GetFloat(),
                                                        mat["diffuseColor"][2].GetFloat());
                     }
 
                     if (mat.HasMember("reflectColor"))
                     {
-                        material->reflectColor = Color(mat["reflectColor"][0].GetFloat(),
+                        material->m_ReflectColor = Color(mat["reflectColor"][0].GetFloat(),
                                                        mat["reflectColor"][1].GetFloat(),
                                                        mat["reflectColor"][2].GetFloat());
                     }
 
                     if (mat.HasMember("refractColor"))
                     {
-                        material->refractColor = Color(mat["refractColor"][0].GetFloat(),
+                        material->m_RefractColor = Color(mat["refractColor"][0].GetFloat(),
                                                        mat["refractColor"][1].GetFloat(),
                                                        mat["refractColor"][2].GetFloat());
                     }
 
                     if (mat.HasMember("emissionColor"))
                     {
-                        material->setEmission(Color(mat["emissionColor"][0].GetFloat(),
+                        material->SetEmission(Color(mat["emissionColor"][0].GetFloat(),
                                                     mat["emissionColor"][1].GetFloat(),
                                                     mat["emissionColor"][2].GetFloat()));
                     }
 
                     if (mat.HasMember("diffuseTexture"))
                     {
-                        material->setDiffuseTexture(mat["diffuseTexture"].GetString());
+                        material->SetDiffuseTexture(mat["diffuseTexture"].GetString());
                     }
                 }
                 else
@@ -262,9 +263,9 @@ namespace new_type_renderer
         {
             auto face = mesh->m_Faces[i];
 
-            if (!face->GetMaterial())
+            if (auto& material = face->GetMaterial())
             {
-                face->SetMaterial(mesh->GetMaterial());
+                face->SetMaterial(material);
             }
 
             face->name = mesh->name + '_' + std::to_string(i);
@@ -314,7 +315,7 @@ namespace new_type_renderer
                 Add(obj);
             }
 
-            if (obj->GetMaterial()->getEmission().Length() > FLT_EPSILON)
+            if (obj->GetMaterial()->GetEmission().Length() > FLT_EPSILON)
             {
                 m_Lights.push_back(obj);
             }

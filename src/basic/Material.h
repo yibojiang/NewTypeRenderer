@@ -1,131 +1,148 @@
 #pragma once
 
+#include <memory>
+
+#include "Shader.h"
 #include "texture.h"
 #include "math/Vector.h"
-#define COOK_TORRANCE
 
+#define COOK_TORRANCE
 namespace new_type_renderer
 {
+    using std::shared_ptr;
+
     struct Material
     {
     public:
-        Material(float in_diffuse = 1.0f, float in_specular = 0.0f, int in_glossy = 1,
-                 float in_reflection = 0.0f, float in_refract = 0.0f, float in_roughness = 0.0f,
-                 float in_emission = 0.0f, float in_ior = 1.0f)
+        Material(float diffuse = 1.0f, float specular = 0.0f, int glossy = 1,
+                 float reflection = 0.0f, float refract = 0.0f, float roughness = 0.0f,
+                 float emission = 0.0f, float ior = 1.0f, shared_ptr<Shader> shader = nullptr)
         {
-            diffuse = in_diffuse;
-            specular = in_specular;
-            glossy = in_glossy;
-            reflection = in_reflection;
-            refract = in_refract;
-            roughness = in_roughness;
-            emission = in_emission;
-            ior = in_ior;
-            useBackground = false;
-            useDiffuseTexture = false;
+            m_Diffuse = diffuse;
+            m_Specular = specular;
+            m_Glossy = glossy;
+            m_Reflection = reflection;
+            m_Refract = refract;
+            m_Roughness = roughness;
+            m_Emission = emission;
+            m_IOR = ior;
+            m_UseBackground = false;
+            m_UseDiffuseTexture = false;
+            m_Shader = shader;
         }
 
-        void init()
+        void Init()
         {
 #ifdef COOK_TORRANCE
-            float f0 = fabs((1.0 - this->ior) / (1.0 + this->ior));
+            float f0 = fabs((1.0 - m_IOR) / (1.0 + m_IOR));
             f0 = f0 * f0;
-            this->F0 = f0 * (1 - this->metallic) + this->metallic;
-            if (this->F0 > 1)
+            m_F0 = f0 * (1 - m_Metallic) + m_Metallic;
+            if (m_F0 > 1)
             {
-                this->F0 = 1;
+                m_F0 = 1;
             }
 
-            if (this->F0 < 0)
+            if (m_F0 < 0)
             {
-                this->F0 = 0;
+                m_F0 = 0;
             }
 
-            this->diffuse = (1 - this->F0) * (1 - metallic);
-            this->reflection = this->F0;
-
+            m_Diffuse = (1 - m_F0) * (1 - m_Metallic);
+            m_Reflection = m_F0;
 #endif
 
-            if (this->refract > 0)
+            if (m_Refract > 0)
             {
-                this->diffuse = 0;
-                this->reflection = 0;
+                m_Diffuse = 0;
+                m_Reflection = 0;
             }
 
-            float energy = this->diffuse + this->reflection + this->refract;
-            this->diffuse = this->diffuse / energy;
-            this->reflection = this->reflection / energy;
-            this->refract = this->refract / energy;
+            float energy = m_Diffuse + m_Reflection + m_Refract;
+            m_Diffuse = m_Diffuse / energy;
+            m_Reflection = m_Reflection / energy;
+            m_Refract = m_Refract / energy;
         }
 
-        void setBumpTexture(const std::string& name)
+        shared_ptr<Shader> GetShader()
         {
-            useBumpTexture = true;
-            bumpTexture.LoadImage(name);
+            return m_Shader;
         }
 
-        void setEmission(Color emissionColor)
+        void SetShader(shared_ptr<Shader> shader)
         {
-            this->emissionColor = emissionColor * this->emission;
+            m_Shader = shader;
         }
 
-        void setDiffuseTexture(const std::string& name)
+        void SetBumpTexture(const std::string& name)
         {
-            useDiffuseTexture = true;
-            diffuseTexture.LoadImage(name);
+            m_UseBumpTexture = true;
+            m_BumpTexture.LoadImage(name);
         }
 
-        Color getDiffuseColor(const Vector2& uv)
+        void SetEmission(Color emissionColor)
         {
-            if (useDiffuseTexture)
+            m_EmissionColor = emissionColor * m_Emission;
+        }
+
+        void SetDiffuseTexture(const std::string& name)
+        {
+            m_UseDiffuseTexture = true;
+            m_DiffuseTexture.LoadImage(name);
+        }
+
+        Color GetDiffuseColor(const Vector2& uv)
+        {
+            if (m_UseDiffuseTexture)
             {
-                return diffuseColor * diffuseTexture.GetColor(uv);
+                return m_DiffuseColor * m_DiffuseTexture.GetColor(uv);
             }
 
-            return diffuseColor;
+            return m_DiffuseColor;
         }
 
-        Color getReflectColor(const Vector2&)
+        Color GetReflectColor(const Vector2&)
         {
-            return reflectColor;
+            return m_ReflectColor;
         }
 
-        Color getRefractColor(const Vector2&)
+        Color GetRefractColor(const Vector2&)
         {
-            return refractColor;
+            return m_RefractColor;
         }
 
-        Color getEmission()
+        Color GetEmission()
         {
-            return emissionColor;
+            return m_EmissionColor;
         }
 
     public:
-        float diffuse{ 0.0f };
-        float specular{ 0.0f };
-        float reflection{ 0.0f };
-        float refract{ 0.0f };
+        float m_Diffuse{ 0.0f };
+        float m_Specular{ 0.0f };
+        float m_Reflection{ 0.0f };
+        float m_Refract{ 0.0f };
 
-        float diffuseRoughness{ 0.0f };
-        float roughness{ 0.0f };
+        float m_DiffuseRoughness{ 0.0f };
+        float m_Roughness{ 0.0f };
 
         
-        float emission{ 0.0f };
-        float ior { 0.0f };
-        float F0 { 0.0f };
-        float metallic { 0.0f };
-        int glossy{ 0 };
+        float m_Emission{ 0.0f };
+        float m_IOR { 0.0f };
+        float m_F0 { 0.0f };
+        float m_Metallic { 0.0f };
+        int m_Glossy{ 0 };
 
-        Color reflectColor{};
-        Color diffuseColor{};
-        Color refractColor;
-        Color emissionColor;
+        Color m_ReflectColor{};
+        Color m_DiffuseColor{};
+        Color m_RefractColor;
+        Color m_EmissionColor;
 
-        bool useBackground{ false };
-        bool useDiffuseTexture{ false };
-        bool useBumpTexture{ false };
+        bool m_UseBackground{ false };
+        bool m_UseDiffuseTexture{ false };
+        bool m_UseBumpTexture{ false };
 
-        Texture diffuseTexture{};
-        Texture bumpTexture{};
+        Texture m_DiffuseTexture{};
+        Texture m_BumpTexture{};
+
+        shared_ptr<Shader> m_Shader{};
     };
 }

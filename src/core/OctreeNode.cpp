@@ -13,7 +13,7 @@ namespace new_type_renderer
         }
     }
 
-    OctreeNode::OctreeNode(Extents boundingExtent): m_Extents(boundingExtent)
+    OctreeNode::OctreeNode(Vector3 boundMin, Vector3 boundMax): m_BoundMin(boundMin), m_BoundMax(boundMax)
     {
         
         m_Depth = 0;
@@ -21,9 +21,6 @@ namespace new_type_renderer
         {
             m_Children[i] = nullptr;
         }
-
-        m_BoundMin = boundingExtent.GetBoundMin();
-        m_BoundMax = boundingExtent.GetBoundMax();
     }
 
     void OctreeNode::DestroyAllNodes()
@@ -85,7 +82,6 @@ namespace new_type_renderer
 
     void OctreeNode::AddObject(shared_ptr<Object>& obj)
     {
-        Extents objectExtent = obj->GetBounds();
         const Vector3 center = (m_BoundMin + m_BoundMax) * 0.5;
 
         // Decide which subdiv node the mesh would attach to base on the relative location to bound center
@@ -93,64 +89,64 @@ namespace new_type_renderer
 
         int selectChildId = -1;
 
-        std::vector<int> candidatesNodesIds {
+        std::vector<int> candidateChildIds {
             0, 1, 2, 3, 4, 5, 6, 7
         };
 
         // filter out the candidates by the relative location
         if (relativePos.z > 0)
         {
-            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 2), candidatesNodesIds.end());
-            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 3), candidatesNodesIds.end());
-            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 6), candidatesNodesIds.end());
-            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 7), candidatesNodesIds.end());
+            candidateChildIds.erase(std::remove(candidateChildIds.begin(), candidateChildIds.end(), 2), candidateChildIds.end());
+            candidateChildIds.erase(std::remove(candidateChildIds.begin(), candidateChildIds.end(), 3), candidateChildIds.end());
+            candidateChildIds.erase(std::remove(candidateChildIds.begin(), candidateChildIds.end(), 6), candidateChildIds.end());
+            candidateChildIds.erase(std::remove(candidateChildIds.begin(), candidateChildIds.end(), 7), candidateChildIds.end());
         }
         else if (relativePos.z < 0)
         {
-            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 0), candidatesNodesIds.end());
-            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 1), candidatesNodesIds.end());
-            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 5), candidatesNodesIds.end());
-            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 4), candidatesNodesIds.end());
+            candidateChildIds.erase(std::remove(candidateChildIds.begin(), candidateChildIds.end(), 0), candidateChildIds.end());
+            candidateChildIds.erase(std::remove(candidateChildIds.begin(), candidateChildIds.end(), 1), candidateChildIds.end());
+            candidateChildIds.erase(std::remove(candidateChildIds.begin(), candidateChildIds.end(), 5), candidateChildIds.end());
+            candidateChildIds.erase(std::remove(candidateChildIds.begin(), candidateChildIds.end(), 4), candidateChildIds.end());
         }
 
         if (relativePos.x > 0)
         {
-            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 1), candidatesNodesIds.end());
-            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 2), candidatesNodesIds.end());
-            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 5), candidatesNodesIds.end());
-            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 6), candidatesNodesIds.end());
+            candidateChildIds.erase(std::remove(candidateChildIds.begin(), candidateChildIds.end(), 1), candidateChildIds.end());
+            candidateChildIds.erase(std::remove(candidateChildIds.begin(), candidateChildIds.end(), 2), candidateChildIds.end());
+            candidateChildIds.erase(std::remove(candidateChildIds.begin(), candidateChildIds.end(), 5), candidateChildIds.end());
+            candidateChildIds.erase(std::remove(candidateChildIds.begin(), candidateChildIds.end(), 6), candidateChildIds.end());
         }
         else if (relativePos.x < 0)
         {
-            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 0), candidatesNodesIds.end());
-            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 3), candidatesNodesIds.end());
-            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 4), candidatesNodesIds.end());
-            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 7), candidatesNodesIds.end());
+            candidateChildIds.erase(std::remove(candidateChildIds.begin(), candidateChildIds.end(), 0), candidateChildIds.end());
+            candidateChildIds.erase(std::remove(candidateChildIds.begin(), candidateChildIds.end(), 3), candidateChildIds.end());
+            candidateChildIds.erase(std::remove(candidateChildIds.begin(), candidateChildIds.end(), 4), candidateChildIds.end());
+            candidateChildIds.erase(std::remove(candidateChildIds.begin(), candidateChildIds.end(), 7), candidateChildIds.end());
         }
 
         if (relativePos.y > 0)
         {
-            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 4), candidatesNodesIds.end());
-            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 5), candidatesNodesIds.end());
-            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 6), candidatesNodesIds.end());
-            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 7), candidatesNodesIds.end());
+            candidateChildIds.erase(std::remove(candidateChildIds.begin(), candidateChildIds.end(), 4), candidateChildIds.end());
+            candidateChildIds.erase(std::remove(candidateChildIds.begin(), candidateChildIds.end(), 5), candidateChildIds.end());
+            candidateChildIds.erase(std::remove(candidateChildIds.begin(), candidateChildIds.end(), 6), candidateChildIds.end());
+            candidateChildIds.erase(std::remove(candidateChildIds.begin(), candidateChildIds.end(), 7), candidateChildIds.end());
         }
         else if (relativePos.y < 0)
         {
-            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 0), candidatesNodesIds.end());
-            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 1), candidatesNodesIds.end());
-            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 2), candidatesNodesIds.end());
-            candidatesNodesIds.erase(std::remove(candidatesNodesIds.begin(), candidatesNodesIds.end(), 3), candidatesNodesIds.end());
+            candidateChildIds.erase(std::remove(candidateChildIds.begin(), candidateChildIds.end(), 0), candidateChildIds.end());
+            candidateChildIds.erase(std::remove(candidateChildIds.begin(), candidateChildIds.end(), 1), candidateChildIds.end());
+            candidateChildIds.erase(std::remove(candidateChildIds.begin(), candidateChildIds.end(), 2), candidateChildIds.end());
+            candidateChildIds.erase(std::remove(candidateChildIds.begin(), candidateChildIds.end(), 3), candidateChildIds.end());
         }
 
-        for (int i = 0; i < candidatesNodesIds.size(); ++i)
+        for (int i = 0; i < candidateChildIds.size(); ++i)
         {
-            selectChildId = candidatesNodesIds[i];
+            selectChildId = candidateChildIds[i];
 
             // Choose the first candidate child node to insert the mesh
-            if (!m_Children[candidatesNodesIds[i]])
+            if (!m_Children[candidateChildIds[i]])
             {
-                selectChildId = candidatesNodesIds[i];
+                selectChildId = candidateChildIds[i];
                 break;
             }
         }
@@ -270,7 +266,6 @@ namespace new_type_renderer
             }
         }
     }
-
 
     void OctreeNode::IntersectTest(Ray& r, Intersection& intersection) const
     {

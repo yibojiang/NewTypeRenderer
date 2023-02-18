@@ -139,6 +139,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\basic\Shader.cpp" />
+    <ClCompile Include="src\gui\InputManager.cpp" />
     <ClCompile Include="libs\imgui\imgui.cpp" />
     <ClCompile Include="libs\imgui\imgui_demo.cpp" />
     <ClCompile Include="libs\imgui\imgui_draw.cpp" />
@@ -168,6 +170,8 @@
     <ClCompile Include="src\utility\Log.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\basic\Shader.h" />
+    <ClInclude Include="src\gui\InputManager.h" />
     <ClInclude Include="libs\GLEW\include\GL\eglew.h" />
     <ClInclude Include="libs\GLEW\include\GL\glew.h" />
     <ClInclude Include="libs\GLEW\include\GL\glxew.h" />
