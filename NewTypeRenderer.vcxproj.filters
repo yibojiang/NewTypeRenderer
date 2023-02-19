@@ -102,6 +102,9 @@
     <ClCompile Include="src\basic\Shader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\basic\Image.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\math\Matrix.h">
@@ -275,10 +278,10 @@
     <ClInclude Include="src\core\Raytracer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\core\Image.h">
+    <ClInclude Include="src\basic\Image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\core\Color.h">
+    <ClInclude Include="src\basic\Color.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\basic\Camera.h">
@@ -351,6 +354,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\basic\Shader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utility\Profiler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

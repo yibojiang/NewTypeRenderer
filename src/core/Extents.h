@@ -26,11 +26,11 @@ namespace new_type_renderer
 
         void ExtendBy(Extents&);
 
-        float Intersect(const Ray& r) const;
+        double Intersect(const Ray& r) const;
 
-        float IntersectNear(const Ray& r) const;
+        double IntersectNear(const Ray& r) const;
 
-        float IntersectWireframe(const Ray& r) const;
+        double IntersectWireframe(const Ray& r) const;
 
         friend bool operator==(Extents a, const Extents& b)
         {
@@ -42,9 +42,9 @@ namespace new_type_renderer
         }
 
     public:
-        float m_DistNear[SLABCOUNT]{};
+        double m_DistNear[SLABCOUNT]{};
 
-        float m_DistFar[SLABCOUNT]{};
+        double m_DistFar[SLABCOUNT]{};
 
 #if SLABCOUNT == 7
         static Vector3 m_Normals[SLABCOUNT];

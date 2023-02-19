@@ -10,7 +10,7 @@ namespace new_type_renderer
     enum Refl_t { DIFF, SPEC, REFR }; // material types, used in radiance()
 
 
-    class Plane : public Object
+    class Plane : public Object, public enable_shared_from_this<Plane>
     {
     private:
         Vector3 normal;
@@ -23,9 +23,16 @@ namespace new_type_renderer
             off = _off;
         }
 
-        float Intersect(Ray& r) override
+        Intersection Intersect(Ray& r) override
         {
-            return (-r.origin.Dot(normal) - off) / (normal).Dot(r.dir);
+            Intersection intersection;
+            intersection.m_Distance = (-r.origin.Dot(normal) - off) / (normal).Dot(r.dir);
+            if (intersection.m_Distance > 0)
+            {
+                intersection.m_HitObject = weak_from_this();
+            }
+            
+            return intersection;
         }
 
         Vector3 GetHitNormal(const Vector3&hitLocation) const override
@@ -48,7 +55,7 @@ namespace new_type_renderer
     };
 
 
-    class Sphere : public Object
+    class Sphere : public Object, public enable_shared_from_this<Sphere>
     {
     public:
         double rad;
@@ -69,14 +76,15 @@ namespace new_type_renderer
             this->center = pos;
         }
 
-        float Intersect(Ray& r) override
+        Intersection Intersect(Ray& r) override
         {
+            Intersection intersection;
             // returns distance, 0 if nohit
             Vector3 op = center - r.origin; // Solve t^2*d.d + 2*t*(o-p).d + (o-p).(o-p)-R^2 = 0
             double t, eps = 1e-4, b = op.Dot(r.dir), det = b * b - op.Dot(op) + rad * rad;
             if (det < 0)
             {
-                return 0;
+                return intersection;
             }
             det = sqrt(det);
 
@@ -98,12 +106,14 @@ namespace new_type_renderer
 
             // float u = (atan( sp.x, sp.z)) / ( 2.0 * M_PI ) + 0.5;
             // float v = asin( sp.y ) / M_PI + 0.5;
-            r.uv = Vector2((atan2(sp.x, sp.z)) / (2.0 * M_PI) + 0.5,
+            intersection.m_UV = Vector2((atan2(sp.x, sp.z)) / (2.0 * M_PI) + 0.5,
                            asin(sp.y) / M_PI + 0.5);
 
-            r.normal = GetHitNormal(hit);
+            intersection.m_Normal = GetHitNormal(hit);
+            intersection.m_HitObject = weak_from_this();
+            intersection.m_Distance = (t = b - det) > eps ? t : ((t = b + det) > eps ? t : 0);
             // return (t = b - det) > eps ? t : ((t = b + det) > eps ? t : 0);
-            return t;
+            return intersection;
         }
 
         Vector3 GetHitNormal(const Vector3& hitLocation) const override
@@ -144,7 +154,7 @@ namespace new_type_renderer
     };
 
 
-    class Box : public Object
+    class Box : public Object, public enable_shared_from_this<Box>
     {
     private:
         float dnear[3];
@@ -226,8 +236,9 @@ namespace new_type_renderer
         // } 
 
 
-        float Intersect(Ray& r) override
+        Intersection Intersect(Ray& r) override
         {
+            Intersection intersection;
             // returns distance, 0 if nohit
             double t1 = (-dnear[0] - r.origin.Dot(normals[0])) / r.dir.Dot(normals[0]);
             double t2 = (-dfar[0] - r.origin.Dot(normals[0])) / r.dir.Dot(normals[0]);
@@ -240,19 +251,20 @@ namespace new_type_renderer
             // if tmax < 0, ray (line) is intersecting AABB, but whole AABB is behing us
             if (tmax < 0)
             {
-                return 0;
+                return intersection;
             }
 
             // if tmin > tmax, ray doesn't Intersect AABB
             if (tmin > tmax)
             {
-                return 0;
+                return intersection;
             }
 
             Vector3 hit = r.origin + r.dir * tmin;
-            r.normal = GetHitNormal(hit);
-
-            return tmin;
+            intersection.m_Normal = GetHitNormal(hit);
+            intersection.m_HitObject = weak_from_this();
+            intersection.m_Distance = tmin;
+            return intersection;
         }
 
         Vector3 GetHitNormal(const Vector3& hitLocation) const override

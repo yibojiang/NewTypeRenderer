@@ -65,11 +65,12 @@ namespace new_type_renderer
         return m_Vertices.size();
     }
 
-    void MeshDraw::Draw(Matrix4x4& mvp)
+    void MeshDraw::Draw(Matrix4x4& mvp, Vector3& viewDir)
     {
         if (m_Material && m_Material->m_Shader)
         {
             m_Material->m_Shader->SetMatrix4f("u_MVP", mvp);
+            m_Material->m_Shader->SetVector3f("u_ViewDir", viewDir);
         }
         
         glBindVertexArray(m_VAO);

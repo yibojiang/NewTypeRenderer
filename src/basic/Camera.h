@@ -29,6 +29,11 @@ namespace new_type_renderer
             return Matrix4x4::CreateViewMatrix(m_Location, m_Right, m_Up, m_Forward);
         }
 
+        float GetFOV() const
+        {
+            return m_FOV;
+        }
+
     public:
         float m_FOV{ 60.f };
 

@@ -26,8 +26,8 @@ namespace new_type_renderer
     {
         for (uint8_t i = 0; i < SLABCOUNT; ++i)
         {
-            m_DistNear[i] = FLT_MAX;
-            m_DistFar[i] = -FLT_MAX;
+            m_DistNear[i] = DBL_MAX;
+            m_DistFar[i] = -DBL_MAX;
         }
     }
 
@@ -63,11 +63,11 @@ namespace new_type_renderer
         }
     }
 
-    float Extents::Intersect(const Ray& r) const
+    double Extents::Intersect(const Ray& r) const
     {
         // returns distance, 0 if no hit
-        float tmin = -FLT_MAX;
-        float tmax = FLT_MAX;
+        double tmin = -DBL_MAX;
+        double tmax = DBL_MAX;
         for (uint8_t i = 0; i < SLABCOUNT; ++i)
         {
             double tNear = (-m_DistNear[i] - r.origin.Dot(Extents::m_Normals[i])) / r.dir.Dot(Extents::m_Normals[i]);
@@ -108,11 +108,11 @@ namespace new_type_renderer
         return tmin;
     }
 
-    float Extents::IntersectNear(const Ray& r) const
+    double Extents::IntersectNear(const Ray& r) const
     {
-        // returns distance, 0 if nohit    
-        float tmin = -FLT_MAX;
-        float tmax = FLT_MAX;
+        // return distance to the plane, 0 if missed
+        double tmin = -DBL_MAX;
+        double tmax = DBL_MAX;
         for (uint8_t i = 0; i < SLABCOUNT; ++i)
         {
             double tNear = (-m_DistNear[i] - r.origin.Dot(Extents::m_Normals[i])) / r.dir.Dot(Extents::m_Normals[i]);
@@ -149,7 +149,6 @@ namespace new_type_renderer
         //     return -1;
         // }
 
-
         // if (tmin < eps){
         //     // return fmax(fmin(fabs(tmin), tmax), eps * 2);
         //     return fmin(fabs(tmin), tmax);
@@ -157,24 +156,24 @@ namespace new_type_renderer
         // }
 
         // inside the boundingbox
-        if (tmin < FLT_EPSILON)
-        {
-            // tmin = 1000;
-            tmin = FLT_EPSILON * 2;
-            // tmin = -1;
-        }
+        // if (tmin < DBL_MAX)
+        // {
+        //     // tmin = 1000;
+        //     tmin = DBL_MAX * 2;
+        //     // tmin = -1;
+        // }
         //     return fmax(fmin(fabs(tmin), tmax), eps * 2);
         // }
 
         return tmin;
     }
 
-    float Extents::IntersectWireframe(const Ray& r) const
+    double Extents::IntersectWireframe(const Ray& r) const
     {
         // returns distance, 0 if nohit    
 
-        double tmin = -FLT_EPSILON;
-        double tmax = FLT_EPSILON;
+        double tmin = -DBL_MAX;
+        double tmax = DBL_MAX;
         for (uint8_t i = 0; i < SLABCOUNT; ++i)
         {
             double tNear = (-m_DistNear[i] - r.origin.Dot(Extents::m_Normals[i])) / r.dir.Dot(Extents::m_Normals[i]);
@@ -250,8 +249,6 @@ namespace new_type_renderer
                 return t;
             }
         }
-
-
         return 0;
     }
 }

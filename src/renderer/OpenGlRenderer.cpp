@@ -6,6 +6,7 @@
 #include "imgui_impl_opengl3.h"
 #include "basic/Shader.h"
 #include "gui/InputManager.h"
+#include "PathtracingRenderer.h"
 
 namespace new_type_renderer
 {
@@ -144,30 +145,18 @@ namespace new_type_renderer
 
     void OpenGlRenderer::Render()
     {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         const Matrix4x4 view = m_Scene->m_Camera.GetViewMatrix();
         const Matrix4x4 prospective = Matrix4x4::CreatePerspectiveProjectMatrix(m_Scene->m_Camera.m_FOV, m_Scene->m_Camera.m_Near, m_Scene->m_Camera.m_Far, m_ViewportWidth * 1.0f / m_ViewportHeight);
-
         // World matrix is applied to the positions already
         Matrix4x4 mvp = prospective * view;
+        Vector3 viewDir = m_Scene->m_Camera.GetLookAt() - m_Scene->m_Camera.GetLocation();
+        viewDir.Normalize();
 
-        // Convert it to column based as OpenGl uses column base matrix representation
-        // Matrix4x4 mvpTransposed = mvp.Transposed();
-
-        // Vector3 viewDir = m_Scene->m_Camera.GetLookAt() - m_Scene->m_Camera.GetLocation();
-        // viewDir.Normalize();
-
-        // glBindFragDataLocation(m_ShaderProgram, 0, "outColor");
-        // unsigned int mvpLocation = glGetUniformLocation(m_ShaderProgram, "u_MVP");
-        // glUniformMatrix4fv(mvpLocation, 1, false, &mvpTransposed.cols[0][0]);
-        //
-        // unsigned int viewDirLocation = glGetUniformLocation(m_ShaderProgram, "u_ViewDir");
-        // glUniform4f(viewDirLocation, viewDir.x, viewDir.y, viewDir.z, 0.0f);
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
         for (int i = 0; i < m_MeshDraws.size(); i++)
         {
-            m_MeshDraws[i].Draw(mvp);
+            m_MeshDraws[i].Draw(mvp, viewDir);
         }
 
         ImGui_ImplOpenGL3_NewFrame();
@@ -189,15 +178,18 @@ namespace new_type_renderer
     void OpenGlRenderer::OnGUI()
     {
         {
+            Camera& camera = m_Scene->m_Camera;
             ImGui::Begin("Debug Menu");
             ImGui::Text("Camera");
-            ImGui::SliderFloat("Camera FOV", &m_Scene->m_Camera.m_FOV, 30.0f, 160.f);
+            ImGui::Text("Pos %s", camera.GetLocation().ToString().c_str());
+            ImGui::Text("Fwd %s", camera.GetForward().ToString().c_str());
+            ImGui::SliderFloat("FOV", &camera.m_FOV, 30.0f, 160.f);
             ImGui::SliderFloat("Speed", &m_CameraSpeedMultiplier, 1.0f, 20.f);
+            ImGui::InputInt("Thread: ", &m_NumThreadRender, 1, 40);
 
-            const Matrix4x4 view = m_Scene->m_Camera.GetViewMatrix();
-            const Matrix4x4 proj = Matrix4x4::CreatePerspectiveProjectMatrix(m_Scene->m_Camera.m_FOV, m_Scene->m_Camera.m_Near, m_Scene->m_Camera.m_Far, m_ViewportWidth / m_ViewportHeight);
+            const Matrix4x4 view = camera.GetViewMatrix();
+            const Matrix4x4 proj = Matrix4x4::CreatePerspectiveProjectMatrix(camera.m_FOV, camera.m_Near, camera.m_Far, m_ViewportWidth / m_ViewportHeight);
 
-            ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             for (auto& meshDraw : m_MeshDraws)
             {
                 auto mesh = meshDraw.GetMesh();
@@ -207,8 +199,13 @@ namespace new_type_renderer
             
             if (ImGui::Button("Render"))
             {
-                
+                PathtracingRenderer pbrRenderer{ 1280, 800, m_NumThreadRender };
+                pbrRenderer.Init();
+                pbrRenderer.LoadScene(m_Scene);
+                pbrRenderer.Render();
             }
+
+            ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
             ImGui::End();
         }

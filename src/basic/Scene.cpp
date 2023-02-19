@@ -276,20 +276,21 @@ namespace new_type_renderer
 
     Intersection Scene::Intersect(Ray& ray) const
     {
-        return bvh.Intersect(ray);
+        // return bvh.Intersect(ray);
         Intersection closestIntersection;
         // Intersect all m_Objects, one after the other
         // for (std::vector<Object*>::iterator it = m_Objects.begin(); it != m_Objects.end(); ++it){
-        // for (uint32_t i = 0; i < m_Objects.size(); ++i)
-        // {
-        //     double t = m_Objects[i]->Intersect(ray);
-        //     if (t > FLT_EPSILON && t < closestIntersection.t)
-        //     {
-        //         closestIntersection.t = t;
-        //         closestIntersection.object = m_Objects[i];
-        //     }
-        // }
-        // return closestIntersection;
+        for (uint32_t i = 0; i < m_Objects.size(); ++i)
+        {
+            Intersection intersection = m_Objects[i]->Intersect(ray);
+            double hitDistance = intersection.GetHitDistance();
+            if (hitDistance > FLT_EPSILON && hitDistance < closestIntersection.m_Distance)
+            {
+                closestIntersection.m_Distance = hitDistance;
+                closestIntersection.m_HitObject = m_Objects[i];
+            }
+        }
+        return closestIntersection;
     }
 
     void Scene::DestroyScene()

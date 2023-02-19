@@ -58,6 +58,8 @@ namespace new_type_renderer
         float m_AspectRatio{ 1.0f };
 
         float m_CameraSpeedMultiplier{ 10.0f };
+
+        int m_NumThreadRender{ 8 };
     };
 }
 

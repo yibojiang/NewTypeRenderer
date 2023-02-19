@@ -250,9 +250,9 @@ namespace new_type_renderer
         double t = this->m_Extents.IntersectWireframe(r);
 
         // Hit the bounding box.
-        if (t > FLT_EPSILON && t < intersection.t)
+        if (t > FLT_EPSILON && t < intersection.m_Distance)
         {
-            intersection.t = t;
+            intersection.m_Distance = t;
         }
 
         if (!this->m_IsLeaf)
@@ -278,12 +278,10 @@ namespace new_type_renderer
             {
                 for (unsigned int i = 0; i < this->m_Objects.size(); ++i)
                 {
-                    double t = this->m_Objects[i]->Intersect(r);
-                    if (t > FLT_EPSILON && t < intersection.t)
+                    Intersection geomIntersection = m_Objects[i]->Intersect(r);
+                    if (geomIntersection.GetHitDistance() > FLT_EPSILON && geomIntersection < intersection)
                     {
-                        t = this->m_Objects[i]->Intersect(r);
-                        intersection.object = this->m_Objects[i];
-                        intersection.t = t;
+                        intersection = geomIntersection;
                     }
                 }
             }

@@ -22,7 +22,8 @@ namespace new_type_renderer
     public:
         static void Print(LogLevel log_level, const char* fmt...)
         {
-            using namespace std;
+            using std::cout;
+            using std::endl;
 
             if (log_level > m_LogLevel)
             {
@@ -79,6 +80,11 @@ namespace new_type_renderer
                         {
                             double lf = va_arg(args, double);
                             std::cout << lf;
+                        }
+                        else if (*fmt == 'l')
+                        {
+                            long long ll = va_arg(args, long long);
+                            std::cout << ll;
                         }
                     }
                     else if (*fmt == 'd')

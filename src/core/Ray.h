@@ -16,10 +16,6 @@ namespace new_type_renderer
         Vector3 origin{};
 
         Vector3 dir{};
-
-        Vector2 uv{};
-
-        Vector3 normal{};
     };
 
     
@@ -28,26 +24,46 @@ namespace new_type_renderer
     public:
         Intersection()
         {
+
         }
 
-        Intersection(float d, weak_ptr<Object> obj) : t(d), object(obj)
+        Intersection(float d, weak_ptr<Object> obj) : m_Distance(d), m_HitObject(obj)
         {
         }
 
-        weak_ptr<Object> GetHitObject()
+        bool operator<(Intersection& other)
         {
-            return object;
+            return m_Distance < other.GetHitDistance();
         }
 
-        float GetHitDistance()
+        weak_ptr<Object>& GetHitObject()
         {
-            return t;
+            return m_HitObject;
+        }
+
+        double GetHitDistance() const
+        {
+            return m_Distance;
+        }
+
+        Vector2 GetUV() const
+        {
+            return m_UV;
+        }
+
+        Vector3 GetNormal() const
+        {
+            return m_Normal;
         }
 
     public:
-        float t{ FLT_MAX };
+        weak_ptr<Object> m_HitObject{};
 
-        weak_ptr<Object> object{};
+        Vector2 m_UV{};
+
+        Vector3 m_Normal{};
+
+        double m_Distance{ DBL_MAX };
     };
 }
 

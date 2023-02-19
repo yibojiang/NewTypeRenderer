@@ -1,7 +1,7 @@
 #pragma once
 
-#include "core/Color.h"
 #include "loadpng/lodepng.h"
+#include "basic/Color.h"
 #include "math/Vector.h"
 #include "utility/Log.h"
 

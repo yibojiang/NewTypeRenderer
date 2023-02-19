@@ -1,4 +1,9 @@
 {
+  "envlight":{
+    "intense": 100,
+    "exp": 1,
+    "HDRI": "/textures/Ridgecrest_Road_Ref.hdr"
+  },
   "materials": {
     "metal": {
       "diffuse": 0,
@@ -54,6 +59,28 @@
         0,
         0,
         1
+      ],
+      "reflectColor": [
+        0,
+        0,
+        0
+      ],
+      "emissionColor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "green": {
+      "diffuse": 1,
+      "specular": 0,
+      "roughness": 0,
+      "emission": 0,
+      "ior": 0,
+      "diffuseColor": [
+        0,
+        1,
+        0
       ],
       "reflectColor": [
         0,
@@ -153,7 +180,7 @@
         ]
       },
       "type": "mesh",
-      "material": "red",
+      "material": "blue",
       "path": "cube.obj"
     },
     {
@@ -176,7 +203,7 @@
         ]
       },
       "type": "mesh",
-      "material": "red",
+      "material": "green",
       "path": "cube.obj"
     },
     {

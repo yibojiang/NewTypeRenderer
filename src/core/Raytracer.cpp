@@ -4,6 +4,7 @@
 #include "math/Common.h"
 
 #include "BVH.h"
+#include "basic/Color.h"
 #include "math/Quaternion.h"
 
 namespace new_type_renderer
@@ -86,23 +87,23 @@ namespace new_type_renderer
         Intersection intersection = m_Scene.Intersect(ray);
 
         Color ambColor(0, 0, 0);
-        if (intersection.object.expired() == true)
+        if (intersection.m_HitObject.expired() == true)
         {
             ambColor = GetEnvColor(ray.dir);
 
 
             return ambColor;
         }
-        auto obj = intersection.object.lock();
-        Vector3 hit = ray.origin + ray.dir * intersection.t;
+        auto obj = intersection.m_HitObject.lock();
+        Vector3 hit = ray.origin + ray.dir * intersection.m_Distance;
         Vector3 N = obj->GetHitNormal(hit);
         Vector3 nl = N.Dot(ray.dir) < 0 ? N : N * -1;
 
 
-        Color albedo = obj->GetMaterial()->GetDiffuseColor(ray.uv);
+        Color albedo = obj->GetMaterial()->GetDiffuseColor(intersection.m_UV);
 
-        Color refractColor = obj->GetMaterial()->GetRefractColor(ray.uv);
-        Color reflectColor = obj->GetMaterial()->GetReflectColor(ray.uv);
+        Color refractColor = obj->GetMaterial()->GetRefractColor(intersection.m_UV);
+        Color reflectColor = obj->GetMaterial()->GetReflectColor(intersection.m_UV);
 
 #ifdef RUSSIAN_ROULETTE_TERMINATION
         // Russian roulette termination.
@@ -267,7 +268,7 @@ namespace new_type_renderer
             Intersection shadow = m_Scene.Intersect(shadowRay);
             // Intersection shadow = m_Scene.Intersect(shadowRay);
 
-            if (shadow.object.expired() == false && shadow.object.lock() == light)
+            if (shadow.m_HitObject.expired() == false && shadow.m_HitObject.lock() == light)
             {
                 double omega = 2 * M_PI * (1 - cos_a_max);
                 e = e + albedo * M_1_PI * (light->GetMaterial()->GetEmission() * l.Dot(nl) * omega); // 1/pi for brdf
@@ -347,13 +348,13 @@ namespace new_type_renderer
 
         Intersection intersection = m_Scene.Intersect(ray);
 
-        if (intersection.object.expired())
+        if (intersection.m_HitObject.expired())
         {
             return;
         }
-        auto obj = intersection.object.lock();
+        auto obj = intersection.m_HitObject.lock();
         LOG_INFO("  hit:", obj->name.c_str());
-        Vector3 hit = ray.origin + ray.dir * intersection.t;
+        Vector3 hit = ray.origin + ray.dir * intersection.m_Distance;
         Vector3 N = obj->GetHitNormal(hit);
         Vector3 nl = N.Dot(ray.dir) < 0 ? N : N * -1;
 
@@ -418,13 +419,13 @@ namespace new_type_renderer
 #endif
                 Intersection intersection = m_Scene.Intersect(ray);
                 ambColor = GetEnvColor(ray.dir);
-                if (intersection.object.expired() == false)
+                if (intersection.m_HitObject.expired() == false)
                 {
-                    auto obj = intersection.object.lock();
+                    auto obj = intersection.m_HitObject.lock();
                     // Vector3 f = obj->GetMaterial()->getDiffuseColor(ray.uv);
                     // Vector3 hit = ro + rd * intersection.t;
                     // Vector3 N = obj->GetNormal(hit);
-                    Vector3 N = ray.normal;
+                    Vector3 N = intersection.m_Normal;
                     // N = ray.dir.Dot(N) < 0 ? N : -N;
                     normalColor = Color((N.x + 1) * 0.5, (N.y + 1) * 0.5, (N.z + 1) * 0.25 + 0.5) * 255;
                     // normalColor = obj->c * 255;
@@ -439,7 +440,7 @@ namespace new_type_renderer
                     }
                     else
                     {
-                        albedo = obj->GetMaterial()->GetDiffuseColor(ray.uv);
+                        albedo = obj->GetMaterial()->GetDiffuseColor(intersection.m_UV);
                     }
                     // Vector3 diffuseColor =  albedo * fmax(ld.Dot(N), 0) * obj->GetMaterial()->diffuse;
 

@@ -12,7 +12,7 @@
 #include "math/Matrix.h"
 
 #include "BVH.h"
-#include "Image.h"
+#include "basic/Image.h"
 #include "basic/Scene.h"
 #include "basic/SceneNode.h"
 #include "HDRLoader/HDRloader.h"

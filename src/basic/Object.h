@@ -22,7 +22,7 @@ namespace new_type_renderer
 
         virtual Vector3 GetHitNormal(const Vector3&hitLocation) const { return Vector3(1); }
 
-        virtual float Intersect(Ray&) { return 0; }
+        virtual Intersection Intersect(Ray&) { return Intersection{}; }
 
         virtual float GetProjectAngleToSphere()
         {

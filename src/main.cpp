@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
     using namespace new_type_renderer;
 
     auto scene = make_shared<Scene>();
-    scene->LoadFromJson("scene/bunny.json");
+    scene->LoadFromJson("scene/box.json");
     OpenGlRenderer viewport;
     viewport.Init();
     viewport.LoadScene(scene);

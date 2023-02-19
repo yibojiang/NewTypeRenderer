@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\basic\Image.cpp" />
     <ClCompile Include="src\basic\Shader.cpp" />
     <ClCompile Include="src\gui\InputManager.cpp" />
     <ClCompile Include="libs\imgui\imgui.cpp" />
@@ -193,8 +194,8 @@
     <ClInclude Include="src\basic\Object.h" />
     <ClInclude Include="src\basic\Primitive.h" />
     <ClInclude Include="src\basic\Mesh.h" />
-    <ClInclude Include="src\core\Color.h" />
-    <ClInclude Include="src\core\Image.h" />
+    <ClInclude Include="src\basic\Color.h" />
+    <ClInclude Include="src\basic\Image.h" />
     <ClInclude Include="src\core\OctreeNode.h" />
     <ClInclude Include="src\renderer\PathtracingRenderer.h" />
     <ClInclude Include="src\core\Ray.h" />
@@ -253,6 +254,7 @@
     <ClInclude Include="src\thirdparty\rapidjson\stream.h" />
     <ClInclude Include="src\thirdparty\rapidjson\stringbuffer.h" />
     <ClInclude Include="src\thirdparty\rapidjson\writer.h" />
+    <ClInclude Include="src\utility\Profiler.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />

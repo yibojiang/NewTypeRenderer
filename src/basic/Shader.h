@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
 
+#include "math/Vector.h"
+
 namespace new_type_renderer
 {
     struct Vector4;
@@ -17,6 +19,7 @@ namespace new_type_renderer
         void SetMatrix4f(const string& location, const Matrix4x4& mat);
 
         void SetVector4f(const string& location, const Vector4& vec);
+        void SetVector3f(const string& location, const Vector3& vec);
         void Bind();
 
         void UnBind();

@@ -59,8 +59,9 @@ namespace new_type_renderer
         return normal.Normalized();
     }
 
-    float MeshFace::Intersect(Ray& r)
+    Intersection MeshFace::Intersect(Ray& r)
     {
+        Intersection intersection;
         Vector3 p1 = GetVertexPosition1();
         Vector3 p2 = GetVertexPosition2();
         Vector3 p3 = GetVertexPosition3();
@@ -70,26 +71,26 @@ namespace new_type_renderer
 
         Vector3 n = e1.Cross(e2);
         // Vector3 n = GetVertexNormal1() + GetVertexNormal2() + GetVertexNormal3();
-        // n.Normalize();
+        n.Normalize();
 
-        float dn = r.dir.Dot(n);
+        double dn = r.dir.Dot(n);
         // Back-face culled
-        if (dn < 0.0f)
-        {
-            // ray is  parallel to triangle plane
-            return 0;
-        }
+        // if (dn >= 0.0f)
+        // {
+        //     // ray is parallel to triangle plane
+        //     return 0;
+        // }
 
         Vector3 center = (p1 + p2 + p3) / 3;
         double dist = -r.origin.Dot(n) + center.Dot(n);
         double tt = dist / dn;
         Vector3 hit = r.origin + r.dir * tt;
 
-        auto u = p2 - p1;
-        auto v = p3 - p1;
+        Vector3 u = p2 - p1;
+        Vector3 v = p3 - p1;
 
         // is I inside T?
-        float uu, uv, vv, wu, wv, D;
+        double uu, uv, vv, wu, wv, D;
         uu = u.Dot(u);
         uv = u.Dot(v);
         vv = v.Dot(v);
@@ -104,20 +105,23 @@ namespace new_type_renderer
         if (m_S < 0.0 || m_S > 1.0)
         {
             // I is outside T
-            return 0;
+            return intersection;
         }
 
         m_T = (uv * wu - uu * wv) / D;
         if (m_T < 0.0 || (m_S + m_T) > 1.0)
         {
             // I is outside T
-            return 0;
+            return intersection;
         }
 
-        r.uv = m_UV1 * (1 - m_S - m_T) + m_UV2 * m_S + m_UV3 * m_T;
-
-        r.normal = GetHitNormal(hit);
-        return tt;
+        // r.uv = m_UV1 * (1 - m_S - m_T) + m_UV2 * m_S + m_UV3 * m_T;
+        // r.normal = GetHitNormal(hit);
+        intersection.m_UV = m_UV1 * (1 - m_S - m_T) + m_UV2 * m_S + m_UV3 * m_T;
+        intersection.m_Normal = GetHitNormal(hit);
+        intersection.m_HitObject = weak_from_this();
+        intersection.m_Distance = tt;
+        return intersection;
     }
 
     void MeshFace::ComputeBounds()

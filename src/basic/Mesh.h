@@ -9,7 +9,7 @@ namespace new_type_renderer
 {
     class Mesh;
 
-    class MeshFace : public Object
+    class MeshFace : public Object, public enable_shared_from_this<MeshFace>
     {
     public:
         MeshFace(shared_ptr<Mesh>& mesh, unsigned int vid1, unsigned int vid2, unsigned int vid3);
@@ -36,7 +36,7 @@ namespace new_type_renderer
 
         Vector3 GetHitNormal(const Vector3& hitLocation) const;
 
-        float Intersect(Ray& r) override;
+        Intersection Intersect(Ray& r) override;
 
         void ComputeBounds() override;
 
@@ -61,7 +61,7 @@ namespace new_type_renderer
         weak_ptr<Mesh> m_Mesh{};
     };
 
-    class Mesh : public Object
+    class Mesh : public Object, public enable_shared_from_this<Mesh>
     {
     public:
         Mesh();

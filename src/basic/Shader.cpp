@@ -17,16 +17,20 @@ namespace new_type_renderer
     void Shader::SetMatrix4f(const string& location, const Matrix4x4& mat)
     {
         Matrix4x4 transposed = mat.Transposed();
-        // unsigned int mvpLocation = glGetUniformLocation(m_ShaderProgram, "u_MVP");
         unsigned int loc = glGetUniformLocation(m_ShaderProgram, location.c_str());
         glUniformMatrix4fv(loc, 1, false, &transposed.cols[0][0]);
     }
 
     void Shader::SetVector4f(const string& location, const Vector4& vec)
     {
-        // unsigned int viewDirLocation = glGetUniformLocation(m_ShaderProgram, "u_ViewDir");
         unsigned int loc = glGetUniformLocation(m_ShaderProgram, location.c_str());
         glUniform4f(loc, vec.x, vec.y, vec.z, 0.0f);
+    }
+
+    void Shader::SetVector3f(const string& location, const Vector3& vec)
+    {
+        unsigned int loc = glGetUniformLocation(m_ShaderProgram, location.c_str());
+        glUniform3f(loc, vec.x, vec.y, vec.z);
     }
 
     void Shader::Bind()
@@ -52,20 +56,16 @@ namespace new_type_renderer
 
             uniform mat4 u_MVP;
             layout(location = 0) in vec4 position;
-            layout(location = 1) in vec3 normal;
+            layout(location = 1) in vec4 normal;
             out vec4 v_Position;
             out vec3 v_Normal;
-            out vec4 camPos;
             out vec3 viewDir;
 
             void main()
             {
                 gl_Position = u_MVP * position;
                 v_Position = position;
-                v_Normal = normal;
-
-                camPos = inverse(u_MVP) * gl_Position;
-                viewDir = normalize(-camPos.xyz);
+                v_Normal = normalize(normal.xyz);
             }
          )glsl";
 
@@ -76,17 +76,15 @@ namespace new_type_renderer
         const char* fragmentSource = R"glsl(
         #version 330 core
 
-        in vec4 camPos;
-        in vec3 viewDir;
         in vec4 v_Position;
         in vec3 v_Normal;
         layout(location = 0) out vec4 outColor;
+        uniform vec3 u_ViewDir;
 
         void main()
         {
-            float radiance = dot(-viewDir, v_Normal);
+            float radiance = dot(-u_ViewDir, v_Normal);
             outColor = vec4(radiance, radiance, radiance, 1);
-            // outColor = v_Position;
         }
         )glsl";
 
@@ -101,14 +99,6 @@ namespace new_type_renderer
         glValidateProgram(shaderProgram);
         GLint validated;
         glGetProgramiv(shaderProgram, GL_VALIDATE_STATUS, &validated);
-        // if (validated != GL_TRUE) 
-        // {
-        //     char info_log[1024];
-        //     GLsizei info_log_length;
-        //     glGetProgramInfoLog(shaderProgram, 1024, &info_log_length, info_log);
-        //     fprintf(stderr, "Program object validation failed: %s\n", info_log);
-        //     __debugbreak();
-        // }
 
         glLinkProgram(shaderProgram);
         glUseProgram(shaderProgram);

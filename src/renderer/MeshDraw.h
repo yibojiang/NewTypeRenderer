@@ -16,7 +16,7 @@ namespace new_type_renderer
 
         int GetVertexCount() const;
 
-        void Draw(Matrix4x4& mvp);
+        void Draw(Matrix4x4& mvp, Vector3& viewDir);
 
     public:
         shared_ptr<Mesh> m_Mesh{};

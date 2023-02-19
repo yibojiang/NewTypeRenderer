@@ -44,10 +44,10 @@ namespace new_type_renderer
         for (uint8_t i = 0; i < m_Scene->m_Objects.size(); ++i)
         {
             float t = m_Scene->m_Objects[i]->GetBounds().IntersectWireframe(ray);
-            if (t > FLT_EPSILON && t < closestIntersection.t)
+            if (t > FLT_EPSILON && t < closestIntersection.m_Distance)
             {
-                closestIntersection.t = t;
-                closestIntersection.object = m_Scene->m_Objects[i];
+                closestIntersection.m_Distance = t;
+                closestIntersection.m_HitObject = m_Scene->m_Objects[i];
             }
         }
         return closestIntersection;
@@ -68,13 +68,10 @@ namespace new_type_renderer
         {
             for (unsigned int i = 0; i < node->m_Objects.size(); ++i)
             {
-                double t = node->m_Objects[i]->Intersect(r);
-
-                if (t > FLT_EPSILON && t < intersection.t)
+                Intersection geomIntersection = node->m_Objects[i]->Intersect(r);                
+                if (geomIntersection.GetHitDistance() > FLT_EPSILON && geomIntersection < intersection)
                 {
-                    t = node->m_Objects[i]->Intersect(r);
-                    intersection.object = node->m_Objects[i];
-                    intersection.t = t;
+                    intersection = geomIntersection;
                 }
             }
         }
@@ -102,7 +99,7 @@ namespace new_type_renderer
         double nearestHit = hitNodes.top().t;
         hitNodes.pop();
 
-        if (nearestHit > intersection.t)
+        if (nearestHit > intersection.m_Distance)
         {
             return;
         }
@@ -115,7 +112,7 @@ namespace new_type_renderer
         std::priority_queue<HitNode> hitNodes;
         Intersection closestIntersection;
 
-        float test = m_Octree->m_Extents.IntersectNear(ray);
+        double test = m_Octree->m_Extents.IntersectNear(ray);
         if (test > FLT_EPSILON)
         {
             IntersectNode(ray, m_Octree, closestIntersection, hitNodes);
