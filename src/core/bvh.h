@@ -28,6 +28,11 @@ namespace new_type_renderer
         Intersection IntersectBVH(const Ray& ray) const;
 
         void IntersectNode(Ray& ray, const shared_ptr<OctreeNode>& node, Intersection& intersection, std::priority_queue<HitNode>&) const;
+
+        void SetDirt(const bool isDirted = true)
+        {
+            m_Dirted = isDirted;
+        }
         
     public:
         shared_ptr <Scene> m_Scene;
@@ -36,5 +41,7 @@ namespace new_type_renderer
          * Octree is used to used to construct the BVH by combining the mesh nodes
          */
         shared_ptr<OctreeNode> m_Octree;
+
+        bool m_Dirted{ true };
     };
 }

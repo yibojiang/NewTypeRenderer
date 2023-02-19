@@ -20,9 +20,9 @@ namespace new_type_renderer
             const GLchar* message,
             const void* userParam)
     {
-        fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
-            (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
-            type, severity, message);
+        // fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+        //     (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+        //     type, severity, message);
 
         if (type == GL_DEBUG_TYPE_ERROR)
         {
@@ -197,7 +197,7 @@ namespace new_type_renderer
             ImGui::Text("Fwd %s", camera.GetForward().ToString().c_str());
             ImGui::SliderFloat("FOV", &camera.m_FOV, 30.0f, 160.f);
             ImGui::SliderFloat("Speed", &m_CameraSpeedMultiplier, 1.0f, 20.f);
-            ImGui::InputInt("Thread: ", &m_NumThread, 1, 40);
+            ImGui::InputInt("Thread: ", &m_NumThreads, 1, 40);
 
             const Matrix4x4 view = camera.GetViewMatrix();
             const Matrix4x4 proj = Matrix4x4::CreatePerspectiveProjectMatrix(camera.m_FOV, camera.m_Near, camera.m_Far, m_ViewportWidth / m_ViewportHeight);
@@ -208,12 +208,20 @@ namespace new_type_renderer
                 ImGui::Text("Mesh: %s", mesh->name.c_str());
                 ImGui::Text("Tris: %d", mesh->m_Faces.size());
             }
-            
-            if (ImGui::Button("Render"))
+
+            if (m_PBRRenderer.IsRendering())
             {
-                m_PBRRenderer.Init();
-                m_PBRRenderer.LoadScene(m_Scene);
-                m_PBRRenderer.RenderMultithread(m_NumThread);
+                ImGui::Text("Progress %.2f%%", m_PBRRenderer.GetProgress() * 100);
+            }
+            else
+            {
+                if (ImGui::Button("Render"))
+                {
+                    m_PBRRenderer.Init();
+                    m_PBRRenderer.LoadScene(m_Scene);
+                    m_PBRRenderer.SetNumThreads(m_NumThreads);
+                    m_PBRRenderer.Render();
+                }
             }
 
             ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);

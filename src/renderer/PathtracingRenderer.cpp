@@ -8,7 +8,30 @@ namespace new_type_renderer
 {
     using std::thread;
 
-    void PathtracingRenderer::RenderWorkderThread()
+    void PathtracingRenderer::DispatchRenderTask_RenderThread()
+    {
+        m_Progress = 0;
+        LOG_INFO("Start Rendering ...");
+        m_DirectImage.Empty();
+        m_IsRendering = true;
+        {
+            PROFILE("Pathtracing");
+            vector<thread> threads;
+            for (int i = 0; i < m_NumThreads; i++)
+            {
+                threads.emplace_back(thread{ &PathtracingRenderer::Render_WorkderThread, this });
+            }
+
+            for (int i = 0; i < m_NumThreads; i++)
+            {
+                threads[i].join();
+            }
+        }
+        m_IsRendering = false;
+        LOG_INFO("Finish Rendering");
+    }
+
+    void PathtracingRenderer::Render_WorkderThread()
     {
         Camera& camera = m_Scene->m_Camera;
         const Vector3 foward = camera.GetForward();
@@ -50,7 +73,7 @@ namespace new_type_renderer
                 float intense = Saturate(normal.Dot(-LightDir));
                 m_DirectImage.SetPixel(x, y, color * intense * 255);
             }
-
+            
             ++m_Progress;
         }
     }
@@ -60,29 +83,16 @@ namespace new_type_renderer
 
     }
 
-    void PathtracingRenderer::RenderMultithread(const int numThread)
-    {
-        m_Progress = 0;
-        LOG_INFO("Start Rendering ...");
-        {
-            PROFILE("Pathtracing");
-            vector<thread> threads;
-            for (int i = 0; i < numThread; i++)
-            {
-                threads.emplace_back(thread{ &PathtracingRenderer::RenderWorkderThread, this });
-            }
-
-            for (int i = 0; i < numThread; i++)
-            {
-                threads[i].join();
-            }
-        }
-        LOG_INFO("Finish Rendering");
-    }
-
     void PathtracingRenderer::Render()
     {
+        if (m_IsRendering)
+        {
+            return;
+        }
 
+        // dispatch the render to render thread so it won't block the main thread
+        m_RenderingThread = thread{ &PathtracingRenderer::DispatchRenderTask_RenderThread, this };
+        m_RenderingThread.detach();
     }
 
     void PathtracingRenderer::LoadScene(shared_ptr<Scene>& scene)

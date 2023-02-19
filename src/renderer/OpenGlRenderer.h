@@ -60,7 +60,7 @@ namespace new_type_renderer
 
         float m_CameraSpeedMultiplier{ 10.0f };
 
-        int m_NumThread{ 8 };
+        int m_NumThreads{ 8 };
 
         PathtracingRenderer m_PBRRenderer{ 1280, 800 };
 

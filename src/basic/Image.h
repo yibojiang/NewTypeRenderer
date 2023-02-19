@@ -29,12 +29,23 @@ namespace new_type_renderer
 
         unsigned char* GetByteData();
 
+        void Empty()
+        {
+            memset(m_Bytes, 0, sizeof(unsigned char) * m_Width * m_Height * 4);
+        }
+
+        void Resize(int width, int height)
+        {
+            m_Width = width;
+            m_Height = height;
+            delete m_Bytes;
+            m_Bytes = new unsigned char[m_Width * m_Height * 4]();
+        }
+
     private:
         int m_Width;
 
         int m_Height;
-
-        Color* m_Pixels{ nullptr };
 
         unsigned char* m_Bytes{ nullptr };
     };

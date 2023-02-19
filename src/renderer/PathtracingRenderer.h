@@ -1,9 +1,14 @@
 #pragma once
+#include <thread>
+
 #include "basic/Image.h"
 #include "renderer/Renderer.h"
 
 namespace new_type_renderer
 {
+    using std::atomic;
+    using std::thread;
+
     class PathtracingRenderer : Renderer
     {
     public:
@@ -11,15 +16,31 @@ namespace new_type_renderer
 
         void Init() override;
 
-        void RenderWorkderThread();
+        void DispatchRenderTask_RenderThread();
 
-        void RenderMultithread(const int numThread = 8);
+        void Render_WorkderThread();
 
         void Render() override;
 
         void LoadScene(shared_ptr<Scene>& scene) override;
 
         void Update(const float elapsedTime) override;
+
+        void SetNumThreads(const int numThread)
+        {
+            m_NumThreads = numThread;
+        }
+
+        bool IsRendering() const
+        {
+            return m_IsRendering;
+        }
+
+        float GetProgress() const
+        {
+            const int totalPixels = m_Width * m_Height;
+            return m_Progress * 1.0f / totalPixels;
+        }
 
         Image& GetImage();
 
@@ -33,6 +54,12 @@ namespace new_type_renderer
     private:
         BVH m_BVH;
 
-        std::atomic<int> m_Progress{ 0 };
+        atomic<int> m_Progress{ 0 };
+
+        atomic<bool> m_IsRendering{ false };
+
+        thread m_RenderingThread;
+
+        int m_NumThreads{ 8 };
     };
 }

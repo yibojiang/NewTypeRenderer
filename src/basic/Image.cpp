@@ -5,13 +5,11 @@ namespace new_type_renderer
 {
     Image::Image(int w, int h) : m_Width(w), m_Height(h)
     {
-        m_Pixels = new Color[w * h]();
         m_Bytes = new unsigned char[w * h * 4]();
     }
 
     Image::~Image()
     {
-        delete[] m_Pixels;
         delete[] m_Bytes;
     }
 
@@ -20,7 +18,6 @@ namespace new_type_renderer
         assert(x < m_Width);
         assert(y < m_Height);
         assert(y * m_Width + x < m_Width * m_Height);
-        m_Pixels[y * m_Width + x] = color;
         m_Bytes[(y * m_Width + x) * 4] = static_cast<unsigned char>(color.x);
         m_Bytes[(y * m_Width + x) * 4 + 1] = static_cast<unsigned char>(color.y);
         m_Bytes[(y * m_Width + x) * 4 + 2] = static_cast<unsigned char>(color.z);
@@ -31,12 +28,11 @@ namespace new_type_renderer
     {
         ofstream fout{ fileName, ios::binary };
         fout << "P3\n" << m_Width << " " << m_Height << "\n" << 255 << endl;
-        for (int i = 0; i < m_Height * m_Width; i++)
+        for (int i = 0; i < m_Height * m_Width; i += 4)
         {
-            Color& color = m_Pixels[i];
-            int R = color.x;
-            int G = color.y;
-            int B = color.z;
+            int R = m_Bytes[i];
+            int G = m_Bytes[i + 1];
+            int B = m_Bytes[i + 2];
             fout << R << " " << G << " " << B << " ";
         }
 
@@ -51,11 +47,6 @@ namespace new_type_renderer
     int Image::GetHeight() const
     {
         return m_Height;
-    }
-
-    Color* Image::GetData()
-    {
-        return m_Pixels;
     }
 
     unsigned char* Image::GetByteData()

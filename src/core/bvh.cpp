@@ -10,6 +10,11 @@ namespace new_type_renderer
 
     void BVH::Build(const shared_ptr<Scene>& scene)
     {
+        if (m_Dirted == false)
+        {
+            LOG_INFO("BVH is up-to-date, no needs to be rebuilt");
+            return;
+        }
         this->m_Scene = scene;
 
         // Compute the bounding extent for the whole scene for octree
@@ -31,6 +36,7 @@ namespace new_type_renderer
         }
 
         m_Octree->ComputeExetents();
+        m_Dirted = false;
     }
 
     void BVH::Destroy()
