@@ -141,6 +141,13 @@ namespace new_type_renderer
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_DEPTH_TEST);
+
+        glGenTextures(1, &m_PreviewTextureId);
+        glBindTexture(GL_TEXTURE_2D, m_PreviewTextureId);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     }
 
     void OpenGlRenderer::Render()
@@ -159,9 +166,14 @@ namespace new_type_renderer
             m_MeshDraws[i].Draw(mvp, viewDir);
         }
 
+        Image& image = m_PBRRenderer.GetImage();
+        glBindTexture(GL_TEXTURE_2D, m_PreviewTextureId);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.GetWidth(), image.GetHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, image.GetByteData());
+
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+
 
         OnGUI();
 
@@ -210,26 +222,11 @@ namespace new_type_renderer
 
             ImGui::Begin("Result");
             Image& image = m_PBRRenderer.GetImage();
-            Color* imageData = image.GetData();
-
-            // Get the current ImGui draw list
-            ImDrawList* drawList = ImGui::GetWindowDrawList();
-
             const int width = image.GetWidth();
             const int height = image.GetHeight();
-            // Calculate the position and size of the color array
-
-            // Draw the color array as a series of rectangles
-            for (int y = 0; y < height; ++y) {
-                for (int x = 0; x < width; ++x) {
-                    int index = y * width + x;
-                    int r = static_cast<int>(imageData[index].x);
-                    int g = static_cast<int>(imageData[index].y);
-                    int b = static_cast<int>(imageData[index].z);
-                    // int color = 24 << r & g << 16 & b << 8;
-                    drawList->AddRectFilled(ImVec2(x, y), ImVec2(x + 1, y + 1), ImColor(r, g, b, 255));
-                }
-            }
+            ImDrawList* drawList = ImGui::GetWindowDrawList();
+            
+            drawList->AddImage((void*)m_PreviewTextureId, ImVec2(0, 0), ImVec2(width, height), ImVec2(0, 0), ImVec2(1, 1), ImColor(255, 255, 255, 255));
             ImGui::End();
         }
     }

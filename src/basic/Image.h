@@ -27,11 +27,15 @@ namespace new_type_renderer
 
         Color* GetData();
 
+        unsigned char* GetByteData();
+
     private:
         int m_Width;
 
         int m_Height;
 
         Color* m_Pixels{ nullptr };
+
+        unsigned char* m_Bytes{ nullptr };
     };
 }

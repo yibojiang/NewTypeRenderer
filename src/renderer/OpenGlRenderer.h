@@ -63,6 +63,8 @@ namespace new_type_renderer
         int m_NumThread{ 8 };
 
         PathtracingRenderer m_PBRRenderer{ 1280, 800 };
+
+        unsigned int m_PreviewTextureId{};
     };
 }
 
