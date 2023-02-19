@@ -11,11 +11,11 @@ namespace new_type_renderer
     void PathtracingRenderer::RenderWorkderThread()
     {
         Camera& camera = m_Scene->m_Camera;
-        Vector3 foward = camera.GetForward();
-        Vector3 right = camera.GetRight();
-        Vector3 up = Vector3{ 0, 1, 0 };
+        const Vector3 foward = camera.GetForward();
+        const Vector3 right = camera.GetRight();
+        const Vector3 up = Vector3{ 0, 1, 0 };
 
-        Matrix3x3 cameraRotMatrix
+        const Matrix3x3 cameraRotMatrix
         {
             right.x, up.x, foward.x,
             right.y, up.y, foward.y,
@@ -60,30 +60,29 @@ namespace new_type_renderer
 
     }
 
-    void PathtracingRenderer::Render()
+    void PathtracingRenderer::RenderMultithread(const int numThread)
     {
+        m_Progress = 0;
         LOG_INFO("Start Rendering ...");
         {
             PROFILE("Pathtracing");
             vector<thread> threads;
-            for (int i = 0; i < m_NumThread; i++)
+            for (int i = 0; i < numThread; i++)
             {
                 threads.emplace_back(thread{ &PathtracingRenderer::RenderWorkderThread, this });
             }
 
-            for (int i = 0; i < m_NumThread; i++)
+            for (int i = 0; i < numThread; i++)
             {
                 threads[i].join();
             }
         }
-        
-        {
-            PROFILE("Output Image");
-            m_DirectImage.WriteImage("output.ppm");
-        }
-        
-
         LOG_INFO("Finish Rendering");
+    }
+
+    void PathtracingRenderer::Render()
+    {
+
     }
 
     void PathtracingRenderer::LoadScene(shared_ptr<Scene>& scene)
@@ -91,12 +90,20 @@ namespace new_type_renderer
         // Load scene
         m_Scene = scene;
 
-        // Setup BVH
-        m_BVH.Build(scene);
+        {
+            PROFILE("Build BVH");
+            // Setup BVH
+            m_BVH.Build(scene);
+        }
     }
 
     void PathtracingRenderer::Update(const float elapsedTime)
     {
 
+    }
+
+    Image& PathtracingRenderer::GetImage()
+    {
+        return m_DirectImage;
     }
 }

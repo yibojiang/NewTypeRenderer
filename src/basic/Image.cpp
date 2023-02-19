@@ -36,5 +36,20 @@ namespace new_type_renderer
 
         fout.close();
     }
+
+    int Image::GetWidth() const
+    {
+        return m_Width;
+    }
+
+    int Image::GetHeight() const
+    {
+        return m_Height;
+    }
+
+    Color* Image::GetData()
+    {
+        return m_Pixels;
+    }
 }
 

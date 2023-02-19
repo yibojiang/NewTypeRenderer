@@ -9,6 +9,7 @@
 #include "renderer/Renderer.h"
 
 #include "MeshDraw.h"
+#include "PathtracingRenderer.h"
 #include "gui/InputManager.h"
 
 namespace new_type_renderer
@@ -59,7 +60,9 @@ namespace new_type_renderer
 
         float m_CameraSpeedMultiplier{ 10.0f };
 
-        int m_NumThreadRender{ 8 };
+        int m_NumThread{ 8 };
+
+        PathtracingRenderer m_PBRRenderer{ 1280, 800 };
     };
 }
 

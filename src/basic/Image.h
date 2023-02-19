@@ -21,11 +21,17 @@ namespace new_type_renderer
 
         void WriteImage(const char* fileName) const;
 
+        int GetWidth() const;
+
+        int GetHeight() const;
+
+        Color* GetData();
+
     private:
         int m_Width;
 
         int m_Height;
 
-        Color* m_Pixels;
+        Color* m_Pixels{ nullptr };
     };
 }

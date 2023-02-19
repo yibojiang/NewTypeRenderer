@@ -7,17 +7,21 @@ namespace new_type_renderer
     class PathtracingRenderer : Renderer
     {
     public:
-        PathtracingRenderer(int width, int height, int numThread = 8): m_Width(width), m_Height(height), m_NumThread(numThread), m_DirectImage(width, height){}
+        PathtracingRenderer(int width, int height): m_Width(width), m_Height(height), m_DirectImage(width, height){}
 
         void Init() override;
 
         void RenderWorkderThread();
+
+        void RenderMultithread(const int numThread = 8);
 
         void Render() override;
 
         void LoadScene(shared_ptr<Scene>& scene) override;
 
         void Update(const float elapsedTime) override;
+
+        Image& GetImage();
 
     protected:
         int m_Width{ 256 };
@@ -26,12 +30,8 @@ namespace new_type_renderer
 
         Image m_DirectImage{ m_Width , m_Height };
 
-        
-
     private:
         BVH m_BVH;
-
-        int m_NumThread{ 8 };
 
         std::atomic<int> m_Progress{ 0 };
     };

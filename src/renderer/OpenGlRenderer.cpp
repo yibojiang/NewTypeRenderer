@@ -185,7 +185,7 @@ namespace new_type_renderer
             ImGui::Text("Fwd %s", camera.GetForward().ToString().c_str());
             ImGui::SliderFloat("FOV", &camera.m_FOV, 30.0f, 160.f);
             ImGui::SliderFloat("Speed", &m_CameraSpeedMultiplier, 1.0f, 20.f);
-            ImGui::InputInt("Thread: ", &m_NumThreadRender, 1, 40);
+            ImGui::InputInt("Thread: ", &m_NumThread, 1, 40);
 
             const Matrix4x4 view = camera.GetViewMatrix();
             const Matrix4x4 proj = Matrix4x4::CreatePerspectiveProjectMatrix(camera.m_FOV, camera.m_Near, camera.m_Far, m_ViewportWidth / m_ViewportHeight);
@@ -199,14 +199,37 @@ namespace new_type_renderer
             
             if (ImGui::Button("Render"))
             {
-                PathtracingRenderer pbrRenderer{ 1280, 800, m_NumThreadRender };
-                pbrRenderer.Init();
-                pbrRenderer.LoadScene(m_Scene);
-                pbrRenderer.Render();
+                m_PBRRenderer.Init();
+                m_PBRRenderer.LoadScene(m_Scene);
+                m_PBRRenderer.RenderMultithread(m_NumThread);
             }
 
             ImGui::Text("%.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
+            ImGui::End();
+
+            ImGui::Begin("Result");
+            Image& image = m_PBRRenderer.GetImage();
+            Color* imageData = image.GetData();
+
+            // Get the current ImGui draw list
+            ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+            const int width = image.GetWidth();
+            const int height = image.GetHeight();
+            // Calculate the position and size of the color array
+
+            // Draw the color array as a series of rectangles
+            for (int y = 0; y < height; ++y) {
+                for (int x = 0; x < width; ++x) {
+                    int index = y * width + x;
+                    int r = static_cast<int>(imageData[index].x);
+                    int g = static_cast<int>(imageData[index].y);
+                    int b = static_cast<int>(imageData[index].z);
+                    // int color = 24 << r & g << 16 & b << 8;
+                    drawList->AddRectFilled(ImVec2(x, y), ImVec2(x + 1, y + 1), ImColor(r, g, b, 255));
+                }
+            }
             ImGui::End();
         }
     }
