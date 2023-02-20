@@ -33,7 +33,7 @@ namespace new_type_renderer
 
     void PathtracingRenderer::Render_WorkderThread()
     {
-        Camera& camera = m_Scene->m_Camera;
+        Camera& camera = m_Scene->GetCamera();
         const Vector3 foward = camera.GetForward();
         const Vector3 right = camera.GetRight();
         const Vector3 up = Vector3{ 0, 1, 0 };

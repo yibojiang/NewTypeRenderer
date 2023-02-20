@@ -126,7 +126,7 @@ namespace new_type_renderer
         m_Scene = scene;
 
         std::vector<shared_ptr<Shape>> allObjects;
-        scene->m_Root->GetAllObjects(allObjects);
+        scene->GetRootNode()->GetAllShapes(allObjects);
 
         // push the mesh into the vertex buffer
         for (int i = 0; i < allObjects.size(); i++)
@@ -154,11 +154,12 @@ namespace new_type_renderer
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        const Matrix4x4 view = m_Scene->m_Camera.GetViewMatrix();
-        const Matrix4x4 prospective = Matrix4x4::CreatePerspectiveProjectMatrix(m_Scene->m_Camera.m_FOV, m_Scene->m_Camera.m_Near, m_Scene->m_Camera.m_Far, m_ViewportWidth * 1.0f / m_ViewportHeight);
+        Camera& camera = m_Scene->GetCamera();
+        const Matrix4x4 view = camera.GetViewMatrix();
+        const Matrix4x4 prospective = Matrix4x4::CreatePerspectiveProjectMatrix(camera.m_FOV, camera.m_Near, camera.m_Far, m_ViewportWidth * 1.0f / m_ViewportHeight);
         // World matrix is applied to the positions already
         Matrix4x4 mvp = prospective * view;
-        Vector3 viewDir = m_Scene->m_Camera.GetLookAt() - m_Scene->m_Camera.GetLocation();
+        Vector3 viewDir = camera.GetLookAt() - camera.GetLocation();
         viewDir.Normalize();
 
         for (int i = 0; i < m_MeshDraws.size(); i++)
@@ -190,7 +191,7 @@ namespace new_type_renderer
     void OpenGlRenderer::OnGUI()
     {
         {
-            Camera& camera = m_Scene->m_Camera;
+            Camera& camera = m_Scene->GetCamera();
             ImGui::Begin("Debug Menu");
             ImGui::Text("Camera");
             ImGui::Text("Pos %s", camera.GetLocation().ToString().c_str());
@@ -251,9 +252,9 @@ namespace new_type_renderer
         InputManager::m_MouseStates[GLFW_MOUSE_BUTTON_MIDDLE] = glfwGetMouseButton(m_Window, GLFW_MOUSE_BUTTON_MIDDLE);
         InputManager::m_MouseStates[GLFW_MOUSE_BUTTON_RIGHT] = glfwGetMouseButton(m_Window, GLFW_MOUSE_BUTTON_RIGHT);
 
+        Camera& camera = m_Scene->GetCamera();
         if (glfwGetKey(m_Window, GLFW_KEY_W) == GLFW_PRESS)
         {
-            Camera& camera = m_Scene->m_Camera;
             Vector3 camPos = camera.GetLocation();
             Vector3 fwd = camera.GetForward();
             camera.SetLocation(camPos + fwd * m_CameraSpeedMultiplier * elapsedTime);
@@ -261,7 +262,6 @@ namespace new_type_renderer
 
         if (glfwGetKey(m_Window, GLFW_KEY_S) == GLFW_PRESS)
         {
-            Camera& camera = m_Scene->m_Camera;
             Vector3 camPos = camera.GetLocation();
             Vector3 fwd = camera.GetForward();
             camera.SetLocation(camPos - fwd * m_CameraSpeedMultiplier * elapsedTime);
@@ -269,7 +269,6 @@ namespace new_type_renderer
 
         if (glfwGetKey(m_Window, GLFW_KEY_A) == GLFW_PRESS)
         {
-            Camera& camera = m_Scene->m_Camera;
             Vector3 camPos = camera.GetLocation();
             Vector3 right = camera.GetRight();
             camera.SetLocation(camPos - right * m_CameraSpeedMultiplier * elapsedTime);
@@ -277,7 +276,6 @@ namespace new_type_renderer
 
         if (glfwGetKey(m_Window, GLFW_KEY_D) == GLFW_PRESS)
         {
-            Camera& camera = m_Scene->m_Camera;
             Vector3 camPos = camera.GetLocation();
             Vector3 right = camera.GetRight();
             camera.SetLocation(camPos + right * m_CameraSpeedMultiplier * elapsedTime);
@@ -285,7 +283,6 @@ namespace new_type_renderer
 
         if (glfwGetKey(m_Window, GLFW_KEY_E) == GLFW_PRESS)
         {
-            Camera& camera = m_Scene->m_Camera;
             Vector3 camPos = camera.GetLocation();
             Vector3 up = Vector3{ 0, 1, 0 };
             camera.SetLocation(camPos + up * m_CameraSpeedMultiplier * elapsedTime);
@@ -293,7 +290,6 @@ namespace new_type_renderer
 
         if (glfwGetKey(m_Window, GLFW_KEY_Q) == GLFW_PRESS)
         {
-            Camera& camera = m_Scene->m_Camera;
             Vector3 camPos = camera.GetLocation();
             Vector3 up = Vector3{ 0, 1, 0 };
             camera.SetLocation(camPos - up * m_CameraSpeedMultiplier * elapsedTime);
@@ -306,8 +302,6 @@ namespace new_type_renderer
 
             InputManager::m_LastMousePositionX = InputManager::m_MousePosX;
             InputManager::m_LastMousePositionY = InputManager::m_MousePosY;
-
-            Camera& camera = m_Scene->m_Camera;
 
             const float mouseMoveSpeed = 0.1f;
             camera.m_AngleH += deltaX * mouseMoveSpeed;

@@ -249,12 +249,12 @@ namespace new_type_renderer
         std::string path = "";
         // std::string name = "/textures/env.hdr";
         std::string fullpath = path + name;
-        m_HasHdri = HDRLoader::load(fullpath.c_str(), m_HDRI);
+        m_HasHdri = HDRLoader::load(fullpath.c_str(), *m_HDRI);
     }
 
     void Scene::Add(shared_ptr<Shape>& object)
     {
-        m_Objects.push_back(object);
+        m_Shapes.push_back(object);
     }
 
     void Scene::AddMesh(shared_ptr<Mesh>& mesh)
@@ -280,14 +280,14 @@ namespace new_type_renderer
         Intersection closestIntersection;
         // Intersect all m_Objects, one after the other
         // for (std::vector<Object*>::iterator it = m_Objects.begin(); it != m_Objects.end(); ++it){
-        for (uint32_t i = 0; i < m_Objects.size(); ++i)
+        for (uint32_t i = 0; i < m_Shapes.size(); ++i)
         {
-            Intersection intersection = m_Objects[i]->Intersect(ray);
+            Intersection intersection = m_Shapes[i]->Intersect(ray);
             double hitDistance = intersection.GetHitDistance();
             if (hitDistance > FLT_EPSILON && hitDistance < closestIntersection.m_Distance)
             {
                 closestIntersection.m_Distance = hitDistance;
-                closestIntersection.m_HitObject = m_Objects[i];
+                closestIntersection.m_HitObject = m_Shapes[i];
             }
         }
         return closestIntersection;
@@ -297,7 +297,7 @@ namespace new_type_renderer
     {
         m_Root->RemoveAllChildren();
         m_Lights.clear();
-        m_Objects.clear();
+        m_Shapes.clear();
     }
 
     void Scene::UpdateTransform(shared_ptr<SceneNode>& sceneNode, Matrix4x4 matrix)

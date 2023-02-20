@@ -19,10 +19,11 @@ namespace new_type_renderer
 
         // Compute the bounding extent for the whole scene for octree
         Extents sceneExtents;
-        for (uint32_t i = 0; i < scene->m_Objects.size(); ++i)
+        auto& shapes = scene->GetAllShapes();
+        for (uint32_t i = 0; i < scene->GetAllShapes().size(); ++i)
         {
-            scene->m_Objects[i]->ComputeBounds();
-            Extents e = scene->m_Objects[i]->GetBounds();
+            shapes[i]->ComputeBounds();
+            Extents e = shapes[i]->GetBounds();
             sceneExtents.ExtendBy(e);
         }
 
@@ -30,9 +31,9 @@ namespace new_type_renderer
         m_Octree->m_IsLeaf = false;
 
         // Construct bvh hierarchy.
-        for (uint32_t i = 0; i < scene->m_Objects.size(); ++i)
+        for (uint32_t i = 0; i < shapes.size(); ++i)
         {
-            m_Octree->AddObject(scene->m_Objects[i]);
+            m_Octree->AddObject(shapes[i]);
         }
 
         m_Octree->ComputeExetents();
@@ -47,13 +48,14 @@ namespace new_type_renderer
     Intersection BVH::IntersectBoundingBox(const Ray& ray) const
     {
         Intersection closestIntersection;
-        for (uint8_t i = 0; i < m_Scene->m_Objects.size(); ++i)
+        auto& shapes = m_Scene->GetAllShapes();
+        for (uint8_t i = 0; i < shapes.size(); ++i)
         {
-            float t = m_Scene->m_Objects[i]->GetBounds().IntersectWireframe(ray);
+            float t = shapes[i]->GetBounds().IntersectWireframe(ray);
             if (t > FLT_EPSILON && t < closestIntersection.m_Distance)
             {
                 closestIntersection.m_Distance = t;
-                closestIntersection.m_HitObject = m_Scene->m_Objects[i];
+                closestIntersection.m_HitObject = shapes[i];
             }
         }
         return closestIntersection;

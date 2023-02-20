@@ -46,7 +46,7 @@ namespace new_type_renderer
         m_Children.erase(std::remove(m_Children.begin(), m_Children.end(), child), m_Children.end());
     }
 
-    void SceneNode::GetAllObjects(std::vector<shared_ptr<Shape>>& objects) const
+    void SceneNode::GetAllShapes(std::vector<shared_ptr<Shape>>& objects) const
     {
         if (m_Object != nullptr)
         {
@@ -55,7 +55,7 @@ namespace new_type_renderer
         
         for (int i = 0; i < m_Children.size(); i++)
         {
-            m_Children[i]->GetAllObjects(objects);
+            m_Children[i]->GetAllShapes(objects);
         }
     }
 }

@@ -247,9 +247,10 @@ namespace new_type_renderer
         // Explicit light sample. Only support for sphere light
 #ifdef EXPLICIT_LIGHT_SAMPLE
         Color e;
-        for (unsigned int i = 0; i < m_Scene.m_Lights.size(); i++)
+        auto& lights = m_Scene.GetAllLights();
+        for (unsigned int i = 0; i < lights.size(); i++)
         {
-            auto light = m_Scene.m_Lights[i];
+            auto light = lights[i];
             Vector3 sw = light->GetCentriod() - hit;
             Vector3 su = ((fabs(sw.x) > .1 ? Vector3(0, 1, 0) : Vector3(1, 0, 0)).Cross(sw)).Normalize();
             Vector3 sv = sw.Cross(su);
@@ -298,28 +299,28 @@ namespace new_type_renderer
     Color Raytracer::GetEnvColor(const Vector3& dir) const
     {
         Color ambColor(0, 0, 0);
-        if (m_Scene.m_HasHdri)
+        
+        if (m_Scene.GetHDRImage() != nullptr)
         {
             Matrix3x3 m(cos(m_Scene.m_EnvRotate), 0, sin(m_Scene.m_EnvRotate),
                         0, 1, 0,
                         sin(m_Scene.m_EnvRotate), 0, -cos(m_Scene.m_EnvRotate));
             Vector3 newdir = m * dir;
             // m_HDRI  
-            HDRImage hdri = m_Scene.m_HDRI;
+            auto& hdri = m_Scene.GetHDRImage();
             double u = atan2(-newdir.x, newdir.z) / (2.0 * M_PI) + 0.5;
             double v = asin(-newdir.y) / M_PI + 0.5;
-            int hdrx = u * (hdri.width - 1);
-            int hdry = v * (hdri.height - 1);
-            double r = hdri.colors[hdry * hdri.width * 3 + hdrx * 3];
-            double g = hdri.colors[hdry * hdri.width * 3 + hdrx * 3 + 1];
-            double b = hdri.colors[hdry * hdri.width * 3 + hdrx * 3 + 2];
+            int hdrx = u * (hdri->width - 1);
+            int hdry = v * (hdri->height - 1);
+            double r = hdri->colors[hdry * hdri->width * 3 + hdrx * 3];
+            double g = hdri->colors[hdry * hdri->width * 3 + hdrx * 3 + 1];
+            double b = hdri->colors[hdry * hdri->width * 3 + hdrx * 3 + 2];
             r = pow(r, 0.44);
             g = pow(g, 0.44);
             b = pow(b, 0.44);
             r = m_Scene.m_EnvLightIntense * pow(r, m_Scene.m_EnvLightExp);
             g = m_Scene.m_EnvLightIntense * pow(g, m_Scene.m_EnvLightExp);
             b = m_Scene.m_EnvLightIntense * pow(b, m_Scene.m_EnvLightExp);
-            // return Vector3(r,g,b);
             ambColor = Color(r, g, b);
         }
         return ambColor;
@@ -327,14 +328,15 @@ namespace new_type_renderer
 
     void Raytracer::TestPixel(int x, int y)
     {
-        Matrix4x4 viewMatrix = m_Scene.m_Camera.GetViewMatrix();
-        Vector3 ro = m_Scene.m_Camera.m_Location;
+        Camera& camera = m_Scene.GetCamera();
+        Matrix4x4 viewMatrix = camera.GetViewMatrix();
+        Vector3 ro = camera.m_Location;
         double u = x * 1.0 / m_Width;
         double v = (m_Height - y) * 1.0 / m_Height;
         u = (u * 2.0 - 1.0);
         v = (v * 2.0 - 1.0);
         v = v * m_Height / m_Width;
-        Vector3 rd = viewMatrix * (Vector3(u, v, m_Scene.m_Camera.m_Near)).Normalize();
+        Vector3 rd = viewMatrix * (Vector3(u, v, camera.m_Near)).Normalize();
         Ray ray(ro, rd);
         TestRaytracing(ray, 0);
     }
@@ -372,8 +374,9 @@ namespace new_type_renderer
 
     void Raytracer::RenderDirect(float& time, Image& directImage, Image& normalImage, Image& boundingBoxImage)
     {
-        Matrix4x4 viewMatrix = m_Scene.m_Camera.GetViewMatrix();
-        Vector3 ro = m_Scene.m_Camera.GetLocation();
+        Camera& camera = m_Scene.GetCamera();
+        Matrix4x4 viewMatrix = camera.GetViewMatrix();
+        Vector3 ro = camera.GetLocation();
         Color normalColor;
         Color directColor;
         Color boundingBoxColor;
@@ -383,9 +386,10 @@ namespace new_type_renderer
         // Vector3 lig = Vector3(-1, -3, -1.5).Normalize();
         Vector3 pointLig(50, 78, 60);
 
-        for (unsigned int i = 0; i < m_Scene.m_Lights.size(); i++)
+        auto& lights = m_Scene.GetAllLights();
+        for (unsigned int i = 0; i < lights.size(); i++)
         {
-            auto light = m_Scene.m_Lights[i];
+            auto light = lights[i];
             pointLig = light->GetCentriod();
             break;
         }
@@ -402,7 +406,7 @@ namespace new_type_renderer
                 v = (v * 2.0 - 1.0);
                 // u = u * m_Width/m_Height;
                 v = v * m_Height / m_Width;
-                Vector3 rd = viewMatrix * (Vector3(u, v, m_Scene.m_Camera.m_Near)).Normalize();
+                Vector3 rd = viewMatrix * (Vector3(u, v, camera.m_Near)).Normalize();
                 normalColor = Color(0, 0, 0);
                 directColor = Color(0, 0, 0);
                 boundingBoxColor = Color(0, 0, 0);
@@ -480,15 +484,15 @@ namespace new_type_renderer
         Color color(0, 0, 0);
         Color radiance(0, 0, 0);
 
-        Camera& camera = m_Scene.m_Camera;
+        Camera& camera = m_Scene.GetCamera();
         // camera.m_FocalLength = (camera.ta - camera.ro).Length();
 
         // ratio of original/new m_Aperture (>1: smaller view angle, <1: larger view angle)
         double aperture = 0.5135 / camera.m_Aperture;
 
         // Vector3 dir_norm = Vector3(0, -0.042612, -1).Normalize();
-        Vector3 dir_norm = (m_Scene.m_Camera.GetLookAt() - m_Scene.m_Camera.GetLocation()).Normalize();
-        double L = m_Scene.m_Camera.m_Near;
+        Vector3 dir_norm = (camera.GetLookAt() - camera.GetLocation()).Normalize();
+        double L = camera.m_Near;
         double L_new = aperture * L;
         double L_diff = L - L_new;
         Vector3 cam_shift = dir_norm * (L_diff);
@@ -498,12 +502,12 @@ namespace new_type_renderer
         }
 
         L = L_new;
-        auto camera_ray = Ray(m_Scene.m_Camera.GetLocation() + cam_shift, dir_norm);
+        auto camera_ray = Ray(camera.GetLocation() + cam_shift, dir_norm);
         // Cross product gets the vector perpendicular to cx and the "gaze" direction
         auto cx = Vector3((m_Width * 1.0) / m_Height, 0, 0);
-        Vector3 rd = (m_Scene.m_Camera.GetLookAt() - m_Scene.m_Camera.GetLocation()).Normalize();
+        Vector3 rd = (camera.GetLookAt() - camera.GetLocation()).Normalize();
         Vector3 cy = (cx.Cross(rd)).Normalize();
-        Matrix4x4 viewMatrix = m_Scene.m_Camera.GetViewMatrix();
+        Matrix4x4 viewMatrix = camera.GetViewMatrix();
 
 #pragma omp parallel for schedule(dynamic, 1) private(color, radiance)       // OpenMP
         for (unsigned short i = 0; i < m_Height; ++i)
@@ -542,7 +546,7 @@ namespace new_type_renderer
                         // u = u * m_Width/m_Height;
                         v = v * m_Height / m_Width;
 
-                        Vector3 rd = viewMatrix * Vector3(u, v, m_Scene.m_Camera.m_Near);
+                        Vector3 rd = viewMatrix * Vector3(u, v, camera.m_Near);
                         // Vector3 rd = dir.Normalized();
                         // if (i == 0 && j == 0){
                         //     // qDebug() << "dir "<< dir;
@@ -555,7 +559,7 @@ namespace new_type_renderer
                         // }
                         // Vector3 rd = m_Scene.ca * (Vector3(u, v, m_Scene.m_Near)).Normalize();
 
-                        Ray primiaryRay(m_Scene.m_Camera.GetLocation(), rd);
+                        Ray primiaryRay(camera.GetLocation(), rd);
 
                         // If we're actually using depth of field, we need to modify the camera ray to account for that
                         if (camera.m_FocusOn)
@@ -573,7 +577,7 @@ namespace new_type_renderer
                         }
                         else
                         {
-                            primiaryRay = Ray(m_Scene.m_Camera.GetLocation(), rd.Normalized());
+                            primiaryRay = Ray(camera.GetLocation(), rd.Normalized());
                         }
 
                         radiance = radiance + Tracing(primiaryRay, 0) * 0.25;
@@ -612,7 +616,8 @@ namespace new_type_renderer
 
     void Raytracer::RenderIndirect(float& time, Image& image)
     {
-        Matrix4x4 viewMatrix = m_Scene.m_Camera.GetViewMatrix();
+        Camera& camera = m_Scene.GetCamera();
+        Matrix4x4 viewMatrix = camera.GetViewMatrix();
         int samps = m_Samples / 4;
         is_rendering = true;
         Color r(0, 0, 0);
@@ -642,9 +647,9 @@ namespace new_type_renderer
                             u = (u * 2.0 - 1.0);
                             v = (v * 2.0 - 1.0);
                             u = u * m_Width / m_Height;
-                            Vector3 rd = viewMatrix * (Vector3(u, v, m_Scene.m_Camera.m_Near)).Normalize();
+                            Vector3 rd = viewMatrix * (Vector3(u, v, camera.m_Near)).Normalize();
 
-                            Ray primiaryRay(m_Scene.m_Camera.GetLocation(), rd);
+                            Ray primiaryRay(camera.GetLocation(), rd);
                             r = r + Tracing(primiaryRay, 0) * (1.0f / samps);
                         }
                         color = color + Vector3(Clamp01(r.x), Clamp01(r.y), Clamp01(r.z)) * .25;

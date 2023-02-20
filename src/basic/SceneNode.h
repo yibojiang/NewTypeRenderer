@@ -29,8 +29,8 @@ namespace new_type_renderer
 
         void RemoveChild(std::shared_ptr<SceneNode> child);
 
-        // Return object from this node and child nodes.
-        void GetAllObjects(std::vector<shared_ptr<Shape>>& objects) const;
+        // Return shapes from this node and child nodes.
+        void GetAllShapes(std::vector<shared_ptr<Shape>>& shapes) const;
 
     public:
         Transform m_Transform{};
