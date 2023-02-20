@@ -2,7 +2,7 @@
 #include <vector>
 #include <memory>
 #include "Transform.h"
-#include "Object.h"
+#include "Shape.h"
 
 namespace new_type_renderer
 {
@@ -19,9 +19,9 @@ namespace new_type_renderer
 
         std::shared_ptr<SceneNode> AddChild(std::shared_ptr<SceneNode> child);
 
-        void AddObject(const std::shared_ptr<Object>& obj);
+        void AddObject(const std::shared_ptr<Shape>& obj);
 
-        std::shared_ptr<Object>& GetObject() { return m_Object; }
+        std::shared_ptr<Shape>& GetObject() { return m_Object; }
 
         std::vector<std::shared_ptr<SceneNode>>& GetChildren() { return m_Children; }
 
@@ -30,7 +30,7 @@ namespace new_type_renderer
         void RemoveChild(std::shared_ptr<SceneNode> child);
 
         // Return object from this node and child nodes.
-        void GetAllObjects(std::vector<shared_ptr<Object>>& objects) const;
+        void GetAllObjects(std::vector<shared_ptr<Shape>>& objects) const;
 
     public:
         Transform m_Transform{};
@@ -40,6 +40,6 @@ namespace new_type_renderer
 
         std::weak_ptr<SceneNode> m_Parent{};
 
-        std::shared_ptr<Object> m_Object{};
+        std::shared_ptr<Shape> m_Object{};
     };
 }

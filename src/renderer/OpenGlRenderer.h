@@ -52,7 +52,7 @@ namespace new_type_renderer
 
         unsigned int m_ViewportHeight{ 800 };
 
-        vector<shared_ptr<Object>> m_AllObjects;
+        vector<shared_ptr<Shape>> m_AllObjects;
 
         vector<MeshDraw> m_MeshDraws;
 

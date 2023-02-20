@@ -1,5 +1,5 @@
 #pragma once
-#include "Object.h"
+#include "Shape.h"
 #include "SceneNode.h"
 #include "Transform.h"
 

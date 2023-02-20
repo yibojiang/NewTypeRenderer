@@ -254,7 +254,7 @@
     <ClInclude Include="src\core\BVH.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\basic\Object.h">
+    <ClInclude Include="src\basic\Shape.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\core\Extents.h">

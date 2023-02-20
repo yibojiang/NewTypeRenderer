@@ -21,7 +21,7 @@ namespace new_type_renderer
 
         void LoadHdri(const std::string& name);
 
-        void Add(shared_ptr<Object>& object);
+        void Add(shared_ptr<Shape>& object);
 
         void AddMesh(shared_ptr<Mesh>& mesh);
 
@@ -34,9 +34,9 @@ namespace new_type_renderer
     public:
         shared_ptr<SceneNode> m_Root;
 
-        std::vector<shared_ptr<Object>> m_Objects;
+        std::vector<shared_ptr<Shape>> m_Objects;
 
-        std::vector<shared_ptr<Object>> m_Lights;
+        std::vector<shared_ptr<Shape>> m_Lights;
 
         HDRImage m_HDRI;
 

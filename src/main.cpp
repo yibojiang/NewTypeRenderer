@@ -7,16 +7,23 @@
 #include <ctime>
 #include <chrono>
 
-using std::chrono::high_resolution_clock;
-using std::chrono::duration;
-using std::chrono::duration_cast;
-
 int main(int argc, char *argv[])
 {
-    using namespace new_type_renderer;
+    using std::chrono::high_resolution_clock;
+    using std::chrono::duration;
+    using std::chrono::duration_cast;
+    using new_type_renderer::Scene;
+    using new_type_renderer::OpenGlRenderer;
+    using std::make_shared;
+    if (argc == 0)
+    {
+        LOG_ERR("Scene is not specified");
+    }
+    const char* fileName = argv[1];
 
     auto scene = make_shared<Scene>();
-    scene->LoadFromJson("scene/box.json");
+    
+    scene->LoadFromJson(fileName);
     OpenGlRenderer viewport;
     viewport.Init();
     viewport.LoadScene(scene);

@@ -26,7 +26,7 @@ namespace new_type_renderer
         return child;
     }
 
-    void SceneNode::AddObject(const shared_ptr<Object>& obj)
+    void SceneNode::AddObject(const shared_ptr<Shape>& obj)
     {
         m_Object = obj;
     }
@@ -46,7 +46,7 @@ namespace new_type_renderer
         m_Children.erase(std::remove(m_Children.begin(), m_Children.end(), child), m_Children.end());
     }
 
-    void SceneNode::GetAllObjects(std::vector<shared_ptr<Object>>& objects) const
+    void SceneNode::GetAllObjects(std::vector<shared_ptr<Shape>>& objects) const
     {
         if (m_Object != nullptr)
         {

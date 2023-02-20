@@ -15,7 +15,7 @@ namespace new_type_renderer
 
         ~OctreeNode();
 
-        void AddObject(shared_ptr<Object>& object);
+        void AddObject(shared_ptr<Shape>& object);
 
         void Traverse();
 
@@ -36,7 +36,7 @@ namespace new_type_renderer
         weak_ptr<OctreeNode> m_Parent{};
         shared_ptr<OctreeNode> m_Children[8]{};
 
-        vector<shared_ptr<Object>> m_Objects{};
+        vector<shared_ptr<Shape>> m_Objects{};
         Vector3 m_BoundMin{};
         Vector3 m_BoundMax{};
 

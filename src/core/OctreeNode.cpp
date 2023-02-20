@@ -1,6 +1,6 @@
 #include "OctreeNode.h"
 #include "Ray.h"
-#include "basic/Object.h"
+#include "basic/Shape.h"
 
 namespace new_type_renderer
 {
@@ -80,7 +80,7 @@ namespace new_type_renderer
         return m_Extents;
     }
 
-    void OctreeNode::AddObject(shared_ptr<Object>& obj)
+    void OctreeNode::AddObject(shared_ptr<Shape>& obj)
     {
         const Vector3 center = (m_BoundMin + m_BoundMax) * 0.5;
 

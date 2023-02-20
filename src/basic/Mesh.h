@@ -1,7 +1,7 @@
 #pragma once
 #include <cassert>
 
-#include "Object.h"
+#include "Shape.h"
 #include "math/Matrix.h"
 #include "math/Vector.h"
 
@@ -9,7 +9,7 @@ namespace new_type_renderer
 {
     class Mesh;
 
-    class MeshFace : public Object, public enable_shared_from_this<MeshFace>
+    class MeshFace : public Shape, public enable_shared_from_this<MeshFace>
     {
     public:
         MeshFace(shared_ptr<Mesh>& mesh, unsigned int vid1, unsigned int vid2, unsigned int vid3);
@@ -61,7 +61,7 @@ namespace new_type_renderer
         weak_ptr<Mesh> m_Mesh{};
     };
 
-    class Mesh : public Object, public enable_shared_from_this<Mesh>
+    class Mesh : public Shape, public enable_shared_from_this<Mesh>
     {
     public:
         Mesh();

@@ -63,7 +63,7 @@ namespace new_type_renderer
             Vector3 rayDir = cameraRotMatrix * Vector3{ u, v, 1.0f / tanHalfFOV };
             Ray ray(camera.GetLocation(), rayDir);
             Intersection intersection = m_BVH.Intersect(ray);
-            shared_ptr<Object> hitObj = intersection.GetHitObject().lock();
+            shared_ptr<Shape> hitObj = intersection.GetHitObject().lock();
             if (hitObj != nullptr)
             {
                 Color color = hitObj->GetMaterial()->GetDiffuseColor(intersection.GetUV());

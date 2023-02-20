@@ -9,14 +9,14 @@ namespace new_type_renderer
     struct Matrix4x4;
     struct Material;
 
-    class Object
+    class Shape
     {
     public:
         std::string name;
 
-        Object() {}
+        Shape() {}
 
-        virtual ~Object()
+        virtual ~Shape()
         {
         }
 

@@ -7,7 +7,7 @@
 
 namespace new_type_renderer
 {
-    struct Object;
+    struct Shape;
     struct Ray;
     struct Intersection;
     class Scene;

@@ -191,7 +191,7 @@
     <ClInclude Include="libs\imgui\imstb_truetype.h" />
     <ClInclude Include="src\basic\Camera.h" />
     <ClInclude Include="src\basic\Material.h" />
-    <ClInclude Include="src\basic\Object.h" />
+    <ClInclude Include="src\basic\Shape.h" />
     <ClInclude Include="src\basic\Primitive.h" />
     <ClInclude Include="src\basic\Mesh.h" />
     <ClInclude Include="src\basic\Color.h" />

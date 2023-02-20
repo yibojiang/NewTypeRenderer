@@ -1,7 +1,7 @@
 #pragma once
 
 #include "material.h"
-#include "Object.h"
+#include "Shape.h"
 #include "core/bvh.h"
 #include "math/Matrix.h"
 
@@ -10,7 +10,7 @@ namespace new_type_renderer
     enum Refl_t { DIFF, SPEC, REFR }; // material types, used in radiance()
 
 
-    class Plane : public Object, public enable_shared_from_this<Plane>
+    class Plane : public Shape, public enable_shared_from_this<Plane>
     {
     private:
         Vector3 normal;
@@ -55,7 +55,7 @@ namespace new_type_renderer
     };
 
 
-    class Sphere : public Object, public enable_shared_from_this<Sphere>
+    class Sphere : public Shape, public enable_shared_from_this<Sphere>
     {
     public:
         double rad;
@@ -154,7 +154,7 @@ namespace new_type_renderer
     };
 
 
-    class Box : public Object, public enable_shared_from_this<Box>
+    class Box : public Shape, public enable_shared_from_this<Box>
     {
     private:
         float dnear[3];

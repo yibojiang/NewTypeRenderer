@@ -3,9 +3,9 @@
 #include <iostream>
 #include <ostream>
 
-#define LOG_INFO(...) Log::Print(LogLevel::Info, __VA_ARGS__)
-#define LOG_WARN(...) Log::Print(LogLevel::Warning, __VA_ARGS__)
-#define LOG_ERR(...) Log::Print(LogLevel::Error, __VA_ARGS__)
+#define LOG_INFO(...) new_type_renderer::Log::Print(new_type_renderer::LogLevel::Info, __VA_ARGS__)
+#define LOG_WARN(...) new_type_renderer::Log::Print(new_type_renderer::LogLevel::Warning, __VA_ARGS__)
+#define LOG_ERR(...) new_type_renderer::Log::Print(new_type_renderer::LogLevel::Error, __VA_ARGS__)
 
 namespace new_type_renderer
 {

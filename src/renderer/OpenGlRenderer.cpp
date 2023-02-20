@@ -125,7 +125,7 @@ namespace new_type_renderer
     {
         m_Scene = scene;
 
-        std::vector<shared_ptr<Object>> allObjects;
+        std::vector<shared_ptr<Shape>> allObjects;
         scene->m_Root->GetAllObjects(allObjects);
 
         // push the mesh into the vertex buffer

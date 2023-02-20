@@ -3,7 +3,7 @@
 
 namespace new_type_renderer
 {
-    class Object;
+    class Shape;
 
     struct Ray
     {
@@ -27,7 +27,7 @@ namespace new_type_renderer
 
         }
 
-        Intersection(float d, weak_ptr<Object> obj) : m_Distance(d), m_HitObject(obj)
+        Intersection(float d, weak_ptr<Shape> obj) : m_Distance(d), m_HitObject(obj)
         {
         }
 
@@ -36,7 +36,7 @@ namespace new_type_renderer
             return m_Distance < other.GetHitDistance();
         }
 
-        weak_ptr<Object>& GetHitObject()
+        weak_ptr<Shape>& GetHitObject()
         {
             return m_HitObject;
         }
@@ -57,7 +57,7 @@ namespace new_type_renderer
         }
 
     public:
-        weak_ptr<Object> m_HitObject{};
+        weak_ptr<Shape> m_HitObject{};
 
         Vector2 m_UV{};
 

@@ -192,7 +192,7 @@ namespace new_type_renderer
                     LOG_ERR("can't find material ", materialName.c_str());
                 }
 
-                shared_ptr<Object> obj;
+                shared_ptr<Shape> obj;
                 std::string ptype = primitives[i]["type"].GetString();
 
                 if (ptype == "box")
@@ -252,7 +252,7 @@ namespace new_type_renderer
         m_HasHdri = HDRLoader::load(fullpath.c_str(), m_HDRI);
     }
 
-    void Scene::Add(shared_ptr<Object>& object)
+    void Scene::Add(shared_ptr<Shape>& object)
     {
         m_Objects.push_back(object);
     }
@@ -269,7 +269,7 @@ namespace new_type_renderer
             }
 
             face->name = mesh->name + '_' + std::to_string(i);
-            auto obj = dynamic_pointer_cast<Object>(face);
+            auto obj = dynamic_pointer_cast<Shape>(face);
             Add(obj);
         }
     }
