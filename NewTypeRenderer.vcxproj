@@ -160,7 +160,6 @@
     <ClCompile Include="src\renderer\PathtracingRenderer.cpp" />
     <ClCompile Include="src\core\Raytracer.cpp" />
     <ClCompile Include="src\basic\Scene.cpp" />
-    <ClCompile Include="src\basic\Object.cpp" />
     <ClCompile Include="src\math\Quaternion.cpp" />
     <ClCompile Include="src\renderer\MeshDraw.cpp" />
     <ClCompile Include="src\renderer\OpenGlRenderer.cpp" />
@@ -172,6 +171,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\basic\Shader.h" />
+    <ClInclude Include="src\core\MemoryArena.h" />
+    <ClInclude Include="src\core\Sampler.h" />
     <ClInclude Include="src\gui\InputManager.h" />
     <ClInclude Include="libs\GLEW\include\GL\eglew.h" />
     <ClInclude Include="libs\GLEW\include\GL\glew.h" />

@@ -32,6 +32,9 @@ namespace new_type_renderer
         unsigned int m_VBO{};
 
         unsigned int m_IBO{};
+
+    private:
+        unsigned int m_textureID;
     };
 }
 

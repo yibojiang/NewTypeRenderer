@@ -2,10 +2,12 @@
 #include <thread>
 
 #include "basic/Image.h"
+#include "core/Sampler.h"
 #include "renderer/Renderer.h"
 
 namespace new_type_renderer
 {
+    struct MemoryArena;
     using std::atomic;
     using std::thread;
 
@@ -19,6 +21,8 @@ namespace new_type_renderer
         void DispatchRenderTask_RenderThread();
 
         void Render_WorkderThread();
+
+        float Li(Ray& ray, MemoryArena& arena, int depth = 0);
 
         void Render() override;
 
@@ -60,6 +64,8 @@ namespace new_type_renderer
 
         thread m_RenderingThread;
 
-        int m_NumThreads{ 8 };
+        int m_NumThreads{ 10 };
+
+        Sampler sampler;
     };
 }

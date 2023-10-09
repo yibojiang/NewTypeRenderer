@@ -142,6 +142,7 @@ namespace new_type_renderer
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_DEPTH_TEST);
 
+        // Render the pbr render result into a texture
         glGenTextures(1, &m_PreviewTextureId);
         glBindTexture(GL_TEXTURE_2D, m_PreviewTextureId);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -167,6 +168,7 @@ namespace new_type_renderer
             m_MeshDraws[i].Draw(mvp, viewDir);
         }
 
+        // Bind the pbr result texture
         Image& image = m_PBRRenderer.GetImage();
         glBindTexture(GL_TEXTURE_2D, m_PreviewTextureId);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.GetWidth(), image.GetHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, image.GetByteData());
@@ -174,7 +176,6 @@ namespace new_type_renderer
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-
 
         OnGUI();
 

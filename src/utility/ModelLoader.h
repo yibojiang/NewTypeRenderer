@@ -134,11 +134,16 @@ namespace new_type_renderer
             for (unsigned int i = 0; i < rawShape.size(); i++)
             {
                 auto& positions = rawShape[i].mesh.positions;
+                auto& textureCoords = rawShape[i].mesh.positions;
                 size_t positionsSize = rawShape[i].mesh.positions.size() / 3;
                 for (int j = 0; j < positionsSize; j++)
                 {
                     mesh->m_Positions.push_back(Vector3{ positions[j * 3], positions[j * 3 + 1], positions[j * 3 + 2] });
                     mesh->m_VertexNormals.push_back(Vector3{});
+                    mesh->m_TextureCoords.push_back(Vector2{
+                        rawShape[i].mesh.texcoords[j * 2],
+                        rawShape[i].mesh.texcoords[j * 2 + 1]
+                    });
                 }
 
                 size_t indicesSize = rawShape[i].mesh.indices.size() / 3;
@@ -220,7 +225,7 @@ namespace new_type_renderer
                     
                     face->SetupUVs(uv1, uv2, uv3);
 
-                    // skip update vertex normal on the mesh, as obj file doesn't normally have the normal infomation
+                    // skip update vertex normal on the mesh, as obj file doesn't normally have the normal information
                     // face->SetVertexNormals(n1, n2, n3);
                     mesh->AddFace(face);
 

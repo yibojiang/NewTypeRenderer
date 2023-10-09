@@ -59,8 +59,8 @@ namespace new_type_renderer
             u = (u * 2.0 - 1.0);
             v = (v * 2.0 - 1.0);
             u = u * ratio;
-
-            Vector3 rayDir = cameraRotMatrix * Vector3{ u, v, 1.0f / tanHalfFOV };
+            Vector3 dir = Vector3{ u, v, 1.0f / tanHalfFOV };
+            Vector3 rayDir = cameraRotMatrix * dir.Normalized();
             Ray ray(camera.GetLocation(), rayDir);
             Intersection intersection = m_BVH.Intersect(ray);
             shared_ptr<Shape> hitObj = intersection.GetHitObject().lock();
@@ -76,6 +76,11 @@ namespace new_type_renderer
             
             ++m_Progress;
         }
+    }
+
+    float PathtracingRenderer::Li(Ray& ray, MemoryArena& arena, int depth)
+    {
+        return 0.0f;
     }
 
     void PathtracingRenderer::Init()

@@ -1,0 +1,100 @@
+{
+  "envlight":{
+    "intense": 100,
+    "exp": 1,
+    "HDRI": "/textures/Ridgecrest_Road_Ref.hdr"
+  },
+  "materials": {
+    "test_diffuse": {
+      "diffuse": 1,
+      "specular": 0,
+      "roughness": 0,
+      "emission": 0,
+      "ior": 0,
+      "diffuseColor": [
+        0.75,
+        0.75,
+        0.75
+      ],
+      "reflectColor": [
+        0,
+        0,
+        0
+      ],
+      "emissionColor": [
+        0,
+        0,
+        0
+      ],
+      "diffuseTexture": "textures/test.png"
+    },
+    "light": {
+      "diffuse": 0,
+      "specular": 0,
+      "roughness": 0,
+      "emission": 100,
+      "ior": 0,
+      "diffuseColor": [
+        0,
+        0,
+        0
+      ],
+      "reflectColor": [
+        0,
+        0,
+        0
+      ],
+      "emissionColor": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  "camera": {
+    "name": "camera",
+    "transform": {
+      "position": [
+        0,
+        2.0,
+        -5
+      ],
+      "target": [
+        0,
+        0,
+        0
+      ],
+      "up": [
+        0,
+        1,
+        0
+      ]
+    },
+    "fov": 60
+  },
+  "primitives": [
+    {
+      "name": "plane",
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          10,
+          10,
+          10
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ]
+      },
+      "type": "mesh",
+      "material": "test_diffuse",
+      "path": "plane.obj"
+    }
+  ]
+}

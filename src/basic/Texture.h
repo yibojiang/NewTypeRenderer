@@ -4,7 +4,7 @@
 #include "basic/Color.h"
 #include "math/Vector.h"
 #include "utility/Log.h"
-
+#include <cassert>
 
 namespace new_type_renderer
 {
@@ -14,40 +14,56 @@ namespace new_type_renderer
         Texture() {}
 
         void LoadImage(const std::string& filename) {
-            image = std::vector<unsigned char>();
-            unsigned error = lodepng::decode(image, width, height, filename.c_str());
+            m_Image = std::vector<unsigned char>();
+            unsigned error = lodepng::decode(m_Image, m_Width, m_Height, filename.c_str());
             if (error) {
-                loaded = false;
-                LOG_INFO("%s", filename.c_str());
+                m_Loaded = false;
+                assert(error == 0, "Fail to load texture: %s", filename.c_str());
             }
             else {
-                loaded = true;
+                m_Loaded = true;
                 LOG_INFO("%s", filename.c_str());
             }
         }
 
-        Color GetColor(const Vector2& uv) {
-            if (!loaded)
+        Color GetColor(const Vector2& uv)
+        {
+            if (!m_Loaded)
                 return (Vector4(1, 0, 1, 1));
 
-            int x = (fmod(fabs(uv.x), 1.0)) * (width - 1);
-            int y = (1. - fmod(fabs(uv.y), 1.0)) * (height - 1);
+            int x = (fmod(fabs(uv.x), 1.0)) * (m_Width - 1);
+            int y = (1. - fmod(fabs(uv.y), 1.0)) * (m_Height - 1);
             float r, g, b, a;
-            r = image.at(y * width * 4 + x * 4) / 255.0f;
-            g = image.at(y * width * 4 + x * 4 + 1) / 255.0f;
-            b = image.at(y * width * 4 + x * 4 + 2) / 255.0f;
-            a = image.at(y * width * 4 + x * 4 + 3) / 255.0f;
+            r = m_Image.at(y * m_Width * 4 + x * 4) / 255.0f;
+            g = m_Image.at(y * m_Width * 4 + x * 4 + 1) / 255.0f;
+            b = m_Image.at(y * m_Width * 4 + x * 4 + 2) / 255.0f;
+            a = m_Image.at(y * m_Width * 4 + x * 4 + 3) / 255.0f;
             return Color(r, g, b, a);
         }
 
+        const unsigned char* GetImage() const
+        {
+            return m_Image.data();
+        }
+
+        unsigned int GetHeight() const
+        {
+            return m_Height;
+        }
+
+        unsigned int GetWidth() const
+        {
+            return m_Width;
+        }
+
     public:
-        unsigned height;
+        unsigned int m_Height;
 
-        unsigned width;
+        unsigned int m_Width;
 
-        bool loaded;
+        bool m_Loaded;
 
-        std::vector<unsigned char> image;
+        std::vector<unsigned char> m_Image;
     };
 
 }

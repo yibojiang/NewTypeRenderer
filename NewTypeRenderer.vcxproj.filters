@@ -42,9 +42,6 @@
     <ClCompile Include="src\core\Raytracer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\basic\Object.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\basic\Transform.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -357,6 +354,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\utility\Profiler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\Sampler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\MemoryArena.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

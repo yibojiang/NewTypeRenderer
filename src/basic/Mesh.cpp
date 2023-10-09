@@ -46,6 +46,21 @@ namespace new_type_renderer
         return m_Mesh.lock()->m_VertexNormals[m_Vid3];
     }
 
+    Vector2 MeshFace::GetUV1() const
+    {
+        return m_UV1;
+    }
+
+    Vector2 MeshFace::GetUV2() const
+    {
+        return m_UV2;
+    }
+
+    Vector2 MeshFace::GetUV3() const
+    {
+        return m_UV3;
+    }
+
     void MeshFace::SetupUVs(Vector2 uv1, Vector2 uv2, Vector2 uv3)
     {
         m_UV1 = uv1;

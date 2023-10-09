@@ -79,6 +79,12 @@ namespace new_type_renderer
             m_BumpTexture.LoadImage(name);
         }
 
+        void SetNormalTexture(const std::string& name)
+        {
+            m_UseNormalTexture = true;
+            m_NormalTexture.LoadImage(name);
+        }
+
         void SetEmission(Color emissionColor)
         {
             m_EmissionColor = emissionColor * m_Emission;
@@ -88,6 +94,21 @@ namespace new_type_renderer
         {
             m_UseDiffuseTexture = true;
             m_DiffuseTexture.LoadImage(name);
+        }
+
+        const Texture& GetDiffuseTexture() const
+        {
+            return m_DiffuseTexture;
+        }
+
+        const Texture& GetBumpTexture() const
+        {
+            return m_BumpTexture;
+        }
+
+        const Texture& GetNormalTexture() const
+        {
+            return m_NormalTexture;
         }
 
         Color GetDiffuseColor(const Vector2& uv)
@@ -115,6 +136,26 @@ namespace new_type_renderer
             return m_EmissionColor;
         }
 
+        bool GetUseDiffuseTexture()
+        {
+            return m_UseDiffuseTexture;
+        }
+
+        bool GetUseNormalTexture()
+        {
+            return m_UseNormalTexture;
+        }
+
+        bool GetUseBumpTexture()
+        {
+            return m_UseBumpTexture;
+        }
+
+        bool GetUseBackground()
+        {
+            return m_UseBackground;
+        }
+
     public:
         float m_Diffuse{ 0.0f };
         float m_Specular{ 0.0f };
@@ -124,7 +165,6 @@ namespace new_type_renderer
         float m_DiffuseRoughness{ 0.0f };
         float m_Roughness{ 0.0f };
 
-        
         float m_Emission{ 0.0f };
         float m_IOR { 0.0f };
         float m_F0 { 0.0f };
@@ -139,9 +179,11 @@ namespace new_type_renderer
         bool m_UseBackground{ false };
         bool m_UseDiffuseTexture{ false };
         bool m_UseBumpTexture{ false };
+        bool m_UseNormalTexture{ false };
 
         Texture m_DiffuseTexture{};
         Texture m_BumpTexture{};
+        Texture m_NormalTexture{};
 
         shared_ptr<Shader> m_Shader{};
     };

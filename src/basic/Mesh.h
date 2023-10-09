@@ -28,6 +28,12 @@ namespace new_type_renderer
 
         Vector3 GetVertexNormal3() const;
 
+        Vector2 GetUV1() const;
+
+        Vector2 GetUV2() const;
+
+        Vector2 GetUV3() const;
+
         void SetVertexNormals(Vector3 n1, Vector3 n2, Vector3 n3);
 
         void SetupUVs(Vector2 uv1, Vector2 uv2, Vector2 uv3);
@@ -53,7 +59,7 @@ namespace new_type_renderer
         float m_S{ 0.0f };
         float m_T{ 0.0f };
 
-        // Vertex inddex
+        // Vertex index
         unsigned int m_Vid1{ 0 };
         unsigned int m_Vid2{ 0 };
         unsigned int m_Vid3{ 0 };
@@ -85,6 +91,8 @@ namespace new_type_renderer
         std::vector<Vector3> m_VertexNormals{};
 
         std::vector<Vector3> m_Positions{};
+
+        std::vector<Vector2> m_TextureCoords{};
 
         std::vector<int> m_Indices{};
     };

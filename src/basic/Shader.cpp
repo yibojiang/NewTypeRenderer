@@ -33,6 +33,12 @@ namespace new_type_renderer
         glUniform3f(loc, vec.x, vec.y, vec.z);
     }
 
+    void Shader::SetTextureSampler(const string& location, const int sampler)
+    {
+        unsigned int loc = glGetUniformLocation(m_ShaderProgram, location.c_str());
+        glUniform1i(loc, sampler);
+    }
+
     void Shader::Bind()
     {
         glUseProgram(m_ShaderProgram);
@@ -57,15 +63,18 @@ namespace new_type_renderer
             uniform mat4 u_MVP;
             layout(location = 0) in vec4 position;
             layout(location = 1) in vec4 normal;
+            layout(location = 2) in vec2 textureCoords;
             out vec4 v_Position;
             out vec3 v_Normal;
             out vec3 viewDir;
+            out vec2 v_TextureCoords;
 
             void main()
             {
                 gl_Position = u_MVP * position;
                 v_Position = position;
                 v_Normal = normalize(normal.xyz);
+                v_TextureCoords = textureCoords;
             }
          )glsl";
 
@@ -78,13 +87,27 @@ namespace new_type_renderer
 
         in vec4 v_Position;
         in vec3 v_Normal;
+        in vec2 v_TextureCoords;
         layout(location = 0) out vec4 outColor;
         uniform vec3 u_ViewDir;
+        uniform sampler2D u_DiffuseTexture;
 
         void main()
         {
             float radiance = dot(-u_ViewDir, v_Normal);
-            outColor = vec4(radiance, radiance, radiance, 1);
+            vec4 rad = vec4(radiance, radiance, radiance, 1);
+            if (v_TextureCoords.x >= 0.0f && v_TextureCoords.x <= 1.0f && v_TextureCoords.y >= 0.0f && v_TextureCoords.y <= 1.0f)
+            {
+                outColor = texture(u_DiffuseTexture, v_TextureCoords) * rad;
+            }
+            else
+            {
+                outColor = rad;
+            }
+
+            //vec4 texColor = texture(u_DiffuseTexture, v_TextureCoords);
+            //outColor = texColor * vec4(radiance, radiance, radiance, 1);
+            //outColor = vec4(v_TextureCoords.x, v_TextureCoords.y, 1, 1);
         }
         )glsl";
 
