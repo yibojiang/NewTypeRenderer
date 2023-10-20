@@ -16,6 +16,7 @@ namespace new_type_renderer
         void LoadImage(const std::string& filename) {
             m_Image = std::vector<unsigned char>();
             unsigned error = lodepng::decode(m_Image, m_Width, m_Height, filename.c_str());
+
             if (error) {
                 m_Loaded = false;
                 assert(error == 0, "Fail to load texture: %s", filename.c_str());
@@ -44,6 +45,21 @@ namespace new_type_renderer
         const unsigned char* GetImage() const
         {
             return m_Image.data();
+        }
+
+        void FlipImage()
+        {
+            unsigned int rowSize = m_Width * 4;
+            unsigned char* row = new unsigned char[rowSize];
+            unsigned int halfRows = m_Height / 2;
+
+            for (int i = 0; i < halfRows; i++) {
+                memcpy(row, &m_Image[i * rowSize], rowSize);
+                memcpy(&m_Image[i * rowSize], &m_Image[(m_Height - i - 1) * rowSize], rowSize);
+                memcpy(&m_Image[(m_Height - i - 1) * rowSize], row, rowSize);
+            }
+
+            delete[] row;
         }
 
         unsigned int GetHeight() const

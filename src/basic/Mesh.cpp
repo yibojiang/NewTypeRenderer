@@ -133,6 +133,7 @@ namespace new_type_renderer
         // r.uv = m_UV1 * (1 - m_S - m_T) + m_UV2 * m_S + m_UV3 * m_T;
         // r.normal = GetHitNormal(hit);
         intersection.m_UV = m_UV1 * (1 - m_S - m_T) + m_UV2 * m_S + m_UV3 * m_T;
+        intersection.m_UV.y = 1.0f - intersection.m_UV.y;
         intersection.m_Normal = GetHitNormal(hit);
         intersection.m_HitObject = weak_from_this();
         intersection.m_Distance = tt;

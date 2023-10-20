@@ -37,13 +37,7 @@ namespace new_type_renderer
         const Vector3 foward = camera.GetForward();
         const Vector3 right = camera.GetRight();
         const Vector3 up = Vector3{ 0, 1, 0 };
-
-        const Matrix3x3 cameraRotMatrix
-        {
-            right.x, up.x, foward.x,
-            right.y, up.y, foward.y,
-            right.z, up.z, foward.z
-        };
+        const Matrix4x4 view = camera.GetViewMatrix().Transposed();
 
         const float tanHalfFOV = tanf(ToRadian(camera.GetFOV() * 0.5f));
         float ratio = static_cast<float>(m_Width) / m_Height;
@@ -59,8 +53,8 @@ namespace new_type_renderer
             u = (u * 2.0 - 1.0);
             v = (v * 2.0 - 1.0);
             u = u * ratio;
-            Vector3 dir = Vector3{ u, v, 1.0f / tanHalfFOV };
-            Vector3 rayDir = cameraRotMatrix * dir.Normalized();
+            Vector4 dir = view * Vector4{ u, v, 1.0f / tanHalfFOV, 0.0f };
+            Vector3 rayDir = Vector3(dir.x, dir.y, dir.z);
             Ray ray(camera.GetLocation(), rayDir);
             Intersection intersection = m_BVH.Intersect(ray);
             shared_ptr<Shape> hitObj = intersection.GetHitObject().lock();
