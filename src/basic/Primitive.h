@@ -40,7 +40,7 @@ namespace new_type_renderer
             return normal;
         }
 
-        void UpdateTransformMatrix(const Matrix4x4& m) override
+        void UpdateWorldTransformMatrix(const Matrix4x4& m) override
         {
             auto normalDir = Vector4(normal, 0);
             normalDir = m * normalDir;
@@ -121,7 +121,7 @@ namespace new_type_renderer
             return (hitLocation - center) / rad;
         }
 
-        void UpdateTransformMatrix(const Matrix4x4& m) override
+        void UpdateWorldTransformMatrix(const Matrix4x4& m) override
         {
             this->m = m;
             auto pos = Vector4(center, 1);
@@ -294,7 +294,7 @@ namespace new_type_renderer
             return Vector3();
         }
 
-        void UpdateTransformMatrix(const Matrix4x4& m) override
+        void UpdateWorldTransformMatrix(const Matrix4x4& m) override
         {
             for (int i = 0; i < 3; ++i)
             {

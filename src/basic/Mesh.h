@@ -48,7 +48,7 @@ namespace new_type_renderer
 
         Vector3 GetCentriod() const override;
 
-        void UpdateTransformMatrix(const Matrix4x4& m) override;
+        void UpdateWorldTransformMatrix(const Matrix4x4& m) override;
 
     public:
         // UV coordinates for each vertex
@@ -74,7 +74,7 @@ namespace new_type_renderer
 
         ~Mesh() override;
 
-        void UpdateTransformMatrix(const Matrix4x4& m) override;
+        void UpdateWorldTransformMatrix(const Matrix4x4& m) override;
 
         void ComputeBounds() override;
 

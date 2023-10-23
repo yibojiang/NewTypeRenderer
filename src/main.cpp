@@ -34,6 +34,7 @@ int main(int argc, char *argv[])
     while (viewport.IsWindowCloased() == false)
     {
         high_resolution_clock::time_point start = high_resolution_clock::now();
+        scene->UpdateAllTransform();
         viewport.Update(elapsedTime);
         viewport.Render();
         

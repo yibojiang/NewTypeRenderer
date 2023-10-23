@@ -35,8 +35,13 @@ namespace new_type_renderer
 
     void Shader::SetTextureSampler(const string& location, const int sampler)
     {
+        SetInt(location, sampler);
+    }
+
+    void Shader::SetInt(const string& location, const int val)
+    {
         unsigned int loc = glGetUniformLocation(m_ShaderProgram, location.c_str());
-        glUniform1i(loc, sampler);
+        glUniform1i(loc, val);
     }
 
     void Shader::Bind()
@@ -60,9 +65,10 @@ namespace new_type_renderer
         const char* vertexSource = R"glsl(
             #version 330 core
 
-            uniform mat4 u_MVP;
+            uniform mat4 u_World;
+            uniform mat4 u_VP;
             layout(location = 0) in vec4 position;
-            layout(location = 1) in vec4 normal;
+            layout(location = 1) in vec3 normal;
             layout(location = 2) in vec2 textureCoords;
             out vec4 v_Position;
             out vec3 v_Normal;
@@ -71,9 +77,10 @@ namespace new_type_renderer
 
             void main()
             {
-                gl_Position = u_MVP * position;
+                gl_Position = u_VP * u_World * position;
                 v_Position = position;
-                v_Normal = normalize(normal.xyz);
+                vec4 normal4 = u_World * normalize(vec4(normal, 0));
+                v_Normal = normal4.xyz;
                 v_TextureCoords = textureCoords;
             }
          )glsl";
@@ -91,12 +98,14 @@ namespace new_type_renderer
         layout(location = 0) out vec4 outColor;
         uniform vec3 u_ViewDir;
         uniform sampler2D u_DiffuseTexture;
+        uniform int u_UseDiffuseTexture;
 
         void main()
         {
             float radiance = dot(-u_ViewDir, v_Normal);
             vec4 rad = vec4(radiance, radiance, radiance, 1);
-            if (v_TextureCoords.x >= 0.0f && v_TextureCoords.x <= 1.0f && v_TextureCoords.y >= 0.0f && v_TextureCoords.y <= 1.0f)
+
+            if (u_UseDiffuseTexture > 0)
             {
                 outColor = texture(u_DiffuseTexture, v_TextureCoords) * rad;
             }
@@ -104,6 +113,17 @@ namespace new_type_renderer
             {
                 outColor = rad;
             }
+
+            /*
+            if (v_TextureCoords.x >= 0.0f && v_TextureCoords.x <= 1.0f && v_TextureCoords.y >= 0.0f && v_TextureCoords.y <= 1.0f)
+            {
+                outColor = texture(u_DiffuseTexture, v_TextureCoords) * rad;
+            }
+            else
+            {
+                
+            }
+            */
 
             //vec4 texColor = texture(u_DiffuseTexture, v_TextureCoords);
             //outColor = texColor * vec4(radiance, radiance, radiance, 1);

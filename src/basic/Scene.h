@@ -30,6 +30,7 @@ namespace new_type_renderer
         Intersection Intersect(Ray& ray) const;
 
         void DestroyScene();
+        void UpdateAllTransform();
 
         void UpdateTransform(shared_ptr<SceneNode>& sceneNode, Matrix4x4 mt);
 

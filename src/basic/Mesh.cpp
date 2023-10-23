@@ -165,7 +165,7 @@ namespace new_type_renderer
         return (p1 + p2 + p3) / 3.0;
     }
 
-    void MeshFace::UpdateTransformMatrix(const Matrix4x4& m)
+    void MeshFace::UpdateWorldTransformMatrix(const Matrix4x4& m)
     {
         // Transform is already applied on Mesh, so need to apply it on the face
     }
@@ -178,17 +178,9 @@ namespace new_type_renderer
     {
     }
 
-    void Mesh::UpdateTransformMatrix(const Matrix4x4& m)
+    void Mesh::UpdateWorldTransformMatrix(const Matrix4x4& m)
     {
-        for (int i = 0; i < m_Positions.size(); i++)
-        {
-            m_Positions[i] = m.TransformLocation(m_Positions[i]);
-        }
-
-        for (int i = 0; i < m_Positions.size(); i++)
-        {
-            m_VertexNormals[i] = m * m_VertexNormals[i];
-        }
+        m_WorldTransform = m;
     }
 
     void Mesh::ComputeBounds()

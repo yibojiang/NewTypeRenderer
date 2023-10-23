@@ -21,6 +21,7 @@ namespace new_type_renderer
         void SetVector4f(const string& location, const Vector4& vec);
         void SetVector3f(const string& location, const Vector3& vec);
         void SetTextureSampler(const string& location, const int sampler);
+        void SetInt(const string& location, const int val);
         void Bind();
 
         void UnBind();

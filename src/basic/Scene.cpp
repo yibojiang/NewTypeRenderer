@@ -199,11 +199,13 @@ namespace new_type_renderer
                 {
                     auto box = make_shared<Box>(Vector3{1.0f, 1.0f, 1.0f});
                     obj = box;
+                    Add(obj);
                 }
                 else if (ptype == "sphere")
                 {
                     auto sphere = make_shared<Sphere>(1.0f);
                     obj = std::move(sphere);
+                    Add(obj);
                 }
                 else if (ptype == "mesh")
                 {
@@ -212,6 +214,7 @@ namespace new_type_renderer
                     std::string modelName = primitives[i]["path"].GetString();
                     loader.LoadModel(modelName, mesh, material);
                     obj = mesh;
+                    AddMesh(mesh);
                 }
                 else
                 {
@@ -220,6 +223,13 @@ namespace new_type_renderer
                 }
 
                 obj->SetMaterial(material);
+
+                if (obj->GetMaterial()->GetEmission().Length() > FLT_EPSILON)
+                {
+                    m_Lights.push_back(obj);
+                }
+
+                // Create transform node for each mesh
                 auto node = make_shared<SceneNode>(m_Root);
                 node->m_Transform.SetLocation(Vector3{ pos[0].GetFloat(), pos[1].GetFloat(), pos[2].GetFloat() });
                 node->m_Transform.SetScale(Vector3{ scl[0].GetFloat(), scl[1].GetFloat(), scl[2].GetFloat() });
@@ -237,9 +247,6 @@ namespace new_type_renderer
                 LOG_INFO("add %s to the scene", obj->name.c_str());
             }
         }
-
-        UpdateTransform(m_Root, Matrix4x4());
-        // bvh.Setup(*this);
 
         return true;
     }
@@ -300,26 +307,17 @@ namespace new_type_renderer
         m_Shapes.clear();
     }
 
+    void Scene::UpdateAllTransform()
+    {
+        UpdateTransform(GetRootNode(), Matrix4x4());
+    }
+
     void Scene::UpdateTransform(shared_ptr<SceneNode>& sceneNode, Matrix4x4 matrix)
     {
         matrix = matrix * sceneNode->m_Transform.TransformMatrix();
         if (auto& obj = sceneNode->GetObject())
         {
-            obj->UpdateTransformMatrix(matrix);
-
-            if (std::shared_ptr<Mesh> mesh = std::dynamic_pointer_cast<Mesh>(obj))
-            {
-                AddMesh(mesh);
-            }
-            else
-            {
-                Add(obj);
-            }
-
-            if (obj->GetMaterial()->GetEmission().Length() > FLT_EPSILON)
-            {
-                m_Lights.push_back(obj);
-            }
+            obj->UpdateWorldTransformMatrix(matrix);
         }
 
         for (unsigned int i = 0; i < sceneNode->GetChildren().size(); ++i)

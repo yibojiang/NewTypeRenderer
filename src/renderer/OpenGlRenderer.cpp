@@ -159,13 +159,13 @@ namespace new_type_renderer
         const Matrix4x4 view = camera.GetViewMatrix();
         const Matrix4x4 prospective = Matrix4x4::CreatePerspectiveProjectMatrix(camera.m_FOV, camera.m_Near, camera.m_Far, m_ViewportWidth * 1.0f / m_ViewportHeight);
         // World matrix is applied to the positions already
-        Matrix4x4 mvp = prospective * view;
+        Matrix4x4 vp = prospective * view;
         Vector3 viewDir = camera.GetLookAt() - camera.GetLocation();
         viewDir.Normalize();
 
         for (int i = 0; i < m_MeshDraws.size(); i++)
         {
-            m_MeshDraws[i].Draw(mvp, viewDir);
+            m_MeshDraws[i].Draw(vp, viewDir);
         }
 
         // Bind the pbr result texture

@@ -3,11 +3,12 @@
 #include "core/Extents.h"
 #include "core/ray.h"
 #include "basic/Material.h"
+#include "math/Matrix.h"
 
 namespace new_type_renderer
 {
-    struct Matrix4x4;
     struct Material;
+    class Mesh;
 
     class Shape
     {
@@ -42,7 +43,9 @@ namespace new_type_renderer
 
         virtual Vector3 GetCentriod() const = 0;
 
-        virtual void UpdateTransformMatrix(const Matrix4x4&) = 0;
+        virtual void UpdateWorldTransformMatrix(const Matrix4x4&) = 0;
+
+        const Matrix4x4& GetWorldTransform() const { return m_WorldTransform; }
 
         virtual void ComputeBounds() = 0;
 
@@ -55,5 +58,7 @@ namespace new_type_renderer
         Extents m_Bounds{};
 
         shared_ptr<Material> m_Material;
+
+        Matrix4x4 m_WorldTransform;
     };
 }
